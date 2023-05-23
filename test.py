@@ -68,7 +68,7 @@ def flat(a):
 
 if __name__ == "__main__":
 
-    m = mesh.Mesh.from_file('/home/alex/Downloads/Cilindro.stl')
+    m = mesh.Mesh.from_file('data/Cilindro.stl')
     points = np.unique(m.points.reshape([-1,3]), axis=0)
     print(points.shape)
     min_max = min_max_points(points)
