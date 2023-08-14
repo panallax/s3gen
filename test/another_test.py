@@ -2,10 +2,11 @@ import numpy as np
 np.seterr(all="ignore")
 from stl import mesh
 from sklearn.neighbors import NearestNeighbors
-from utils import plot
+from utils import plot, in_volume
 import matplotlib.pyplot as plt
 from scipy.spatial import Delaunay
 from scipy.spatial.distance import pdist, squareform
+from scipy.spatial import cKDTree
 
 def generate_coords_tensor(n, base_points) -> np.ndarray:
 
@@ -111,7 +112,6 @@ def remove_small_areas(rm_points, cp_dict, tol= 0.05):
 
 
   return new_points, cp_dict
-  # return new_points, cp_dict
 
 
 def get_simplices(self, vertex):
@@ -185,11 +185,28 @@ def join_paths(list_of_tuples):
     grouped_list = [tuple(group) for group in groups]
     return grouped_list
 
+
+def caracteristic_distsance(points):
+    kd_tree = cKDTree(points)   
+    total_dist = 0.0  
+    for point in points:
+        dist,_ = kd_tree.query(point, k=2)
+        total_dist += dist[1]
+    
+    return total_dist / len(points)
+
+def z_shell_points(points, bot_points,d):
+  shell = points[np.linalg.norm(points[:,:2], axis=1) > 1.48]
+  z = shell[abs(shell[:,2:] - np.mean(bot_points,axis=0)[-1]).argmin()]
+
+  return shell[abs(shell[:,2] - z[-1]) < 0.45*d]
+
 m = mesh.Mesh.from_file('/home/alex/Desktop/mesh-gen/data/Cilindro.stl')
 points = np.unique(m.points.reshape([-1,3]), axis=0)
 bot_points = points[np.where(points[:,-1] < np.min(points[:,-1]) + 0.1)]
 top_points = points[np.where(points[:,-1] > np.max(points[:,-1]) - 0.1)]
-
+kd_tree = cKDTree(points)
+d = caracteristic_distsance(points)
 
 fig = plt.figure(figsize=(15,15))
 ax = fig.add_subplot(111, projection="3d")
@@ -207,12 +224,6 @@ while not reached_top:
 
 # print(indices.shape)
 # print(indices)
-  bot_points_pr = bot_points[:,:2]
-  indices = Delaunay(bot_points_pr).simplices
-  plt.triplot(bot_points_pr[:,0], bot_points_pr[:,1], indices)
-  plt.plot(bot_points_pr[:,0], bot_points_pr[:,1], 'o')
-  plt.show()
-
 # for _ in range(2):
   puntos_optimos = []
   bot_points_pr = bot_points[:,:2]
@@ -235,6 +246,8 @@ while not reached_top:
       if punto_optimo[-1] >= np.max(points[:,-1]):
           reached_top = True
       else:
+          if not in_volume(punto_optimo, points):
+              punto_optimo = points[kd_tree.query(punto_optimo, 2)[1][1]]
           # Add the optimal point to the list of optimal points if it is inside the volume
           puntos_optimos.append(punto_optimo)
           tetrahedrons[str(iteration) + str(i)] = {"base_points": base_points, "apex": punto_optimo}
@@ -242,8 +255,10 @@ while not reached_top:
       # print(punto_optimo)
       # check_point(punto_optimo, base_points)
 
+  shell = z_shell_points(points, bot_points,d)
+  puntos_optimos = np.append(puntos_optimos, shell, axis=0) 
   # final_points, cleaned_dict = remove_small_areas(puntos_optimos, tetrahedrons)
-  new_points, new_dict = remove_short_edges(puntos_optimos, tetrahedrons, 0.2)
+  new_points, new_dict = remove_short_edges(puntos_optimos, tetrahedrons, d)
   # final_points, cleaned_dict = remove_small_areas(new_points, cropped_dict)
   print_dict(new_dict)
   print(np.array(puntos_optimos).shape)
@@ -252,6 +267,12 @@ while not reached_top:
   bot_points = np.array(new_points); del new_points
   tetrahedrons = new_dict; del new_dict
   iteration += 1
+
+  bot_points_pr = bot_points[:,:2]
+  indices = Delaunay(bot_points_pr).simplices
+  plt.triplot(bot_points_pr[:,0], bot_points_pr[:,1], indices)
+  plt.plot(bot_points_pr[:,0], bot_points_pr[:,1], 'o')
+  plt.show()
 
 print_dict(tetrahedrons)
 
