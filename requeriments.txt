@@ -1,6 +1,0 @@
-networkx
-sklearn
-numpy-stl
-scipy
-numpy
-matplotlib

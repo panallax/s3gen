@@ -207,9 +207,11 @@ while not reached_top:
 
 # print(indices.shape)
 # print(indices)
-# plt.triplot(bot_points_pr[:,0], bot_points_pr[:,1], indices)
-# plt.plot(bot_points_pr[:,0], bot_points_pr[:,1], 'o')
-# plt.show()
+  bot_points_pr = bot_points[:,:2]
+  indices = Delaunay(bot_points_pr).simplices
+  plt.triplot(bot_points_pr[:,0], bot_points_pr[:,1], indices)
+  plt.plot(bot_points_pr[:,0], bot_points_pr[:,1], 'o')
+  plt.show()
 
 # for _ in range(2):
   puntos_optimos = []
