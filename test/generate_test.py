@@ -8,6 +8,13 @@ from scipy.spatial import Delaunay
 from scipy.spatial.distance import pdist, squareform
 from scipy.spatial import cKDTree
 
+
+TODO = "Refactorize"
+TODO = "Move funcitons to utils.py"
+TODO = "Add comments and docstrings"
+TODO = "Add dict to graph function"
+
+
 def generate_coords_tensor(n, base_points) -> np.ndarray:
 
     xmin = np.min(base_points[:,0])
@@ -149,6 +156,7 @@ def print_dict(tetra_dict):
 
   fig = plt.figure(figsize=(15,15))
   ax = fig.add_subplot(111, projection="3d")
+  ax.set_box_aspect((1,1,1))
   for elem in tetra_dict.values():
     ax.scatter(elem["base_points"][:, 0], elem["base_points"][:, 1], elem["base_points"][:,2], facecolors='none', edgecolors='black')
     ax.scatter(elem["apex"][0], elem["apex"][1], elem["apex"][2], facecolors='none', edgecolors='green')
@@ -201,30 +209,37 @@ def z_shell_points(points, bot_points,d):
 
   return shell[abs(shell[:,2] - z[-1]) < 0.45*d]
 
+def exclude_points(arr, values_to_remove):
+  values_to_remove = np.array(values_to_remove)
+  mask = ~np.all(arr[:, np.newaxis] == values_to_remove, axis=2).any(axis=1)
+  new_arr = arr[mask]
+  
+  return new_arr
+
+TODO = "Finish this function, to join the shell with the inner points"
+# def add_shell(shell_points, dict_points, kd_tree):
+
+   
+#### MAIN ####
+
 m = mesh.Mesh.from_file('/home/alex/Desktop/mesh-gen/data/Cilindro.stl')
 points = np.unique(m.points.reshape([-1,3]), axis=0)
 bot_points = points[np.where(points[:,-1] < np.min(points[:,-1]) + 0.1)]
 top_points = points[np.where(points[:,-1] > np.max(points[:,-1]) - 0.1)]
+free_points = exclude_points(points, bot_points)
+
 kd_tree = cKDTree(points)
 d = caracteristic_distsance(points)
 
-fig = plt.figure(figsize=(15,15))
-ax = fig.add_subplot(111, projection="3d")
-
-
-bot_points = points[np.where(points[:,-1] < np.min(points[:,-1]) + 0.1)]
-top_points = points[np.where(points[:,-1] > np.max(points[:,-1]) - 0.1)]
+# fig = plt.figure(figsize=(15,15))
+# ax = fig.add_subplot(111, projection="3d")
 
 
 tetrahedrons = {}
 reached_top = False
 iteration = 0
 while not reached_top:
-# ax.scatter3D(*bot_points.T)
 
-# print(indices.shape)
-# print(indices)
-# for _ in range(2):
   puntos_optimos = []
   bot_points_pr = bot_points[:,:2]
   indices = Delaunay(bot_points_pr).simplices
@@ -256,11 +271,13 @@ while not reached_top:
       # check_point(punto_optimo, base_points)
 
   shell = z_shell_points(points, bot_points,d)
+  free_points = exclude_points(free_points, shell)
+
   puntos_optimos = np.append(puntos_optimos, shell, axis=0) 
   # final_points, cleaned_dict = remove_small_areas(puntos_optimos, tetrahedrons)
-  new_points, new_dict = remove_short_edges(puntos_optimos, tetrahedrons, d)
+  new_points, new_dict = remove_short_edges(puntos_optimos, tetrahedrons, d/2)
   # final_points, cleaned_dict = remove_small_areas(new_points, cropped_dict)
-  print_dict(new_dict)
+  # print_dict(new_dict)
   print(np.array(puntos_optimos).shape)
   print(new_points.shape)
   print("altura: ", np.max(np.max(new_points[:,-1])))
@@ -268,13 +285,15 @@ while not reached_top:
   tetrahedrons = new_dict; del new_dict
   iteration += 1
 
-  bot_points_pr = bot_points[:,:2]
-  indices = Delaunay(bot_points_pr).simplices
-  plt.triplot(bot_points_pr[:,0], bot_points_pr[:,1], indices)
-  plt.plot(bot_points_pr[:,0], bot_points_pr[:,1], 'o')
-  plt.show()
 
+  #Uncommet to plot the triangulation of each iteration
+
+  # bot_points_pr = bot_points[:,:2]
+  # indices = Delaunay(bot_points_pr).simplices
+  # plt.triplot(bot_points_pr[:,0], bot_points_pr[:,1], indices)
+  # plt.plot(bot_points_pr[:,0], bot_points_pr[:,1], 'o')
+  # plt.show()
+
+# add_shell(free_points, tetrahedrons, kd_tree)
 print_dict(tetrahedrons)
 
-
-# plot(base_points, [base_points[indices[0][0]], base_points[indices[0][1]], base_points[indices[0][3]]])

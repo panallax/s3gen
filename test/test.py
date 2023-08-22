@@ -68,7 +68,7 @@ def flat(a):
 
 if __name__ == "__main__":
 
-    m = mesh.Mesh.from_file('data/Cilindro.stl')
+    m = mesh.Mesh.from_file('/home/alex/Desktop/mesh-gen/data/Cilindro.stl')
     points = np.unique(m.points.reshape([-1,3]), axis=0)
     print(points.shape)
     min_max = min_max_points(points)
@@ -99,7 +99,6 @@ if __name__ == "__main__":
     ref = pnts[:,0,:]
     points = pnts[:,1:,:]
     plane = np.array([[0,0,1]])
-
     angles = angle(points,ref,plane)
 
     G = nx.Graph()
