@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.spatial import Delaunay
 
 def plot(cloud_points, points=[]) -> None:
     """
@@ -36,3 +37,9 @@ def plot_knn(indices, X) -> None:
             ax.plot([X[i, 0], X[j, 0]], [X[i, 1], X[j, 1]], [X[i, 2], X[j, 2]])
 
     plt.show(block=False)
+
+def plot_Dealunay(points):
+    indices = Delaunay(points).simplices
+    plt.triplot(points[:,0], points[:,1], indices)
+    plt.plot(points[:,0], points[:,1], 'o')
+    plt.show()
