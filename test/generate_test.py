@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from scipy.spatial import Delaunay
 from scipy.spatial.distance import pdist, squareform
 from scipy.spatial import cKDTree
+import networkx as nx
 
 
 TODO = "Refactorize"
@@ -204,20 +205,45 @@ def caracteristic_distsance(points):
     return total_dist / len(points)
 
 def z_shell_points(points, bot_points,d):
+  """
+  Return the points of the shell of the mesh closer to a given distance d from the bottom points 
+  """
   shell = points[np.linalg.norm(points[:,:2], axis=1) > 1.48]
   z = shell[abs(shell[:,2:] - np.mean(bot_points,axis=0)[-1]).argmin()]
 
   return shell[abs(shell[:,2] - z[-1]) < 0.45*d]
 
 def exclude_points(arr, values_to_remove):
+  """
+  Remove the rows of arr that are equal to any of the rows of values_to_remove
+  
+  Arguments:
+      arr {np.ndarray} -- Array of points
+      values_to_remove {np.ndarray} -- Array of points to remove
+    
+  Returns:
+      np.ndarray -- Array of points without the points of values_to_remove
+  
+  """
+  arr = np.array(arr)
   values_to_remove = np.array(values_to_remove)
-  mask = ~np.all(arr[:, np.newaxis] == values_to_remove, axis=2).any(axis=1)
+  mask = ~np.all(np.isin(arr,values_to_remove), axis=1)
   new_arr = arr[mask]
   
   return new_arr
 
 TODO = "Finish this function, to join the shell with the inner points"
-# def add_shell(shell_points, dict_points, kd_tree):
+
+def adjacency_matrix(points_dict):
+  G = nx.Graph()
+  for i in points_dict.values():
+    G.add_nodes_from(list(map(tuple,np.append(i["base_points"],i["apex"][np.newaxis,:], axis= 0))))
+    for j in i["base_points"]:
+      G.add_edge(tuple(j),tuple(i["apex"]))
+
+  return list(map(np.array,G.nodes())), nx.adjacency_matrix(G).todense()
+
+# def add_shell(shell_points, dict_points):
 
    
 #### MAIN ####
@@ -238,7 +264,8 @@ d = caracteristic_distsance(points)
 tetrahedrons = {}
 reached_top = False
 iteration = 0
-while not reached_top:
+# while not reached_top:
+for _ in range(3):
 
   puntos_optimos = []
   bot_points_pr = bot_points[:,:2]
@@ -295,5 +322,10 @@ while not reached_top:
   # plt.show()
 
 # add_shell(free_points, tetrahedrons, kd_tree)
+
+nodes, matrix = adjacency_matrix(tetrahedrons)
+np.savez("../data/adjacency_matrix.npz", nodes=nodes, matrix=matrix)
+# np.savez("../data/tetrahedrons.npz", tetrahedrons=tetrahedrons, free_points=free_points, bot_points=bot_points, points=points)
+
 print_dict(tetrahedrons)
 
