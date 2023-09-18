@@ -13,8 +13,7 @@ import networkx as nx
 TODO = "Refactorize"
 TODO = "Move funcitons to utils.py"
 TODO = "Add comments and docstrings"
-TODO = "Add dict to graph function"
-
+TODO = "Translate to english"
 
 def generate_coords_tensor(n, base_points) -> np.ndarray:
 
@@ -148,6 +147,7 @@ def get_simplices(self, vertex):
 
 
 def update_tetrahedrons_dict(tetra_dict, points, value):
+  
   if points.ndim > 1:
     return {k:{"base_points": v["base_points"], "apex": value  if (v['apex'][:2] == points).all(1).any() else v["apex"]} for k,v in tetra_dict.items()}
   
@@ -168,6 +168,16 @@ def print_dict(tetra_dict):
 
 
 def join_paths(list_of_tuples):
+    """Joins paths in a list of tuples.
+    
+    Arguments:
+        list_of_tuples {list} -- List of tuples
+        
+        Returns:
+        
+        list -- List of tuples with joined paths
+    """
+
     value_group = {}
     groups = []
 
@@ -232,7 +242,6 @@ def exclude_points(arr, values_to_remove):
   
   return new_arr
 
-TODO = "Finish this function, to join the shell with the inner points"
 
 def adjacency_matrix(points_dict):
   G = nx.Graph()
@@ -243,12 +252,13 @@ def adjacency_matrix(points_dict):
 
   return list(map(np.array,G.nodes())), nx.adjacency_matrix(G).todense()
 
+TODO = "Finish this function, to join the shell with the inner points"
 # def add_shell(shell_points, dict_points):
 
    
 #### MAIN ####
 
-m = mesh.Mesh.from_file('/home/alex/Desktop/mesh-gen/data/Cilindro.stl')
+m = mesh.Mesh.from_file('../data/Cilindro.stl')
 points = np.unique(m.points.reshape([-1,3]), axis=0)
 bot_points = points[np.where(points[:,-1] < np.min(points[:,-1]) + 0.1)]
 top_points = points[np.where(points[:,-1] > np.max(points[:,-1]) - 0.1)]
@@ -260,10 +270,15 @@ d = caracteristic_distsance(points)
 # fig = plt.figure(figsize=(15,15))
 # ax = fig.add_subplot(111, projection="3d")
 
-
+bot_points_pr = bot_points[:,:2]
+indices = Delaunay(bot_points_pr).simplices
+plt.triplot(bot_points_pr[:,0], bot_points_pr[:,1], indices)
+plt.plot(bot_points_pr[:,0], bot_points_pr[:,1], 'o')
+plt.show()
 tetrahedrons = {}
 reached_top = False
 iteration = 0
+
 # while not reached_top:
 for _ in range(3):
 
@@ -292,17 +307,18 @@ for _ in range(3):
               punto_optimo = points[kd_tree.query(punto_optimo, 2)[1][1]]
           # Add the optimal point to the list of optimal points if it is inside the volume
           puntos_optimos.append(punto_optimo)
-          tetrahedrons[str(iteration) + str(i)] = {"base_points": base_points, "apex": punto_optimo}
+          tetrahedrons[str(iteration) + "_" + str(i)] = {"base_points": base_points, "apex": punto_optimo, "generation":  iteration}
 
       # print(punto_optimo)
       # check_point(punto_optimo, base_points)
 
-  shell = z_shell_points(points, bot_points,d)
+  shell = z_shell_points(points, puntos_optimos,d)
   free_points = exclude_points(free_points, shell)
 
   puntos_optimos = np.append(puntos_optimos, shell, axis=0) 
   # final_points, cleaned_dict = remove_small_areas(puntos_optimos, tetrahedrons)
   new_points, new_dict = remove_short_edges(puntos_optimos, tetrahedrons, d/2)
+  print_dict(new_dict)
   # final_points, cleaned_dict = remove_small_areas(new_points, cropped_dict)
   # print_dict(new_dict)
   print(np.array(puntos_optimos).shape)
@@ -315,17 +331,17 @@ for _ in range(3):
 
   #Uncommet to plot the triangulation of each iteration
 
-  # bot_points_pr = bot_points[:,:2]
-  # indices = Delaunay(bot_points_pr).simplices
-  # plt.triplot(bot_points_pr[:,0], bot_points_pr[:,1], indices)
-  # plt.plot(bot_points_pr[:,0], bot_points_pr[:,1], 'o')
-  # plt.show()
+  bot_points_pr = bot_points[:,:2]
+  indices = Delaunay(bot_points_pr).simplices
+  plt.triplot(bot_points_pr[:,0], bot_points_pr[:,1], indices)
+  plt.plot(bot_points_pr[:,0], bot_points_pr[:,1], 'o')
+  plt.show()
 
 # add_shell(free_points, tetrahedrons, kd_tree)
 
 nodes, matrix = adjacency_matrix(tetrahedrons)
 np.savez("../data/adjacency_matrix.npz", nodes=nodes, matrix=matrix)
-# np.savez("../data/tetrahedrons.npz", tetrahedrons=tetrahedrons, free_points=free_points, bot_points=bot_points, points=points)
+np.savez("../data/tetrahedrons.npz", tetrahedrons=tetrahedrons, free_points=free_points, bot_points=bot_points, points=points)
 
 print_dict(tetrahedrons)
 
