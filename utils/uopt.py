@@ -14,18 +14,36 @@ def generate_coords_tensor(n, base_points) -> np.ndarray:
     Returns:
         np.ndarray: 3D tensor of coordinates."""
 
-    xmin = np.min(base_points[:,0])
-    xmax = np.max(base_points[:,0])
-    ymin = np.min(base_points[:,1])
-    ymax = np.max(base_points[:,1])
-    zmin = np.max(base_points[:,2])
+    # xmin = np.min(base_points[:,0])
+    # xmax = np.max(base_points[:,0])
+    # ymin = np.min(base_points[:,1])
+    # ymax = np.max(base_points[:,1])
+    # zmin = np.max(base_points[:,2])
 
-    x = np.linspace(xmin, xmax, n)
-    y = np.linspace(ymin, ymax, n)
-    z = np.linspace(zmin, zmin + (xmax-xmin), n)
-    Z, X, Y = np.meshgrid(z, x, y, indexing='ij')
+    # x = np.linspace(xmin, xmax, n)
+    # y = np.linspace(ymin, ymax, n)
+    # z = np.linspace(zmin, zmin + (xmax-xmin), n)
+    # Z, X, Y = np.meshgrid(z, x, y, indexing='ij')
     
-    return np.stack((X, Y, Z), axis=-1)
+    # return np.stack((X, Y, Z), axis=-1)
+
+    altura = np.linalg.norm(base_points[0] - base_points[1])
+    # Generar coordenadas bariocéntricas aleatorias para el plano base
+    r1 = np.sqrt(np.random.uniform(0, 1, n))
+    r2 = np.random.uniform(0, 1, n)
+    alpha = 1 - r1
+    beta = (1 - r2) * r1
+    gamma = r2 * r1
+
+    # Generar alturas aleatorias dentro del prisma
+    alturas_aleatorias = np.random.uniform(0, altura, n)
+    # Calcular las coordenadas cartesianas de los puntos dentro del prisma de manera vectorizada
+    puntos_base = alpha[:, np.newaxis] * base_points[0] + beta[:, np.newaxis] * base_points[1] + gamma[:, np.newaxis] * base_points[2] 
+
+    # Combinar el punto en el plano base con la altura en la dirección Z
+    puntos_generados = puntos_base + np.column_stack((np.zeros(n), np.zeros(n), alturas_aleatorias))
+
+    return puntos_generados
 
 def check_point(apex_pos, base_points) -> None:
     """Checks the angles between the apex and the base points."""
@@ -172,3 +190,21 @@ def join_paths(list_of_tuples):
 
     grouped_list = [tuple(group) for group in groups]
     return grouped_list
+
+def min_dist(points,point):
+  return points[np.argmin(np.linalg.norm(points-point, axis=1))]
+
+def join_hull_and_shell(tetra_dict, points, shell):
+  inner_points = points[:,:2]
+  dea = Delaunay(inner_points)
+  indices = dea.convex_hull
+  hull = inner_points[np.unique(indices)]
+  shell_pr = shell[:,:2]
+  closer_points = list(map(lambda x: min_dist(shell_pr,x), hull))
+
+  for i,v in enumerate(hull):
+    closer_point = shell[np.where(np.all(shell_pr == closer_points[i], axis =1))[0]][0]
+    points[np.where(np.all(inner_points == v, axis =1))[0]] = closer_point
+    tetra_dict = update_tetrahedrons_dict(tetra_dict, v, closer_point)
+
+  return points, tetra_dict

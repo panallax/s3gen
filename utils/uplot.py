@@ -39,6 +39,9 @@ def plot_knn(indices, X) -> None:
     plt.show(block=False)
 
 def plot_Dealunay(points):
+    points = np.array(points)
+    if points.shape[1] == 3:
+        points = points[:,:2]
     indices = Delaunay(points).simplices
     plt.triplot(points[:,0], points[:,1], indices)
     plt.plot(points[:,0], points[:,1], 'o')

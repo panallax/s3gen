@@ -3,7 +3,7 @@ np.seterr(all="ignore")
 from utils import in_volume, extract_points_from_STL, z_shell_points, \
                   exclude_points, generate_coords_tensor, eval_objective_function,\
                   remove_short_edges, print_dict, adjacency_matrix, caracteristic_distsance, \
-                  plot_Dealunay
+                  plot_Dealunay, join_hull_and_shell
 from scipy.spatial import Delaunay
 from scipy.spatial import cKDTree
 import os
@@ -40,7 +40,7 @@ class MeshGen:
         self.d = caracteristic_distsance(self.points)
         self.tetrahedrons = {}
         if max_iterations :
-            self.max_iterations = max_iterations
+            self.max_iterations = int(max_iterations)
         else:
             self.max_iterations = 1e5
         self.output_path = output_path
@@ -63,9 +63,12 @@ class MeshGen:
                 # Obtain the base points from triangulation
                 base_points = bot_points[indice]
                 # Generate a tensor of coordinates
-                tensor_coords = generate_coords_tensor(20, base_points)
+                # tensor_coords = generate_coords_tensor(20, base_points)
+                tensor_coords = generate_coords_tensor(1000, base_points)
+
                 # Evaluate the objective function in the tensor of coordinates
-                function_values = np.apply_along_axis(eval_objective_function, axis=3, arr=tensor_coords, base_points=base_points)
+                # function_values = np.apply_along_axis(eval_objective_function, axis=3, arr=tensor_coords, base_points=base_points)
+                function_values = np.apply_along_axis(eval_objective_function, axis=1, arr=tensor_coords, base_points=base_points)
                 # Asign the value 100 to the NaN values
                 function_values[np.isnan(function_values)] = 100
                 # Finded the minimum index of the objective function
@@ -82,28 +85,31 @@ class MeshGen:
                     # Add the optimal point to the list of optimal points if it is inside the volume
                     optimal_points.append(optimal_point)
                     self.tetrahedrons[str(iteration) + "_" + str(i)] = {"base_points": base_points, "apex": optimal_point, "generation":  iteration}
-
+            print_dict(self.tetrahedrons) #plot the tetrahedrons
+            plot_Dealunay(optimal_points)
             shell = z_shell_points(self.points, optimal_points, self.d)
             self.free_points = exclude_points(self.free_points, shell)
-            optimal_points = np.append(optimal_points, shell, axis=0) 
             new_points, new_dict = remove_short_edges(optimal_points, self.tetrahedrons, self.d/2)
+            joined_points, new_dict = join_hull_and_shell(new_dict, new_points, shell)
+            points_with_shell = np.append(joined_points, shell, axis=0)
 
             print_dict(new_dict) #plot the tetrahedrons
 
             # print(np.array(optimal_points).shape)
-            # print(new_points.shape)
+            # print(self.free_points.shape, self.free_points)
+            plot_Dealunay(points_with_shell)
             altura = np.max(np.max(new_points[:,-1]))
             print(f"Height: {np.round(altura,3)} mm. {np.round(altura*100/np.max(self.top_points[:,-1]),1)} % completed.", )
 
-            bot_points = np.array(new_points); del new_points
+            bot_points = np.array(points_with_shell); del points_with_shell
             self.tetrahedrons = new_dict; del new_dict
-            bot_points_pr = bot_points[:,:2]
             iteration += 1
 
         #Uncommet to plot the triangulation of each iteration
         # plot_Dealunay(bot_points_pr)
 
         # add_shell(free_points, tetrahedrons, kd_tree)
+        print(self.free_points)
         print_dict(self.tetrahedrons)
 
     def save_adjacency_matrix(self):    

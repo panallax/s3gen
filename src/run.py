@@ -10,7 +10,7 @@ parser.add_argument("-o", "--output", help="Destination path for the data", defa
 
 args = parser.parse_args()
 path = vars(args)["path"]
-iterations = int(vars(args)["iterations"])
+iterations = vars(args)["iterations"]
 output = vars(args)["output"]
 
 points = extract_points_from_STL(path)

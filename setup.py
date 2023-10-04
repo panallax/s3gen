@@ -9,7 +9,7 @@ setup(
         "networkx",
         "sklearn",
         "numpy-stl",
-        "scipy",
+        "scipy >= 1.11.0",
         "numpy",
         "matplotlib",
         "numpy",
