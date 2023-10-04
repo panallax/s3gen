@@ -5,98 +5,9 @@ from stl import mesh
 from utils import in_volume
 from sklearn.neighbors import NearestNeighbors
 import networkx as nx
-
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.animation import FuncAnimation
-from functools import partial
-# # def generar_tensor_coordenadas(n):
-
-# #     xmin = np.min(base_points[:,0])
-# #     xmax = np.max(base_points[:,0])
-# #     ymin = np.min(base_points[:,1])
-# #     ymax = np.max(base_points[:,1])
-# #     zmin = np.max(base_points[:,2])
-
-# #     x = np.linspace(xmin, xmax, n)
-# #     y = np.linspace(ymin, ymax, n)
-# #     z = np.linspace(zmin, zmin + (xmax-xmin), n)
-# #     Z, X, Y = np.meshgrid(z, x, y, indexing='ij')
-
-# #     return np.stack((X, Y, Z), axis=-1)
-
-# def generar_tensor_coordenadas(base_points, n):
-#     altura = np.linalg.norm(base_points[0] - base_points[1])
-#     # Generar coordenadas bariocéntricas aleatorias para el plano base
-#     r1 = np.sqrt(np.random.uniform(0, 1, n))
-#     r2 = np.random.uniform(0, 1, n)
-#     alpha = 1 - r1
-#     beta = (1 - r2) * r1
-#     gamma = r2 * r1
-
-#     # Generar alturas aleatorias dentro del prisma
-#     alturas_aleatorias = np.random.uniform(0, altura, n)
-#     # Calcular las coordenadas cartesianas de los puntos dentro del prisma de manera vectorizada
-#     puntos_base = alpha[:, np.newaxis] * base_points[0] + beta[:, np.newaxis] * base_points[1] + gamma[:, np.newaxis] * base_points[2] 
-
-#     # Combinar el punto en el plano base con la altura en la dirección Z
-#     puntos_generados = puntos_base + np.column_stack((np.zeros(n), np.zeros(n), alturas_aleatorias))
-
-#     return puntos_generados
-
-# def check_point(apex_pos, base_points) -> None:
-
-#   f1 = (np.degrees(np.arccos(-(base_points[0,-1] - apex_pos[-1])/np.linalg.norm([base_points[0,0] - apex_pos[0], base_points[0,1] - apex_pos[1], base_points[0,2] - apex_pos[2]]))) - 45) + \
-#         (np.degrees(np.arccos(-(base_points[1,-1] - apex_pos[-1])/np.linalg.norm([base_points[1,0] - apex_pos[0], base_points[1,1] - apex_pos[1], base_points[1,2] - apex_pos[2]]))) - 45) + \
-#         (np.degrees(np.arccos(-(base_points[2,-1] - apex_pos[-1])/np.linalg.norm([base_points[2,0] - apex_pos[0], base_points[2,1] - apex_pos[1], base_points[2,2] - apex_pos[2]]))) - 45)
-
-#   f2 = np.degrees(np.arccos(-(base_points[0,-1] - apex_pos[-1])/np.linalg.norm([base_points[0,0] - apex_pos[0], base_points[0,1] - apex_pos[1], base_points[0,2] - apex_pos[2]])))
-#   f3 = np.degrees(np.arccos(-(base_points[1,-1] - apex_pos[-1])/np.linalg.norm([base_points[1,0] - apex_pos[0], base_points[1,1] - apex_pos[1], base_points[1,2] - apex_pos[2]])))
-#   f4 = np.degrees(np.arccos(-(base_points[2,-1] - apex_pos[-1])/np.linalg.norm([base_points[2,0] - apex_pos[0], base_points[2,1] - apex_pos[1], base_points[2,2] - apex_pos[2]])))
-
-
-#   print(f1,f2,f3,f4)
-
-# def eval_objective_function(apex_pos, base_points) -> float:
-
-#         f1 = (np.degrees(np.arccos(-(base_points[0,-1] - apex_pos[-1])/np.linalg.norm([base_points[0,0] - apex_pos[0], base_points[0,1] - apex_pos[1], base_points[0,2] - apex_pos[2]]))) - 45)
-#         f2 = (np.degrees(np.arccos(-(base_points[1,-1] - apex_pos[-1])/np.linalg.norm([base_points[1,0] - apex_pos[0], base_points[1,1] - apex_pos[1], base_points[1,2] - apex_pos[2]]))) - 45)
-#         f3 = (np.degrees(np.arccos(-(base_points[2,-1] - apex_pos[-1])/np.linalg.norm([base_points[2,0] - apex_pos[0], base_points[2,1] - apex_pos[1], base_points[2,2] - apex_pos[2]]))) - 45)
-
-#         angles = [f1,f2,f3]
-#         if np.min(angles) < 0:
-#           return 100
-
-#         return np.sum(angles)
-
-# base_points = np.array([[ 0.87858421 ,-1.21576715 , 0.28925565],
-#  [ 1.11338913, -1.00516903  ,0.29742363],
-#  [ 0.87235419 ,-0.93263633,  0.18392836]])
-
-
-
-# tensor_coords = generar_tensor_coordenadas(base_points, 1000)
-# print(tensor_coords.shape)
-
-# valores_funcion = np.apply_along_axis(eval_objective_function, axis=1, arr=tensor_coords, base_points=base_points)
-# valores_funcion[np.isnan(valores_funcion)] = 100
-
-# indice_minimo = np.argmin(np.abs(valores_funcion))
-
-# indice_minimo_3d = np.unravel_index(indice_minimo, valores_funcion.shape)
-# punto_optimo = tensor_coords[indice_minimo_3d]
-# print(punto_optimo)
-# check_point(punto_optimo, base_points)
-
-# fig = plt.figure(figsize=(15,15))
-# ax = fig.add_subplot(111, projection="3d")
-# ax.scatter(base_points[:, 0], base_points[:, 1], base_points[:,2], facecolors='none', edgecolors='black')
-# ax.scatter(punto_optimo[0], punto_optimo[1], punto_optimo[2], facecolors='none', edgecolors='green')
-
-# for i in range(3):
-#     plt.plot([base_points[i,0],punto_optimo[0]],[base_points[i,1],punto_optimo[1]],[base_points[i,2],punto_optimo[2]], "yellow")
-
-
-# plt.show()
+import os
 
 def angle(points, ref, plane):
     """
@@ -232,11 +143,12 @@ for p in pairs:
   else:
     new_points = np.vstack((new_points, np.mean([point_1, point_2], axis= 0)))
 
-fig = plt.figure(figsize = (10,10))
-ax = fig.add_subplot(111, projection='3d')
-ax.scatter(*new_points.T, c="blue")
-plt.show()
+# fig = plt.figure(figsize = (10,10))
+# ax = fig.add_subplot(111, projection='3d')
+# ax.scatter(*new_points.T, c="blue")
+# # plt.show()
 
+new_points = new_points[np.argsort(new_points[:, 2])[::1]]
 pnts, dists, indices =  knn(new_points,20)
 
 ref_points = pnts[:,0,:]
@@ -274,64 +186,34 @@ for i,v in enumerate(pnts):
         node_connections = len(nx.to_dict_of_dicts(G)[idx])
         if node_connections > 0 and node_connections <= 6:
             score_array[pos] /= (7-node_connections)
+    uniones[i] = {"points": filtered_points, "point": current_point, "scores": score_array}
 
-    for timer,j in enumerate(np.argsort(score_array)):
-        # if timer == 5:
-        #     break
-        G.add_edge(i,filtered_indices[j])
-        ax.plot([current_point[0], filtered_points[j,0]],[current_point[1], filtered_points[j,1]],[current_point[2], filtered_points[j,2]])
+    # for j in np.argsort(score_array):
+    #     G.add_edge(i,filtered_indices[j])
+    # adj =  nx.adjacency_matrix(G).todense()
+    # print(adj)
+    # np.savez(os.path.join('.', "adjacency_matrix.npz"), nodes=new_points, matrix=adj)
 
+def actualizar(iteration, uniones):
+    print(iteration)
+    ax.view_init(elev=50, azim=iteration) 
+    v = uniones[iteration]
+    for j in np.argsort(v["scores"]):
+        ax.plot([v["point"][0], v["points"][j,0]],[v["point"][1], v["points"][j,1]],[v["point"][2], v["points"][j,2]])
+        # ax.plot([current_point[0], filtered_points[j,0]],[current_point[1], filtered_points[j,1]],[current_point[2], filtered_points[j,2]])
 
-num_iteraiones = 0
-anim = FuncAnimation(fig, partial(actualizar, pnts, angles, dists, indices), repeat= False)
-anim.save('./generacion_uniones.gif', writer='pillow')
+def init():
+    ax.cla()
+    ax.set_box_aspect([1, 1, 1])
+    ax.set_xlim([x_min, x_max])
+    ax.set_ylim([y_min, y_max])
+    ax.set_zlim([z_min, z_max])
+    ax.set_xlabel('X [mm]')
+    ax.set_ylabel('Y [mm]')
+    ax.set_zlabel('Z [mm]')
+    return ax
+
+num_iteraiones = len(uniones)
+anim = FuncAnimation(fig, actualizar, fargs=(uniones,), repeat= False, frames=num_iteraiones, init_func= init)
+anim.save('./generacion_uniones.gif', writer='pillow', fps=30)
 plt.show()
-
-
-
-
-
-# from sklearn.neighbors import NearestNeighbors
-# np.random.seed(1)
-# min_max = min_max_points(points)
-
-# x_min, x_max = flat(min_max[0])
-# y_min, y_max = flat(min_max[1])
-# z_min, z_max = flat(min_max[2])
-
-# pc = np.array([[np.random.uniform(x_min, x_max), np.random.uniform(y_min, y_max), np.random.uniform(z_min, z_max)] for _ in range(5000)])
-# pc = pc[in_volume(pc, points)]
-# all_points = np.concatenate((points, pc), axis=0)
-# nbr = NearestNeighbors(n_neighbors=10, algorithm='ball_tree').fit(all_points)
-# dist, idx = nbr.kneighbors(all_points)
-
-# pairs = []
-# unique_points = set()
-# for i,d in enumerate(dist):
-#   c = np.where(d[1:]<0.1)[0]
-#   if len(c) > 0:
-#     unique_points.add(i)
-#     for j in c:
-#       if (idx[i][c[j]+1], i) not in pairs:
-#         pairs.append((i,idx[i][c[j]+1]))
-#         unique_points.add(idx[i][c[j]+1])
-
-# new_points = all_points[~np.isin(np.arange(len(all_points)), np.array(list(unique_points)))]
-
-# for p in pairs:
-#   point_1,point_2 = all_points[list(p)]
-#   if point_1 in points:
-#     new_points = np.vstack((new_points, point_1))
-
-#   elif point_2 in points:
-#     new_points = np.vstack((new_points, point_2))
-
-#   else:
-#     new_points = np.vstack((new_points, np.mean([point_1, point_2], axis= 0)))
-
-# print(len(new_points))
-# fig = plt.figure(figsize = (10,10))
-# ax = fig.add_subplot(111, projection='3d')
-# ax.scatter(points[:,0], points[:,1], points[:,2], c='red', marker='*')
-# ax.scatter(*new_points.T, c="blue")
-# plt.show()
