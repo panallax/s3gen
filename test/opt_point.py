@@ -8,6 +8,9 @@ import networkx as nx
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.animation import FuncAnimation
 import os
+from scipy.stats.qmc import PoissonDisk
+from collections import Counter
+from scipy.spatial import cKDTree
 
 def angle(points, ref, plane):
     """
@@ -92,128 +95,260 @@ def min_max_points(points):
     """
     return tuple(map(lambda axis: (min(axis), max(axis)), zip(*points)))
 
-m = mesh.Mesh.from_file('../data/Cilindro.stl')
-points = np.unique(m.points.reshape([-1,3]), axis=0)
+def fill_volume(shell_points, r=0.2):
+  min_max = min_max_points(shell_points)
 
-from scipy.stats.qmc import PoissonDisk
-min_max = min_max_points(points)
+  x_min, x_max = flat(min_max[0])
+  y_min, y_max = flat(min_max[1])
+  z_min, z_max = flat(min_max[2])
 
-x_min, x_max = flat(min_max[0])
-y_min, y_max = flat(min_max[1])
-z_min, z_max = flat(min_max[2])
+  radius = r
+  n = 1000
+  all_points = np.zeros([(x_max-x_min)*(y_max-y_min)*(z_max-z_min)*n,3])
+  for k in range(z_min, z_max):
+    for j in range(y_min,y_max):
+      for i in range(x_min, x_max):
+        vect = np.array([i,j,k])
+        engine = PoissonDisk(d=3, radius=radius)
+        sample = engine.random(n)
+        sub_points = sample + vect
+        index_location = int(np.argwhere(np.all(all_points == [0, 0, 0], axis=1))[0])
+        all_points[index_location : index_location + len(sub_points)] = sub_points
 
-radius = 0.3
-n = 1000
-all_points = np.zeros([(x_max-x_min)*(y_max-y_min)*(z_max-z_min)*n,3])
-for k in range(z_min, z_max):
-  for j in range(y_min,y_max):
-    for i in range(x_min, x_max):
-      vect = np.array([i,j,k])
-      engine = PoissonDisk(d=3, radius=radius)
-      sample = engine.random(n)
-      sub_points = sample + vect
-      index_location = int(np.argwhere(np.all(all_points == [0, 0, 0], axis=1))[0])
-      all_points[index_location : index_location + len(sub_points)] = sub_points
+  all_points = all_points[np.argwhere(np.all(all_points != [0, 0, 0], axis=1))]
+  inner_points = all_points[in_volume(all_points, shell_points)]
 
-all_points = all_points[np.argwhere(np.all(all_points != [0, 0, 0], axis=1))]
-inner_points = all_points[in_volume(all_points, points)]
+  all_points = np.concatenate((shell_points, inner_points), axis=0)
+  _, dist,idx = knn(all_points, 10)
 
-all_points = np.concatenate((points, inner_points), axis=0)
-_, dist,idx = knn(all_points, 10)
+  pairs = []
+  unique_points = set()
+  for i,d in enumerate(dist):
+    c = np.where(d < 0.1)[0]
+    if len(c) > 0:
+      unique_points.add(i)
+      for j in c:
+        if (idx[i][c[j]+1], i) not in pairs:
+          pairs.append((i,idx[i][c[j]+1]))
+          unique_points.add(idx[i][c[j]+1])
+
+  new_points = all_points[~np.isin(np.arange(len(all_points)), np.array(list(unique_points)))]
+  for p in pairs:
+    point_1,point_2 = all_points[list(p)]
+    if point_1 in shell_points:
+      new_points = np.vstack((new_points, point_1))
+    elif point_2 in shell_points:
+      new_points = np.vstack((new_points, point_2))
+    else:
+      new_points = np.vstack((new_points, np.mean([point_1, point_2], axis= 0)))
+
+  return new_points
 
 
-pairs = []
-unique_points = set()
-for i,d in enumerate(dist):
-  c = np.where(d < 0.1)[0]
-  if len(c) > 0:
-    unique_points.add(i)
-    for j in c:
-      if (idx[i][c[j]+1], i) not in pairs:
-        pairs.append((i,idx[i][c[j]+1]))
-        unique_points.add(idx[i][c[j]+1])
+def calculate_position(cloud_points, points):
 
-new_points = all_points[~np.isin(np.arange(len(all_points)), np.array(list(unique_points)))]
-for p in pairs:
-  point_1,point_2 = all_points[list(p)]
-  if point_1 in points:
-    new_points = np.vstack((new_points, point_1))
-  elif point_2 in points:
-    new_points = np.vstack((new_points, point_2))
+    distances = np.linalg.norm(cloud_points - points, axis=1)
+    # print(f"in position {np.argsort(distances)[1]}")
+    cloud_points = np.insert(cloud_points, np.argsort(distances)[1], points, axis=0)
+
+    return cloud_points
+
+def generate_point_in_quadrant(center, r, n, quadrant):
+    "https://www.bogotobogo.com/Algorithms/uniform_distribution_sphere.php"
+    if quadrant == 5:
+      theta_range = np.array([0, np.pi*2])
+    else:
+      theta_range =  np.array([np.pi/9, np.pi/2 - np.pi/9]) + (quadrant - 1)*np.pi/2
+
+    #Between 45 and 80 degrees
+    phi_range = np.array([ np.pi/9, np.pi/4])
+    theta = np.random.uniform(*theta_range, n)
+    phi = np.random.uniform(*phi_range, n)
+
+    x = r*np.sin(phi)*np.cos(theta)
+    y = r*np.sin(phi)*np.sin(theta)
+    z = r*np.cos(phi)
+
+    return np.column_stack((x, y, z)) + center
+
+def determinar_cuadrante(punto):
+    if len(punto) == 2:
+      x,y = punto
+    else:
+      x, y, z = punto
+    if x > 0:
+      return 1 if y > 0 else 4
+    else:
+      return 2 if y > 0 else 3
+
+def generate_points(center, points):
+
+  # points = generate_point_in_quadrant(center,1,2, 5)
+  if len(points) > 0:
+    norms = points[:,:2] - center[:2]
+    cuadrantes = list(map(lambda punto: determinar_cuadrante(punto), norms))
+    repes = [n for n, t in Counter(cuadrantes).items() for _ in range(t-1) if t > 1]
   else:
-    new_points = np.vstack((new_points, np.mean([point_1, point_2], axis= 0)))
+    cuadrantes = [1,2,3,4]
 
-# fig = plt.figure(figsize = (10,10))
-# ax = fig.add_subplot(111, projection='3d')
-# ax.scatter(*new_points.T, c="blue")
-# # plt.show()
+  faltan = set(range(1, 5)) - set(cuadrantes)
+  if len(repes) > 0:
+    for i,v in enumerate(cuadrantes):
+      if v in repes:
+        quadrant = faltan.pop()
+        points[i] = generate_point_in_quadrant(center, 1,1,quadrant)
+        cuadrantes[i] = quadrant
+        repes.remove(v)
 
+  if len(cuadrantes) < 4:
+    for i in faltan:
+      points = np.vstack((points, generate_point_in_quadrant(center, 1,1,i)))
+      cuadrantes.append(i)
+
+  return points
+
+def exclude_points(arr, values_to_remove):
+  """
+  Remove the rows of arr that are equal to any of the rows of values_to_remove
+
+  Arguments:
+      arr {np.ndarray} -- Array of points
+      values_to_remove {np.ndarray} -- Array of points to remove
+
+  Returns:
+      np.ndarray -- Array of points without the points of values_to_remove
+
+  """
+  arr = np.array(arr)
+  values_to_remove = np.array(values_to_remove)
+  mask = ~np.all(np.isin(arr,values_to_remove), axis=1)
+  new_arr = arr[mask]
+
+  return new_arr
+
+m = mesh.Mesh.from_file('../data/Cilindro.stl')
+shell_points = np.unique(m.points.reshape([-1,3]), axis=0)
+r = 0.6
+new_points = fill_volume(shell_points, r)
+#Sort from z=0
 new_points = new_points[np.argsort(new_points[:, 2])[::1]]
-pnts, dists, indices =  knn(new_points,20)
+top_points = shell_points[np.where(shell_points[:,-1] > np.max(shell_points[:,-1]) - 0.1)]
+print(len(top_points))
+z = new_points[0][-1]
+z_max = new_points[-1][-1]
+i = 0
 
-ref_points = pnts[:,0,:]
-nbr_points = pnts[:,1:,:]
-plane = np.array([[0,0,1]])
-
-angles = angle(nbr_points,ref_points,plane)
-
-G = nx.Graph()
-G.add_nodes_from(np.arange(len(indices)))
+fixed_points = shell_points
 
 fig = plt.figure(figsize = (10,10))
 ax = fig.add_subplot(111, projection='3d')
-ax.scatter(*pnts.T)
-uniones =  {}
+kd_tree = cKDTree(shell_points)
+while z<z_max:
+# while i <200:
+    # print(i)
+    if (top_points[:, None] == new_points[i]).all(-1).any():
+       break
+    nbrs = NearestNeighbors(algorithm="kd_tree").fit(new_points)
+    d, indices = nbrs.radius_neighbors([new_points[i]], radius=1.3*r, return_distance=True, sort_results=True)
+    points_to_join = []
+    pnts = new_points[indices[0]]
+    dists = d[0][1:]
+    index = indices[0][1:]
+    #Select one point to evaluate
+    # print(pnts)
+    current_point = pnts[0,:]
+    # print("current point: ", current_point)
+    #Filter the neighbours of the point to keep only the ones above it
+    indx_pos_above = np.where(pnts[:,-1] > current_point[-1])
+    #Array of this points
+    points_above = pnts[indx_pos_above]
+    indx_above = indices[0][indx_pos_above]
 
-for i,v in enumerate(pnts):
+    fixed_points_above = points_above[(points_above[:, None] == fixed_points).all(-1).any(-1)]
+    index_fixed_points_above = indx_above[(points_above[:, None] == fixed_points).all(-1).any(-1)]
+    not_fixed_points_above = points_above[~(points_above[:, None] == fixed_points).all(-1).any(-1)]
+    index_not_fixed_points_above = indx_above[~(points_above[:, None] == fixed_points).all(-1).any(-1)]
 
-    current_point = v[0,:]
+    available_quadrants = [1,2,3,4]
 
-    indx_pos = np.where(v[:,-1] > current_point[-1]) #Nos quedamos solo con puntos por encima del de referencia
-    points_above = v[indx_pos]
-    filtered_angles = angles[i][0][np.array(indx_pos) - 1][0] #Angulos con los puntos superiores
-    indx_angles = np.where(np.absolute(filtered_angles) > (45- 0.1)) #Angulos mayores a 44.9
+    if len(fixed_points_above) > 0:
+        for point in fixed_points_above:
+            union_angle = np.arcsin(np.divide(np.matmul(point-current_point, np.array([0,0,1])), np.linalg.norm(point - current_point)))*180/np.pi
+            quadrant = determinar_cuadrante(point - current_point)
+            if union_angle >= 44.9 and quadrant in available_quadrants:
+                available_quadrants.remove(quadrant)
+                fixed_points = np.vstack((fixed_points, point))
+                points_to_join.append(point)
+    # print(f"{len(points_to_join)} fixed points joined, remaining quadrants {available_quadrants}")
+    j = 0
+    while len(available_quadrants) > 0 and j < len(not_fixed_points_above):
+        point = not_fixed_points_above[j]
+        union_angle = np.arcsin(np.divide(np.matmul(point-current_point, np.array([0,0,1])), np.linalg.norm(point - current_point)))*180/np.pi
+        quadrant = determinar_cuadrante(point - current_point)
 
-    filtered_angles = (filtered_angles[indx_angles] - 45)/360 #Normalizamos los angulos
-    filtered_points = points_above[indx_angles] #Puntos que cumplen la condición de angularidad
+        if union_angle >= 44.9:
+            #If the angle is correct and it is in an empty quadrant, it joins
+            if quadrant in available_quadrants:
+                # print(f"union angle: {union_angle} between {point} and current point joined in quadrant {quadrant}")
+                available_quadrants.remove(quadrant)
+                fixed_points = np.vstack((fixed_points, point))
+                points_to_join.append(point)
+            # If the angle is correct but its quadrant is occupied, it is moved to an available quadrant
+            else:
+                destiny_quadrant = available_quadrants[0]
+                new_point = generate_point_in_quadrant(current_point,r,1, destiny_quadrant)[0]
+                if not in_volume(new_point, shell_points):
+                    break
 
-    filtered_dist = (dists[i][np.array(indx_pos) - 1][0][indx_angles] - np.mean(dists))/np.max(dists) #Distancia de los puntos que cumplen la condición 
-                                                                                                    #al punto de refrencia normalizada
-    filtered_indices = indices[i][np.array(indx_pos) - 1][0][indx_angles]  #Indices que cumplen la condición de angularidad
-    score_array = np.absolute(filtered_angles + filtered_dist)
+                new_angle = np.arcsin(np.divide(np. matmul(new_point-current_point, np.array([0,0,1])), np.linalg.norm(new_point - current_point)))*180/np.pi  
+                # print(f"union angle: {union_angle} between {point} and current point joined in quadrant {destiny_quadrant}  as new point {new_point} because quadrant {quadrant} is ocupied, new angle {new_angle}")
+                new_points[index_not_fixed_points_above[j]] = new_point
+                fixed_points = np.vstack((fixed_points, new_point))
+                available_quadrants.remove(destiny_quadrant)
+                points_to_join.append(new_point)
+        #If the angle is not correct, it is moved to an available quadrant with a correct angle
+        else:
+            destiny_quadrant = available_quadrants[0]
+            new_point = generate_point_in_quadrant(current_point,r,1, destiny_quadrant)[0]
+            if not in_volume(new_point, shell_points):
+                break
 
-    for pos,idx in enumerate(filtered_indices):
-        node_connections = len(nx.to_dict_of_dicts(G)[idx])
-        if node_connections > 0 and node_connections <= 6:
-            score_array[pos] /= (7-node_connections)
-    uniones[i] = {"points": filtered_points, "point": current_point, "scores": score_array}
+            new_angle = np.arcsin(np.divide(np. matmul(new_point-current_point, np.array([0,0,1])), np.linalg.norm(new_point - current_point)))*180/np.pi
+            # print(f"union angle: {union_angle} between {point} and current point joined in quadrant {destiny_quadrant}  as new point {new_point} because angle is not correct, new angle {new_angle}")
+            new_points[index_not_fixed_points_above[j]] = new_point
+            fixed_points = np.vstack((fixed_points, new_point))
+            available_quadrants.remove(destiny_quadrant)
+            points_to_join.append(new_point)
 
-    # for j in np.argsort(score_array):
-    #     G.add_edge(i,filtered_indices[j])
-    # adj =  nx.adjacency_matrix(G).todense()
-    # print(adj)
-    # np.savez(os.path.join('.', "adjacency_matrix.npz"), nodes=new_points, matrix=adj)
+        j+=1
+    if len(available_quadrants) > 0:
+    #   print(f"quadrants {available_quadrants} left, generating new points in those quadrants")
+      for quadrant in available_quadrants:
+        new_point = generate_point_in_quadrant(current_point, r,1, quadrant)[0]
+        if not in_volume(new_point, shell_points):
+            continue
+        # print(f"Added new point {new_point}")   
+        new_points = calculate_position(new_points, new_point)
+        
+        fixed_points = np.vstack((fixed_points, new_point))
+        points_to_join.append(new_point)
+    # print(points_to_join)
+    for p in range(len(points_to_join)):
+      ax.plot([current_point[0], points_to_join[p][0]],[current_point[1], points_to_join[p][1]],[current_point[2], points_to_join[p][2]])
 
-def actualizar(iteration, uniones):
-    print(iteration)
-    ax.view_init(elev=50, azim=iteration) 
-    v = uniones[iteration]
-    for j in np.argsort(v["scores"]):
-        ax.plot([v["point"][0], v["points"][j,0]],[v["point"][1], v["points"][j,1]],[v["point"][2], v["points"][j,2]])
-        # ax.plot([current_point[0], filtered_points[j,0]],[current_point[1], filtered_points[j,1]],[current_point[2], filtered_points[j,2]])
+    z = np.max(exclude_points(fixed_points,shell_points)[:,2])
+    # print("points to join: ", points_to_join)
+    # print(z)
+    # print("=================================")
+    # print(len(fixed_points), z)
+    i+=1
 
-def init():
-    ax.cla()
-    ax.set_box_aspect([1, 1, 1])
-    ax.set_xlim([x_min, x_max])
-    ax.set_ylim([y_min, y_max])
-    ax.set_zlim([z_min, z_max])
-    ax.set_xlabel('X [mm]')
-    ax.set_ylabel('Y [mm]')
-    ax.set_zlabel('Z [mm]')
-    return ax
-
-num_iteraiones = len(uniones)
-anim = FuncAnimation(fig, actualizar, fargs=(uniones,), repeat= False, frames=num_iteraiones, init_func= init)
-anim.save('./generacion_uniones.gif', writer='pillow', fps=30)
+for p in new_points:
+   print(p[2])
+print(len(top_points))
+print(i)
+print(len(new_points), len(fixed_points))
+ax.scatter(*fixed_points.T)
 plt.show()
+
+
