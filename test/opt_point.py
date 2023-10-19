@@ -145,11 +145,11 @@ def fill_volume(shell_points, r=0.2):
   return new_points
 
 
-def calculate_position(cloud_points, points):
+def calculate_position(cloud_points, point):
 
-    distances = np.linalg.norm(cloud_points - points, axis=1)
-    # print(f"in position {np.argsort(distances)[1]}")
-    cloud_points = np.insert(cloud_points, np.argsort(distances)[1], points, axis=0)
+    distances = np.abs(cloud_points[:,2] - point[2])
+    print(f"in position {np.argsort(distances)[0]}")
+    cloud_points = np.insert(cloud_points, np.argsort(distances)[0]+1, point, axis=0)
 
     return cloud_points
 
@@ -230,9 +230,12 @@ m = mesh.Mesh.from_file('../data/Cilindro.stl')
 shell_points = np.unique(m.points.reshape([-1,3]), axis=0)
 r = 0.6
 new_points = fill_volume(shell_points, r)
+connections = {}
+
 #Sort from z=0
 new_points = new_points[np.argsort(new_points[:, 2])[::1]]
 top_points = shell_points[np.where(shell_points[:,-1] > np.max(shell_points[:,-1]) - 0.1)]
+bot_points = shell_points[np.where(shell_points[:,-1] < np.min(shell_points[:,-1]) + 0.1)]
 print(len(top_points))
 z = new_points[0][-1]
 z_max = new_points[-1][-1]
@@ -245,7 +248,7 @@ ax = fig.add_subplot(111, projection='3d')
 kd_tree = cKDTree(shell_points)
 while z<z_max:
 # while i <200:
-    # print(i)
+    print(i)
     if (top_points[:, None] == new_points[i]).all(-1).any():
        break
     nbrs = NearestNeighbors(algorithm="kd_tree").fit(new_points)
@@ -255,9 +258,10 @@ while z<z_max:
     dists = d[0][1:]
     index = indices[0][1:]
     #Select one point to evaluate
-    # print(pnts)
     current_point = pnts[0,:]
-    # print("current point: ", current_point)
+    print("current point: ", current_point)
+    connections[i] = {"point": current_point, "connections": {}, "connections_below" :{}}
+
     #Filter the neighbours of the point to keep only the ones above it
     indx_pos_above = np.where(pnts[:,-1] > current_point[-1])
     #Array of this points
@@ -276,6 +280,7 @@ while z<z_max:
             union_angle = np.arcsin(np.divide(np.matmul(point-current_point, np.array([0,0,1])), np.linalg.norm(point - current_point)))*180/np.pi
             quadrant = determinar_cuadrante(point - current_point)
             if union_angle >= 44.9 and quadrant in available_quadrants:
+                connections[i]["connections"].update({quadrant: point})
                 available_quadrants.remove(quadrant)
                 fixed_points = np.vstack((fixed_points, point))
                 points_to_join.append(point)
@@ -290,6 +295,7 @@ while z<z_max:
             #If the angle is correct and it is in an empty quadrant, it joins
             if quadrant in available_quadrants:
                 # print(f"union angle: {union_angle} between {point} and current point joined in quadrant {quadrant}")
+                connections[i]["connections"].update({quadrant: point})
                 available_quadrants.remove(quadrant)
                 fixed_points = np.vstack((fixed_points, point))
                 points_to_join.append(point)
@@ -303,6 +309,7 @@ while z<z_max:
                 new_angle = np.arcsin(np.divide(np. matmul(new_point-current_point, np.array([0,0,1])), np.linalg.norm(new_point - current_point)))*180/np.pi  
                 # print(f"union angle: {union_angle} between {point} and current point joined in quadrant {destiny_quadrant}  as new point {new_point} because quadrant {quadrant} is ocupied, new angle {new_angle}")
                 new_points[index_not_fixed_points_above[j]] = new_point
+                connections[i]["connections"].update({destiny_quadrant: new_point})
                 fixed_points = np.vstack((fixed_points, new_point))
                 available_quadrants.remove(destiny_quadrant)
                 points_to_join.append(new_point)
@@ -316,6 +323,7 @@ while z<z_max:
             new_angle = np.arcsin(np.divide(np. matmul(new_point-current_point, np.array([0,0,1])), np.linalg.norm(new_point - current_point)))*180/np.pi
             # print(f"union angle: {union_angle} between {point} and current point joined in quadrant {destiny_quadrant}  as new point {new_point} because angle is not correct, new angle {new_angle}")
             new_points[index_not_fixed_points_above[j]] = new_point
+            connections[i]["connections"].update({destiny_quadrant: new_point})
             fixed_points = np.vstack((fixed_points, new_point))
             available_quadrants.remove(destiny_quadrant)
             points_to_join.append(new_point)
@@ -327,27 +335,69 @@ while z<z_max:
         new_point = generate_point_in_quadrant(current_point, r,1, quadrant)[0]
         if not in_volume(new_point, shell_points):
             continue
-        # print(f"Added new point {new_point}")   
+        connections[i]["connections"].update({quadrant: new_point})
         new_points = calculate_position(new_points, new_point)
         
         fixed_points = np.vstack((fixed_points, new_point))
         points_to_join.append(new_point)
     # print(points_to_join)
+
+
     for p in range(len(points_to_join)):
       ax.plot([current_point[0], points_to_join[p][0]],[current_point[1], points_to_join[p][1]],[current_point[2], points_to_join[p][2]])
 
     z = np.max(exclude_points(fixed_points,shell_points)[:,2])
     # print("points to join: ", points_to_join)
     # print(z)
-    # print("=================================")
+    print("=================================")
     # print(len(fixed_points), z)
     i+=1
 
-for p in new_points:
-   print(p[2])
-print(len(top_points))
-print(i)
-print(len(new_points), len(fixed_points))
+reversed_points = new_points[np.argsort(new_points[:, 2])[::-1]]
+for i,p in enumerate(reversed_points):
+    if (bot_points[:, None] == p).all(-1).any():
+        break
+    indx_point = np.where(np.all(new_points == p, axis=1))[0][0]
+    if indx_point not in connections.keys():
+        connections[indx_point] = {"point": p, "connections": {}, "connections_below" :{}}
+    nbrs = NearestNeighbors(algorithm="kd_tree").fit(new_points)
+    d, indices = nbrs.radius_neighbors([p], radius=1.3*r, return_distance=True, sort_results=True)
+    pnts = reversed_points[indices[0]]
+    dists = d[0][1:]
+    index = indices[0][1:]
+    #Select one point to evaluate
+    current_point = pnts[0,:]
+    #Filter the neighbours of the point to keep only the ones below it
+    indx_pos_below = np.where(pnts[:,-1] < current_point[-1])
+    #Array of this points
+    points_below = pnts[indx_pos_below]
+    indx_below = indices[0][indx_pos_below]
+    points_to_join = []
+    available_quadrants = [1,2,3,4]
+
+    for point in points_below:
+        union_angle = np.arcsin(np.divide(np.matmul(point-current_point, np.array([0,0,-1])), np.linalg.norm(point - current_point)))*180/np.pi
+        quadrant = determinar_cuadrante(point - current_point)
+        if union_angle >= 44.9 and quadrant in available_quadrants:
+            connections[indx_point]["connections_below"].update({quadrant: point})
+            available_quadrants.remove(quadrant)
+            points_to_join.append(point)
+    for p in range(len(points_to_join)):
+      ax.plot([current_point[0], points_to_join[p][0]],[current_point[1], points_to_join[p][1]],[current_point[2], points_to_join[p][2]])
+
+print(len(top_points), len(new_points), len(fixed_points))
+print(connections)
+
+G = nx.Graph()
+for value in connections.values():
+    tuples_points = list(map(tuple,[value['point']] + list(value.get('connections', {}).values()) + list(value.get('connections_below', {}).values())))
+    G.add_nodes_from(list(map(tuple,tuples_points)))
+    for i in range(1,len(tuples_points)):
+      G.add_edge(tuples_points[0], tuples_points[i])
+
+nodes = list(map(np.array,G.nodes()))
+matrix = nx.adjacency_matrix(G).todense()
+np.savez(os.path.join('.', "adjacency_matrix.npz"), nodes=nodes, matrix=matrix)
 ax.scatter(*fixed_points.T)
 plt.show()
 
