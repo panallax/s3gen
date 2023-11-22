@@ -7,7 +7,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         "networkx",
-        "sklearn",
+        "scikit-learn",
         "numpy-stl",
         "scipy >= 1.11.0",
         "numpy",
