@@ -46,3 +46,12 @@ def plot_Dealunay(points):
     plt.triplot(points[:,0], points[:,1], indices)
     plt.plot(points[:,0], points[:,1], 'o')
     plt.show()
+
+def plot_graph(G):
+    fig = plt.figure(np.random.randint(1000), figsize = (15,15))
+    ax = fig.add_subplot(111, projection='3d')
+    ax.scatter(*np.array(list(G.nodes())).T)
+    for edge in G.edges():
+        ax.plot([edge[0][0], edge[1][0]],[edge[0][1], edge[1][1]],[edge[0][2], edge[1][2]])
+
+    plt.show(block=False)

@@ -22,11 +22,19 @@ def print_dict(tetra_dict):
 
   plt.show()
 
-def adjacency_matrix(points_dict):
-  G = nx.Graph()
-  for i in points_dict.values():
-    G.add_nodes_from(list(map(tuple,np.append(i["base_points"],i["apex"][np.newaxis,:], axis= 0))))
-    for j in i["base_points"]:
-      G.add_edge(tuple(j),tuple(i["apex"]))
+def adjacency_matrix(G):
+  """
+  Compute the adjacency matrix of a graph and the nodes of the graph.
 
-  return list(map(np.array,G.nodes())), nx.adjacency_matrix(G).todense()
+  Arguments:
+      G {networkx.classes.graph.Graph} -- Graph
+  
+  Returns:
+      list -- List of nodes
+      numpy.ndarray -- Adjacency matrix
+  """
+  
+  nodes = list(map(np.array,G.nodes()))
+  matrix = nx.adjacency_matrix(G).todense()
+
+  return nodes, matrix
