@@ -1,2 +1,9 @@
 *.egg-info
 *.pyc
+*.stl
+*.FCStd
+*.FCStd1
+*.pickle
+*.npz
+*.gif
+*.png

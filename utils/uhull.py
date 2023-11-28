@@ -4,7 +4,7 @@ from scipy.spatial import Delaunay
 from scipy.spatial import cKDTree
 from collections import Counter
 from scipy.stats.qmc import PoissonDisk
-from utils import flat, knn, min_max_points
+from utils.unodes import flat, knn, min_max_points
 import networkx as nx
 
 def sample_points(npoints, point, radius):
@@ -233,7 +233,7 @@ def calculate_neighbors_in_node(G, node):
   node = tuple(node)
   return (len(list(nx.neighbors(G, node))))
 
-def decompose_structure(self, shell_points, r):
+def decompose_structure(shell_points, r):
     """
     Decompose the structure in three parts: shell, bottom and top.
     The shell is the points of the mesh in the shell of the mesh.
@@ -250,7 +250,8 @@ def decompose_structure(self, shell_points, r):
         np.ndarray -- Array of points of the top of the mesh
     """
     
-    bot_points = self.points[np.where(shell_points[:,-1] < np.min(self.points[:,-1]) + 0.1)]
-    top_points = self.points[np.where(self.points[:,-1] > np.max(self.points[:,-1]) - 0.1)]
-    points = fill_volume(shell_points, r)[np.argsort(shell_points[:, 2])[::1]]
+    bot_points = shell_points[np.where(shell_points[:,-1] < np.min(shell_points[:,-1]) + 0.1)]
+    top_points = shell_points[np.where(shell_points[:,-1] > np.max(shell_points[:,-1]) - 0.1)]
+    inner_points = fill_volume(shell_points, r)
+    points = inner_points[np.argsort(inner_points[:, 2])[::1]]
     return points, bot_points, top_points

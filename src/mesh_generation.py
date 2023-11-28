@@ -2,19 +2,21 @@ import numpy as np
 np.seterr(all="ignore")
 from utils import in_volume, exclude_points, determinate_quadrant, generate_point_in_quadrant, \
                     angle, calculate_position, adjacency_matrix, calculate_segments_dist, \
-                    calculate_neighbors_in_node, isin, decompose_structure
+                    calculate_neighbors_in_node, isin, decompose_structure, plot_graph
                     
 from sklearn.neighbors import NearestNeighbors
 from scipy.spatial import KDTree
 import os
 import networkx as nx
+import pickle
+from itertools import chain
    
 class MeshGen:
 
     def __init__(self, shell_points, radius, output_path):
         self.shell_points = self.fixed_points =  shell_points
         self.r = radius
-        self.points, self.bot_points, self.top_points = decompose_structure(self.shell_points, self.radius)
+        self.points, self.bot_points, self.top_points = decompose_structure(self.shell_points, radius)
         self.z_max = self.points[-1][-1]
         self.z = self.points[0][-1]
         self.max_global_dist = 0
@@ -27,7 +29,6 @@ class MeshGen:
     def generate_mesh(self):
         i = 0
         while self.z < self.z_max:
-
             if (self.top_points[:, None] == self.points[i]).all(-1).any():
                 break
             nbrs = NearestNeighbors(algorithm="kd_tree").fit(self.points)
@@ -37,7 +38,7 @@ class MeshGen:
 
             #Select one point to evaluate
             current_point = pnts[0,:]
-            # print(f"current point: {current_point} is shell point {isin(shell_points, current_point)}")
+            # print(f"current point: {current_point} is shell point {isin(self.shell_points, current_point)}")
             self.connections[i] = {"point": current_point, "connections": {}, "connections_below" :{}}
 
             #Filter the neighbours of the point to keep only the ones above it
@@ -81,7 +82,7 @@ class MeshGen:
                         if not in_volume(new_point, self.shell_points):
                             break
 
-                        # print(f"union angle: {union_angle} between {point} and current point joined in quadrant {destiny_quadrant}  as new point {new_point} because quadrant {quadrant} is ocupied, new angle {new_angle}")
+                        # print(f"union angle: {union_angle} between {point} and current point joined in quadrant {destiny_quadrant}  as new point {new_point} because quadrant {quadrant} is ocupied")
                         self.__add_point(new_point, index_not_fixed_points_above[j], i, destiny_quadrant, "connections")
                         available_quadrants.remove(destiny_quadrant)
 
@@ -92,7 +93,7 @@ class MeshGen:
                     if not in_volume(new_point, self.shell_points):
                         break
 
-                    # print(f"union angle: {union_angle} between {point} and current point joined in quadrant {destiny_quadrant}  as new point {new_point} because angle is not correct, new angle {new_angle}")
+                    # print(f"union angle: {union_angle} between {point} and current point joined in quadrant {destiny_quadrant}  as new point {new_point} because angle is not correct")
                     self.__add_point(new_point, index_not_fixed_points_above[j], i, destiny_quadrant, "connections")
                     available_quadrants.remove(destiny_quadrant)
 
@@ -108,17 +109,17 @@ class MeshGen:
                         for shell_point in available_nearest_shell_points:
                             if quadrant == determinate_quadrant(shell_point, current_point):
                                 self.__insert_point(shell_point, i, quadrant, "connections")
-
                     else:
                         self.__insert_point(new_point, i, quadrant, "connections")
+
                     # print(f"new point {new_point} generated in quadrant {quadrant}")
 
             # print(f"points joined: {self.points_to_join}")
             local_dist = np.max(np.linalg.norm(self.points_to_join - current_point, axis=1)) if len(self.points_to_join) > 0 else 0
             self.max_global_dist = local_dist if local_dist > self.max_global_dist else self.max_global_dist
-            
             self.z = np.max(exclude_points(self.fixed_points,self.shell_points)[:,2])
             i+=1
+            # print("--------------------------------------------------")
 
         reversed_points = self.points[np.argsort(self.points[:, 2])[::-1]]
         nbrs = NearestNeighbors(algorithm="kd_tree").fit(reversed_points)
@@ -148,12 +149,13 @@ class MeshGen:
                     available_quadrants.remove(quadrant)
 
         self.__generate_graph()
+        # plot_graph(self.G)
         self.__remove_close_edges()
-
+        plot_graph(self.G)
         return self.G
 
     def __remove_close_edges(self):
-
+        segments_to_remove = []
         init_edges = len(self.G.edges())
         nodes = np.array(self.G.nodes()) 
         tree_points = KDTree(nodes)
@@ -172,18 +174,25 @@ class MeshGen:
 
             observable_segments = np.unique(np.array(list(map(lambda x: x[np.argsort(x[:,0])], observable_segments))), axis=0)
             min_nbr_current_segment = min(list(map(lambda x: calculate_neighbors_in_node(self.G,x), [p1,p2])))
+            local_segments_to_remove = []
             for s in observable_segments:
                 if calculate_segments_dist(s, (p1,p2)) < 0.1:
-                    nbr_node = list(map(lambda x: calculate_neighbors_in_node(G,x), s))
-                try:
+                    nbr_node = list(map(lambda x: calculate_neighbors_in_node(self.G,x), s))
                     if min(nbr_node) > min_nbr_current_segment:
-                        self.G.remove_edge(tuple(s[0]), tuple(s[1]))
+                        local_segments_to_remove.append(tuple(map(tuple,s)))
+
                     else:
                         self.G.remove_edge(tuple(p1), tuple(p2))
-                except:
-                    continue
-        
-        print(f"Initially were {init_edges}. {init_edges - len(G.edges())} edges were removed")
+                        local_segments_to_remove.clear()
+                        break
+
+            if len(local_segments_to_remove) >= 1:
+                if  len(set(chain(*local_segments_to_remove))) % 2 != 0:
+                    self.G.remove_edge(tuple(p1), tuple(p2))
+                else:
+                    self.G.remove_edges_from(local_segments_to_remove) 
+
+        print(f"Initially were {init_edges} edges. {init_edges - len(self.G.edges())} edges were removed")
 
     def __add_point(self, point, array_index, connection_idx, quadrant, connection_type,):
         self.points[array_index] = point
@@ -210,9 +219,9 @@ class MeshGen:
             for i in range(1,len(tuples_points)):
                 self.G.add_edge(tuples_points[0], tuples_points[i])
 
-    def save_data(self):
-        np.savez(os.path.join(self.output_path, "tetrahedrons.npz"), tetrahedrons=self.tetrahedrons, free_points=self.free_points, bot_points=self.bot_points, points=self.points)
+    def save_graph(self):
+        pickle.dump(self.G, open(os.path.join(self.output_path, "G.pickle"),"wb"))
 
-    def save_adjacency_matrix(self):    
+    def save_adjacency_matrix(self):   
         nodes, matrix = adjacency_matrix(self.G)
         np.savez(os.path.join(self.output_path, "adjacency_matrix.npz"), nodes=nodes, matrix=matrix)

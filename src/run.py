@@ -11,11 +11,12 @@ parser.add_argument("-o", "--output", help="Destination path for the data", defa
 args = parser.parse_args()
 path = vars(args)["path"]
 output = vars(args)["output"]
-radius = vars(args)["radius"]
+radius = float(vars(args)["radius"])
 
 points = extract_points_from_STL(path)
 mesh = MeshGen(points, radius, output)
 mesh.generate_mesh()
 
 if bool(output):
+    mesh.save_graph()
     mesh.save_adjacency_matrix()
