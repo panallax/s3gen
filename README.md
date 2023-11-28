@@ -6,8 +6,8 @@
 
 - Execute in _src_:
 
-```python run.py [-p data path] [-it max iterations] [-o output path]```
+```python run.py [-p data path] [-r Pore radius] [-o output path]```
 
   * _path_ :  path where the STL file is stored. Default = "../data/Cilindro.stl"
-  * _iteration_: Number maximum of iterations to generate. If not specified it will generate the hole structure.
+  * _radius_: Pore radius desired.
   * _output_ : Folder to save the output. Default = "../data/output"
