@@ -1,5 +1,7 @@
 ### Usage
 
+#### Installation
+
 - Intall package:
 
 ``` pip install -e .```
@@ -11,13 +13,13 @@ FreeCAD is needed for generating the STL output file. To install FreeCAD follow 
 
 *For now, this has only been tested in Ubuntu so the user should follow the instructions [here](https://wiki.freecad.org/Manual:Installing) to install it in other OS.
 
-- Execute in _src_:
+#### Execute in _src_:
 
 ```python run.py```
 
 For clean run first remove any file in ```tmp``` folder.
 
-- Output:
+#### Output:
 
 Each execution creates a folder containing all the output files created. This files are: 
 * pickle file containing the graph generated 
@@ -27,6 +29,6 @@ Each execution creates a folder containing all the output files created. This fi
 
 The name of the output folder will always be the name of the STL file executed plus the time when it was executed. Also, the pickle file is stored in the temporal folder. The program checks if there is a file in the ```tmp``` folder, if there is any, the graph generation will be bypassed and the existing file will be used to generate the STL. If the executions fails anytime, the output folder is removed.
 
-- Incoming updates
+### Incoming updates
 
 Currently the way that the STL is generated is not he optimal one but some issues realated to lib versions need to be fixed for testing and upgrading it. It is on work.
