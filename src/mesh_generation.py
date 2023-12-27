@@ -10,10 +10,10 @@ import os
 import networkx as nx
 import pickle
 from itertools import chain
-   
+
 class MeshGen:
 
-    def __init__(self, shell_points, radius, output_path):
+    def __init__(self, shell_points, radius, output_path, tmp_path):
         self.shell_points = self.fixed_points =  shell_points
         self.r = radius
         self.points, self.bot_points, self.top_points = decompose_structure(self.shell_points, radius)
@@ -24,9 +24,11 @@ class MeshGen:
         self.kd_tree = KDTree(self.shell_points)
         self.G = nx.Graph()
         self.output_path = output_path
+        self.tmp_path = os.path.join("..", tmp_path)
 
 
     def generate_mesh(self):
+
         i = 0
         while self.z < self.z_max:
             if (self.top_points[:, None] == self.points[i]).all(-1).any():
@@ -155,7 +157,6 @@ class MeshGen:
         return self.G
 
     def __remove_close_edges(self):
-        segments_to_remove = []
         init_edges = len(self.G.edges())
         nodes = np.array(self.G.nodes()) 
         tree_points = KDTree(nodes)
@@ -221,6 +222,7 @@ class MeshGen:
 
     def save_graph(self):
         pickle.dump(self.G, open(os.path.join(self.output_path, "G.pickle"),"wb"))
+        pickle.dump(self.G, open(os.path.join(self.tmp_path, "G.pickle"),"wb"))
 
     def save_adjacency_matrix(self):   
         nodes, matrix = adjacency_matrix(self.G)

@@ -61,7 +61,7 @@ def extract_points_from_STL(file):
     Returns:
         np.array: coordinates of the points.
     """
-    m = mesh.Mesh.from_file(file)
+    m = mesh.Mesh.from_file("../" + file)
     points = np.unique(m.points.reshape([-1,3]), axis=0)
     
     return points

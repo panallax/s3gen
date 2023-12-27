@@ -1,22 +1,26 @@
-import argparse
 from mesh_generation import MeshGen
-from utils import extract_points_from_STL
-parser = argparse.ArgumentParser(description="Mesh generation",
-                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument("-p", "--path", help="Path for the data", default= "../data/Cilindro.stl")
-parser.add_argument("-r", "--radius", help="Pore radius", default= 0.5)
-parser.add_argument("-o", "--output", help="Destination path for the data", default="../data/output")
+from utils import extract_points_from_STL, parse_ouput_folfer, parsed_path
+from stl_generation import STLGen
+import config
+import os
 
+try:
+    output_path = parse_ouput_folfer(config.STLFILE, config.OUTPUTPATH)
+    points = extract_points_from_STL(config.STLFILE)
 
-args = parser.parse_args()
-path = vars(args)["path"]
-output = vars(args)["output"]
-radius = float(vars(args)["radius"])
+    if len(os.listdir(parsed_path(config.TMPPATH))) > 0:
+        stl = STLGen(parsed_path(config.TMPPATH), output_path)
+        stl.generate_stl()
+        exit()
 
-points = extract_points_from_STL(path)
-mesh = MeshGen(points, radius, output)
-mesh.generate_mesh()
-
-if bool(output):
+    mesh = MeshGen(points, config.PORERADIUS, output_path, config.TMPPATH)
+    mesh.generate_mesh()
     mesh.save_graph()
     mesh.save_adjacency_matrix()
+
+    stl = STLGen(output_path, output_path)
+    stl.generate_stl()
+
+except Exception as e:
+    print(e)
+    os.rmdir(output_path)

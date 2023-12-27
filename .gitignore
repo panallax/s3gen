@@ -7,3 +7,4 @@
 *.npz
 *.gif
 *.png
+__pycache__/

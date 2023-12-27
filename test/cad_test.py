@@ -1,98 +1,63 @@
-# import FreeCAD as App
-# import Part
+import sys
+# FREECADPATH = "/usr/lib/freecad-python3/lib"
+FREECADPATH = "/lib/freecad-source/build/lib"
 
-def create_cylinder_between_points(doc, point1, point2, diameter):
-    cylinder = doc.addObject("Part::Cylinder", "Cylinder")
-    cylinder.Radius = diameter / 2.0
-    cylinder.Height = (point2 - point1).Length
-    cylinder.Placement.Base = point1
+sys.path.append(FREECADPATH)
+import FreeCAD as App
+import Part
+import numpy as np
+import pickle
+import time
+import Mesh
+
+def create_cylinder_between_points(point1, point2, diameter):
+    delta = point2.sub(point1)
+    cylinder = Part.makeCylinder(diameter / 2.0, delta.Length, point1, delta)
+
     return cylinder
 
-def create_sphere_at_point(doc, center, radius,i):
-    sphere = doc.addObject("Part::Sphere", "Sphere"+i)
-    sphere.Radius = radius
-    sphere.Placement.Base = center
+def create_sphere_at_point(center, radius):
+    sphere = Part.makeSphere(radius, center)
+
     return sphere
 
-def fillet_edges(obj, radius):
-    if obj:
-        fillet = obj.newObject("Part::Fillet", "Fillet")
-        fillet.Edges = [obj.Shape.Edges[i] for i in range(len(obj.Shape.Edges))]
-        fillet.Radius = radius
-        return fillet
-    else:
-        return None
+def batchfuse(objs, nbatch):
+    n  = len(objs)
+    inds = [i* int(n/nbatch) for i in range(nbatch +1)]
+
+    inds[-1] = max(inds[-1], n)
+    base = objs[0].fuse(objs[1:inds[1]])
+    print(f' 0 : {inds[1]}')
+    for j in range(1, len(inds)-1):
+        base = base.fuse(objs[inds[j]:inds[j+1]])
+        print(f' {inds[j]} : {inds[j+1]}')
+
+    return base
 
 def main():
 
-    import sys
-    FREECADPATH = "/usr/lib/freecad-python3/lib"
 
-    sys.path.append(FREECADPATH)
-    import FreeCAD as App
-    import Part
-    import numpy as np
-    import pickle
-    nodes = pickle.load(open('filename.pickle', 'rb'))
-    
-    doc = App.newDocument()
+    G = pickle.load(open('../data/output/G.pickle', 'rb'))
+    doc =  App.newDocument()
 
-    for n in nodes:
-        c = Part.makeSphere(0.01, App.Vector(n))
+    objs = []
+    for n in G.nodes():
+        objs.append(create_sphere_at_point(App.Vector(*n), 0.015))
 
-    # Part.show(c)
-    # doc.addObject("Part::Cylinder", "cube").Shape = c
-    # c1 = Part.makeCylinder(1, 10, App.Vector(0, 0, 0), App.Vector(1, 0, 0))
-    # # Part.show(c1)
-    # # doc.addObject("Part::Cylinder", "cube1").Shape = c1
-    # c2 = Part.makeSphere(2, App.Vector(1, 0, 0))
-    # # c3 = Part.makeSphere(2, App.Vector(1, 2, 5))
-    # # Part.show(c2)
-    # a = c2.multiFuse([c,c1])
-    # Part.show(a)
-    # a.exportStl("test.stl",0.01)
+    for e in G.edges():
+        objs.append(create_cylinder_between_points(App.Vector(*e[0]), App.Vector(*e[1]), 0.01))
 
-    # c = doc.addObject("Part::Cylinder", "cylinder")
-    # c.Radius = 0.1
-    # c.Height = 10
-    # c.Placement = App.Placement(App.Vector(-1, 0, 0), App.Rotation(App.Vector(1, 0, 1),90))
-
-    # c2 = doc.addObject("Part::Sphere", "sphere")
-    # c2.Radius = 0.1
-    # c2.Placement = App.Placement(App.Vector(1, 0, 0), App.Rotation(App.Vector(0, 0, 1), 0))
-
-    # obs = (c,c1,c2)
-    # print(obs)
-    # doc.addObject("Part::MultiFuse", "MultiFuse").Shapes = doc.findObjects()  
-    # doc.Refine = True
-
-    # cylinder1 = create_cylinder_between_points(doc, App.Vector(0, 0, 0), App.Vector(1, 1, 1), 0.2)
-    # sphere1 = create_sphere_at_point(doc, App.Vector(0,0,0), 0.3, i="1")
-    # sphere1 = create_sphere_at_point(doc, App.Vector(0,0,0), 0.3, i="2")
-    # doc.addObject("Part::Fuse", "Fusion")
-    # doc.Fusion.Base = App.activeDocument().Sphere1
-    # doc.Fusion.Tool = App.activeDocument().Cylinder
-    # doc.addObject("Part::Fillet", "Fillet")
-    # doc.Fillet.Base = App.activeDocument().Fusion
-    # fil = []
-    # for i in doc.findObjects():
-                             
-    #     print(i.Label)
-    # print(doc.getObjectsByLabel("Cylinder")[0].Shape.Edges[0].values())
-
-    # for i in range(len(App.activeDocument().Fusion.Shape.Edges)):
-    #     print("AQAAa")
-    #     print((App.activeDocument().Fusion.Shape.Edges[i]))
-    #     fil.append((App.activeDocument().Fusion.Shape.Edges[i], 0.1))
-    # doc.Fillet.Edges = fil
-    # doc.Fillet.Edges = [(App.activeDocument().Fusion.Shape.Edges[i], 0.1) for i in range(len(App.activeDocument().Fusion.Shape.Edges))]
+    # sortedobjs = sorted(objs, key = lambda obj : obj.CenterOfGravity.z)
+    objsShapes = list(map(lambda obj : Part.Shape(obj), objs))
+    final_shape = Part.makeCompound(objsShapes)
+    Part.show(final_shape, "final_shape")
+    # a = Mesh.meshFromShape(final_shape, LinearDeflection=0.01, AngularDeflection=0.01)
+    # a.write('test.stl')
+    # final_shape.exportStl( 'test.stl',0.05)
 
 
-
-
-    # Guardar el documento
     doc.recompute()
-    doc.saveAs("fillet_example.FCStd")
+    doc.saveAs("fillet_exampleb.FCStd")
 
 if __name__ == "__main__":
     main()
