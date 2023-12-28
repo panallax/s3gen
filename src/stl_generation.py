@@ -5,6 +5,7 @@ import os
 sys.path.append(config.FREECADPATH)
 import FreeCAD as App
 import Part
+# import Part, MeshPart
 
 class STLGen():
 
@@ -40,7 +41,8 @@ class STLGen():
         final_shape = Part.makeCompound(objsShapes)
         Part.show(final_shape, "final_shape")
         doc.recompute()
-        
+        # mesh = MeshPart.meshFromShape(final_shape, LinearDeflection=0.01, AngularDeflection=0.01)
+        # mesh.write(os.path.join(self.output_path, "mesh.stl"))   
         final_shape.exportStl(os.path.join(self.output_path, "mesh.stl"), 0.05)
         doc.saveAs(os.path.join(self.output_path,"Part.FCStd"))
 

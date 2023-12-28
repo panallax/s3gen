@@ -2,13 +2,14 @@ from mesh_generation import MeshGen
 from utils import extract_points_from_STL, parse_ouput_folfer, parsed_path
 from stl_generation import STLGen
 import config
+from glob import glob
 import os
 
 try:
     output_path = parse_ouput_folfer(config.STLFILE, config.OUTPUTPATH)
     points = extract_points_from_STL(config.STLFILE)
-
-    if len(os.listdir(parsed_path(config.TMPPATH))) > 0:
+   
+    if len(glob(f"{parsed_path(config.TMPPATH)}/*.pickle")) > 0:
         stl = STLGen(parsed_path(config.TMPPATH), output_path)
         stl.generate_stl()
         exit()
