@@ -29,6 +29,3 @@ Each execution creates a folder containing all the output files created. This fi
 
 The name of the output folder will always be the name of the STL file executed plus the time when it was executed. Also, the pickle file is stored in the temporal folder. The program checks if there is a file in the ```tmp``` folder, if there is any, the graph generation will be bypassed and the existing file will be used to generate the STL. If the executions fails anytime, the output folder is removed.
 
-### Incoming updates
-
-Currently the way that the STL is generated is not he optimal one but some issues realated to lib versions need to be fixed for testing and upgrading it. It is on work.
