@@ -36,7 +36,7 @@ def angle(points, ref, plane):
     """
 
     if len(points.shape) <= 2:
-      norm_product = np.linalg.norm(points-ref, axis=1)
+      norm_product = np.linalg.norm(points-ref)
       return np.arcsin(np.divide(np. matmul(points-ref, plane), norm_product))*180/np.pi
     plane_vecs = np.tile(np.array(plane).T, (ref.shape[0],1,1))
     norm_product = np.reshape(np.linalg.norm(points-ref[:,np.newaxis], axis=2), (ref.shape[0], points.shape[1],1))

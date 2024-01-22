@@ -91,7 +91,7 @@ def exclude_points(arr, values_to_remove):
   """
   arr = np.array(arr)
   values_to_remove = np.array(values_to_remove)
-  mask = ~np.all(np.isin(arr,values_to_remove), axis=1)
+  mask = ~(arr[:, None] == values_to_remove).all(-1).any(-1)
   new_arr = arr[mask]
   
   return new_arr
@@ -145,7 +145,8 @@ def generate_point_in_quadrant(center, r, n, quadrant, seed=1):
     if quadrant == 5:
       theta_range = np.array([0, np.pi*2])
     else:
-      theta_range =  np.array([np.pi/9, np.pi/2 - np.pi/9]) + (quadrant - 1)*np.pi/2
+      #From 10 to 80 degrees
+      theta_range =  np.array([np.pi/18, np.pi/2 - np.pi/18]) + (quadrant - 1)*np.pi/2
 
     #Between 45 and 80 degrees
     phi_range = np.array([ np.pi/9, np.pi/4])
@@ -156,7 +157,10 @@ def generate_point_in_quadrant(center, r, n, quadrant, seed=1):
     y = r*np.sin(phi)*np.sin(theta)
     z = r*np.cos(phi)
 
-    return np.column_stack((x, y, z)) + center
+    if n == 1:
+      return np.squeeze(np.column_stack((x, y, z)) + center)
+    else:
+      return np.column_stack((x, y, z)) + center
 
 
 def fill_volume(shell_points, r=0.2):
@@ -199,7 +203,7 @@ def fill_volume(shell_points, r=0.2):
     pairs = []
     unique_points = set()
     for i,d in enumerate(dist):
-        c = np.where(d < 0.1)[0]
+        c = np.where(d < 0.2)[0]
         if len(c) > 0:
             unique_points.add(i)
             for j in c:
@@ -245,7 +249,7 @@ def decompose_structure(shell_points, r):
         r {float} -- Radius of the Poisson Disk Sampling algorithm (default: {0.2})
 
     Returns:
-        np.ndarray -- Array of points of the shell of the mesh
+        np.ndarray -- Array of points of the shell of the mesh and inner ones.
         np.ndarray -- Array of points of the bottom of the mesh
         np.ndarray -- Array of points of the top of the mesh
     """

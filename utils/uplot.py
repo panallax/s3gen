@@ -53,5 +53,7 @@ def plot_graph(G):
     # ax.scatter(*np.array(list(G.nodes())).T)
     for edge in G.edges():
         ax.plot([edge[0][0], edge[1][0]],[edge[0][1], edge[1][1]],[edge[0][2], edge[1][2]])
-
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_zlabel("z")
     plt.show()

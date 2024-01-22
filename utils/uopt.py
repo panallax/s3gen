@@ -195,6 +195,18 @@ def min_dist(points,point):
   return points[np.argmin(np.linalg.norm(points-point, axis=1))]
 
 def join_hull_and_shell(tetra_dict, points, shell):
+  """ Join the hull and the shell of the triangulation.
+
+  Arguments:
+      tetra_dict {dict} -- Dictionary of tetrahedrons
+      points {np.ndarray} -- Array of points
+      shell {np.ndarray} -- Array of points of the shell
+
+  Returns:
+      np.ndarray -- Array of points with the shell
+      dict -- Dictionary of tetrahedrons with the shell
+  
+  """
   inner_points = points[:,:2]
   dea = Delaunay(inner_points)
   indices = dea.convex_hull
