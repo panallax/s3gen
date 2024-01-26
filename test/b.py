@@ -1,17 +1,90 @@
 import numpy as np
 np.seterr(all="ignore")
-from stl import mesh
-from sklearn.neighbors import NearestNeighbors
-# from utils import plot
 import matplotlib.pyplot as plt
-from scipy.spatial import Delaunay, cKDTree
-from scipy.spatial.distance import pdist, squareform
-import itertools
+from scipy.spatial import Delaunay, KDTree
+from scipy.spatial.distance import pdist, squareform, cdist
 import config
-from utils import extract_points_from_STL, parsed_path, angle
+from utils import extract_points_from_STL, parsed_path, angle, isin, calculate_segments_dist
 import networkx as nx
 import pickle
 import os
+from shapely.geometry import Polygon
+from shapely.ops import polylabel
+
+
+def inner_colisions(G, D, node, point):
+    C = nx.compose(G,D)
+    
+    if tuple(node) not in C:
+        return False
+    
+    s1 = np.linspace(node, point, 20)
+    for nbr in C.neighbors(tuple(node)):
+        s2 = np.linspace(node, np.array(nbr),20)
+        if (np.min(cdist(s1,s2), axis=0) < 0.1).all():
+            return True
+    return False
+
+
+def get_observable_segments(G, D, origin, point,d):
+    C = nx.compose(G,D)
+    nodes = np.array(C.nodes())
+    tree_points = KDTree(nodes)
+    p1,p2 =  origin, point
+    mid_point = (p1+p2)/2
+    observable_points = np.unique(np.concatenate([x[1:] for x in tree_points.query_ball_point([p1,p2,mid_point], 2*d, workers= -1)], dtype= int, casting= "unsafe"))            
+
+    valid_points = exclude_points(nodes[observable_points],[p1,p2, mid_point])
+    observable_segments = []
+    for valid_point in valid_points:
+        point_nodes = C.neighbors(tuple(valid_point))
+        for n in point_nodes:
+            if not isin(np.array([p1,p2]), np.array(n)).any() and isin(nodes[observable_points], np.array(n)).any():
+                observable_segments.append(np.array([valid_point,n]))
+
+    observable_segments = np.unique(np.array(list(map(lambda x: x[np.argsort(x[:,0])], observable_segments))), axis=0)
+
+    return observable_segments
+
+def check_connection(G, D, origin, point, d):
+
+    if angle(origin, point, np.array([0,0,-1])) < 44:
+        return False
+    
+    if len(G.nodes()) < 3:
+        return True
+    
+    colisions = inner_colisions(G, D, origin, point)
+    if colisions:
+        return False
+    
+    observable_segments = get_observable_segments(G, D, origin, point,d)
+    for s in observable_segments:
+        d = calculate_segments_dist(s, (origin, point))
+        if d < 0.1:
+            return False
+        
+    return True
+
+
+def shell_graph(D, points, d):
+    bot_points = points[np.where(points[:,-1] < np.min(points[:,-1]) + 0.1)]
+    top_points = points[np.where(points[:,-1] > np.max(points[:,-1]) - 0.1)]
+    lateral = exclude_points(points, bot_points)
+    lateral = exclude_points(lateral, top_points)
+    lateral = lateral[np.argsort(lateral[:, 2])[::1]]
+    kd_tree = KDTree(lateral)
+
+    G = nx.Graph()
+    for point in lateral:
+        a = np.array(kd_tree.query_ball_point(point, 2*d))
+        points_above =  lateral[a[np.where(lateral[a][:,-1] > point[-1])]]
+        for i in points_above:
+            if check_connection(G, D, point, i, d):
+                G.add_edge(tuple(point), tuple(i))
+
+    return G
+
 
 def generate_coords_tensor(n, base_points) -> np.ndarray:
 
@@ -98,7 +171,7 @@ def remove_closer_points(tetra_dict, points, shell_points):
   points = np.unique(points, axis=0)
   points_pr = points[:,:2]
   dists = squareform(pdist(points_pr))
-  closer = np.where((dists <= 0.1) & (dists>0))
+  closer = np.where((dists <= 0.15) & (dists>0))
   groups = join_paths(list(zip(*closer)))
 
   if len(groups) != 0:
@@ -107,8 +180,7 @@ def remove_closer_points(tetra_dict, points, shell_points):
       g = np.array(g)
       check_shell = (points_pr[g][:,None] == shell_points[:,:2]).all(-1).any(-1)
       if check_shell.any():
-        print("AAAA")
-        shell_point = points_pr[g][np.nonzero(check_shell)][0]
+        shell_point = points[g][np.nonzero(check_shell)][0]
         indx_to_delete.extend(np.delete(g, np.nonzero(check_shell), axis=0).tolist())
         # bot_points_pr = np.delete(points[g],np.nonzero(check_shell), axis=0)
         for p in np.delete(points_pr[g],np.nonzero(check_shell), axis=0):
@@ -122,7 +194,7 @@ def remove_closer_points(tetra_dict, points, shell_points):
           tetra_dict = update_tetrahedrons_dict(tetra_dict, pt, new_point)
 
     spaced_points = np.delete(points, indx_to_delete, axis=0)
-    
+
     return tetra_dict, spaced_points
   else:
     return tetra_dict, points
@@ -140,7 +212,7 @@ def in_volume(p, hull):
     return hull.find_simplex(p) >= 0
 
 def caracteristic_distsance(points):
-    kd_tree = cKDTree(points)
+    kd_tree = KDTree(points)
     total_dist = 0.0
     for point in points:
         dist,_ = kd_tree.query(point, k=2)
@@ -185,11 +257,17 @@ def join_paths(list_of_tuples):
 
 def print_dict(tetra_dict):
 
+  # for k,v in tetra_dict.items():
+  #   print(k,v)
+
   fig = plt.figure(figsize=(15,15))
   ax = fig.add_subplot(111, projection="3d")
-  for elem in tetra_dict.values():
-    ax.scatter(elem["base_points"][:, 0], elem["base_points"][:, 1], elem["base_points"][:,2], facecolors='none', edgecolors='black')
-    ax.scatter(elem["apex"][0], elem["apex"][1], elem["apex"][2], facecolors='none', edgecolors='green')
+  for k,elem in tetra_dict.items():
+    try:
+      ax.scatter(elem["base_points"][:, 0], elem["base_points"][:, 1], elem["base_points"][:,2], facecolors='none', edgecolors='black')
+      ax.scatter(elem["apex"][0], elem["apex"][1], elem["apex"][2], facecolors='none', edgecolors='green')
+    except:
+       print(k,elem)
     for i in range(len(elem["base_points"])):
         plt.plot([elem["base_points"][i,0],elem["apex"][0]],[elem["base_points"][i,1],elem["apex"][1]],[elem["base_points"][i,2],elem["apex"][2]], "blue")
 
@@ -209,7 +287,7 @@ def merge_sorted_simplices(s1, s2):
     nocomm_val = s2[np.setdiff1d(np.arange(len(s2)), np.where(np.isin(s2, s1)))]
     positions = np.where((comm_val[:,None] == s1).any(0))[0]
     rp =np.where((comm_val[:,None] == s2).any(0))[0]
-    
+
     if len(rp) == len(s1):
       return s2
     elif len(positions) == len(s2):
@@ -246,7 +324,7 @@ def tessellate_points(inital_len, points):
   sorted_simplices = list(simplices[sorted_areas_idx])
   sorted_dea = list(dea[sorted_areas_idx])
   initial_len = len(sorted_simplices)
-  print(initial_len)
+
   # print(sorted_dea)
 
   while len(sorted_simplices) > inital_len:
@@ -276,7 +354,7 @@ def tessellate_points(inital_len, points):
     sorted_simplices.insert(pos, merged_simplex)
     sorted_dea.insert(pos, merged_dea)
 
-  print(len(sorted_dea))
+  # print(len(sorted_dea))
   return sorted_dea
 
 
@@ -313,28 +391,66 @@ def abc(base_points, apex_pos):
 def dict_to_graph(lateral, dict):
   G = nx.Graph()
 
-  kd_tree = cKDTree(lateral)
-  for point in lateral:
-      a = kd_tree.query(point, k=10)[1][1:]
-      points_above =  lateral[a[np.where(lateral[a][:,-1] > point[-1])]]
-      joined = 0
-      for i in points_above:
-          if angle(i, point, np.array([0,0,1])) > 44 and joined < 2:
-              joined +=1
-              G.add_edge(tuple(point), tuple(i))
-  
+  # kd_tree = KDTree(lateral)
+  # for point in lateral:
+  #     a = kd_tree.query(point, k=10)[1][1:]
+  #     points_above =  lateral[a[np.where(lateral[a][:,-1] > point[-1])]]
+  #     joined = 0
+  #     for i in points_above:
+  #         if angle(i, point, np.array([0,0,1])) > 44 and joined < 2:
+  #             joined +=1
+  #             G.add_edge(tuple(point), tuple(i))
+
   for v in dict.values():
     for i in v["base_points"]:
       G.add_edge(tuple(i), tuple(v["apex"]))
 
   return G
 
+def find_poi(points):
+
+  points_pr = points[:,:2]
+  z_coord = np.mean(points[:,-1])
+  pares= tuple([tuple(x) for x in points_pr])
+  try:
+    polygon = Polygon(pares)
+  except:
+    aux = np.array([points[0]])
+    for p in aux:
+      if not ((aux[:,None] == p).all(-1).any()):
+        aux = np.vstack((aux,p))
+    pares = tuple([tuple(x) for x in aux[:,:2]])
+    polygon = Polygon(pares)
+  
+  point = polylabel(polygon, tolerance= 0.05)
+  x = np.reshape(point.xy, (2,))
+  return np.hstack((x,z_coord))
+
+def aaaa(points, dea, opt, ss):
+  fig, ax = plt.subplots(figsize=(10,10))
+  for d in dea:
+    # pares = alpha_shape_edges(points[d],0.3)
+    # lista_puntos = list(sorted(points[d], key=lambda p: polar_angle_sort(p, np.mean(points[d], axis=0))))
+    points_simplex = points[d]
+    pares_consecutivos = [(points_simplex[i], points_simplex[(i + 1) % len(points_simplex)]) for i in range(len(points_simplex))]
+    for par in pares_consecutivos:
+        x_values = [par[0][0], par[1][0]]
+        y_values = [par[0][1], par[1][1]]
+        ax.plot(x_values, y_values, marker='o', color="green")
+  plt.scatter(*points.T, color = "blue")
+  plt.scatter(*np.array(opt)[:,:2].T, color="black")
+  plt.scatter(*np.array(ss)[:,:2].T, color="red")
+  ax.set_aspect('equal', adjustable='datalim')
+
+  # Mostrar el gráfico
+  plt.show()
+
 points = extract_points_from_STL(config.STLFILE)
 bot_points = points[np.where(points[:,-1] < np.min(points[:,-1]) + 0.1)]
 top_points = points[np.where(points[:,-1] > np.max(points[:,-1]) - 0.1)]
 free_points = exclude_points(points, bot_points)
 lateral = exclude_points(free_points, top_points)
-kd_tree = cKDTree(points)
+kd_tree = KDTree(points)
 d = caracteristic_distsance(points)
 tetrahedrons = {}
 aux = {}
@@ -342,32 +458,38 @@ reached_top = False
 iteration = 0
 
 while not reached_top:
-# for _ in range(4):
+# for _ in range(3):  
   aux = {}
-
+  ss = []
   optimal_points = []
   if iteration != 0: 
+    print(f"iteration {iteration}")
     # TODO: Mejorar esta función
     shell_points = z_shell_points(points, bot_points, d)
     tetrahedrons, bot_points = remove_closer_points(tetrahedrons, bot_points, shell_points)
     bot_points_pr = bot_points[:,:2]
     simplices = tessellate_points(initial_len, bot_points_pr)
-    plot_tessellation(bot_points_pr,simplices)
+    # plot_tessellation(bot_points_pr,simplices)
 
   else:
+    # print(len(bot_points))
     bot_points_pr = bot_points[:,:2]
     simplices = Delaunay(bot_points_pr).simplices
     initial_len = len(simplices)
-    plt.triplot(bot_points_pr[:,0], bot_points_pr[:,1], simplices)
-    plt.plot(bot_points_pr[:,0], bot_points_pr[:,1], 'o')
-    plt.show()
+    # plt.triplot(bot_points_pr[:,0], bot_points_pr[:,1], simplices)
+    # plt.plot(bot_points_pr[:,0], bot_points_pr[:,1], 'o')
+    # plt.show()
 
-  print(len(simplices))
   for i,indice in enumerate(simplices):
-      # Obtain the base points from triangulation
+      # Obtain the base points from tessellation
       base_points = bot_points[indice]
       found = False
-      optimal_point = np.mean(base_points,axis=0)
+      ss.append(np.mean(base_points,axis=0))
+      try:
+        optimal_point = find_poi(base_points)
+      except:
+        optimal_point = np.mean(base_points,axis=0)
+
       while not found:
         optimal_point[2] += 0.05
         if abc(base_points, optimal_point):
@@ -376,13 +498,14 @@ while not reached_top:
       if optimal_point[-1] >= np.max(points[:,-1]):
           # TODO: implementar función que busque puntos del top a los que anclarse
           reached_top = True
+
       else:
         if not in_volume(optimal_point, points):
           optimal_point = points[kd_tree.query(optimal_point, 2)[1][1]]
           # Add the optimal point to the list of optimal points if it is inside the volume
         optimal_points.append(optimal_point)
-        tetrahedrons[str(iteration) + str(i)] = {"base_points": base_points, "apex": optimal_point}
-        aux[str(iteration) + str(i)] = {"base_points": base_points, "apex": optimal_point}
+        tetrahedrons[f"{iteration}_{i}"] = {"base_points": base_points, "apex": optimal_point}
+        aux[f"{iteration}_{i}"] = {"base_points": base_points, "apex": optimal_point}
         # if iteration != 0:
         #   print(base_points)
         #   print(optimal_point)
@@ -395,28 +518,42 @@ while not reached_top:
         #   plt.show()
 # print(punto_optimo)
       # check_point(punto_optimo, base_points)
+
+ 
+  
+    #  print(optimal_points)
+  # aaaa(bot_points_pr,simplices, optimal_points, ss)
+
+  # for k,v in tetrahedrons.items():
+  #   if k.startswith("1"):
+  #     print(k,v)
   shell = z_shell_points(points, optimal_points, d)
   # free_points = exclude_points(free_points, shell)
-
   # new_points, new_dict = remove_short_edges(optimal_points, tetrahedrons, d/2)
   joined_points, new_dict = join_hull_and_shell(tetrahedrons, optimal_points, shell)
-  # joined_points, new_dict = join_hull_and_shell(aux, optimal_points, shell)
+  _, aa = join_hull_and_shell(aux, optimal_points, shell)
   joined_points = np.append(joined_points, shell, axis=0)
 
   bot_points = np.array(joined_points)
+  # print(len(bot_points))
+  # print("------")
+
   tetrahedrons = new_dict
-  # aux = new_dict
+  aux = aa
   iteration += 1
-
-  print_dict(tetrahedrons)
-  bot_points_pr = bot_points[:,:2]
-  indices = Delaunay(bot_points_pr).simplices
-  plt.triplot(bot_points_pr[:,0], bot_points_pr[:,1], indices)
-  plt.plot(bot_points_pr[:,0], bot_points_pr[:,1], 'o')
-  plt.show()
+  # for k,v in tetrahedrons.items():
+  #     if k.startswith("1"):
+  #       print(k,v)
+  # print_dict(aux)
 
 
+  # indices = Delaunay(bot_points_pr).simplices
+  # plt.triplot(bot_points_pr[:,0], bot_points_pr[:,1], indices)
+  # plt.plot(bot_points_pr[:,0], bot_points_pr[:,1], 'o')
+  # plt.show()
 
-
-G = dict_to_graph(lateral,tetrahedrons)
+# print_dict(tetrahedrons)
+D = dict_to_graph(lateral,tetrahedrons)
+S = shell_graph(D, points, d)
+G = nx.compose(D,S)
 pickle.dump(G, open(os.path.join(parsed_path(config.TMPPATH), "G.pickle"),"wb"))

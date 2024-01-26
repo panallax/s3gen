@@ -14,5 +14,6 @@ setup(
         "matplotlib",
         "numpy",
         "matplotlib",
+        "shapely"
     ]
 )
