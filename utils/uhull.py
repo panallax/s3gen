@@ -63,8 +63,11 @@ def extract_points_from_STL(file):
     """
     m = mesh.Mesh.from_file("../" + file)
     points = np.unique(m.points.reshape([-1,3]), axis=0)
+    bot_points = points[points[:,2] == m.z.min()]
+    top_points = points[points[:,2] == m.z.max()]
+    lateral_points = points[(points[:,2] != m.z.min()) & (points[:,2] != m.z.max())]
     
-    return points
+    return points, bot_points, top_points, lateral_points
 
 
 def z_shell_points(points, bot_points,d):

@@ -16,8 +16,8 @@ class STLGen():
 
     def __create_cylinder(self,point1, point2, diameter):
         delta = point2.sub(point1)
-        cylinder = Part.makeCylinder(diameter / 2.0, delta.Length, point1, delta)
-
+        cylinder = Part.makeCylinder(diameter / 2.0, delta.Length, point1, delta)  
+    
         return cylinder
     
     def __create_sphere(self,center, radius):
@@ -31,12 +31,12 @@ class STLGen():
 
         objs = []
         for n in self.G.nodes():
-            objs.append(self.__create_sphere(App.Vector(*n), 0.015))
+            objs.append(self.__create_sphere(App.Vector(*n), 0.5))
 
         for e in self.G.edges():
-            objs.append(self.__create_cylinder(App.Vector(*e[0]), App.Vector(*e[1]), 0.01))
+            objs.append(self.__create_cylinder(App.Vector(*e[0]), App.Vector(*e[1]), 0.4))
 
-  
+        
         objsShapes = list(map(lambda obj : Part.Shape(obj), objs))
         final_shape = Part.makeCompound(objsShapes)
         Part.show(final_shape, "final_shape")
