@@ -12,8 +12,7 @@ setup(
         "scipy >= 1.11.0",
         "numpy",
         "matplotlib",
-        "numpy",
-        "matplotlib",
-        "shapely"
+        "shapely",
+        "triangle"
     ]
 )
