@@ -1,225 +1,230 @@
 import numpy as np
 np.seterr(all="ignore")
-from utils import in_volume, exclude_points, determinate_quadrant, generate_point_in_quadrant, \
-                    angle, calculate_position, adjacency_matrix, calculate_segments_dist, \
-                    calculate_neighbors_in_node, isin, decompose_structure, plot_graph
-                    
-from sklearn.neighbors import NearestNeighbors
-from scipy.spatial import KDTree
+from scipy.spatial import Delaunay
 import os
 import networkx as nx
 import pickle
-from itertools import chain
+from shapely.geometry import LineString
+from triangle import triangulate
+from utils import tessellate_points, polar_angle_sort, area_polygon, sort_simplices, \
+                    adjacency_matrix, update_polyhedrons_dict, find_POI, find_apex, \
+                    min_dist, between_points, remove_close_edges, isin, find_POI, \
+                    find_apex
 
 class MeshGen:
 
-    def __init__(self, shell_points, radius, output_path, tmp_path):
-        self.shell_points = self.fixed_points =  shell_points
-        self.r = radius
-        self.points, self.bot_points, self.top_points = decompose_structure(self.shell_points, radius)
-        self.z_max = self.points[-1][-1]
-        self.z = self.points[0][-1]
-        self.max_global_dist = 0
-        self.connections = {}
-        self.kd_tree = KDTree(self.shell_points)
+    def __init__(self,points, base_points, top_points, lateral_points, radius, output_path, tmp_path):
+        self.points = points
+        self.base_points = base_points
+        self.top_points = top_points
+        self.lateral_points = lateral_points
+        self.z_max = np.max(self.top_points[:,-1])
+        self.L = radius #mm
+        self.pore_area = self.L**2*np.sqrt(3)/4 #mm^2
+        self.polyhedrons = {}
         self.G = nx.Graph()
         self.output_path = output_path
         self.tmp_path = os.path.join("..", tmp_path)
 
 
     def generate_mesh(self):
+        """ Generate the mesh of the structure. The generation of the mesh follows
+        an iterative process that creates stacked polyhedrons until all the 
+        polyhedrons created in an interation are outside the volume. 
+        
+        In each iteration, a set of points, called bot points, are tessellated. 
+        From this tessellation, a set of polygons are obtained that will be used
+        as the called base points from which the apex will be calculated. 
+        
+        To calculate the apex, the point of inaccessibility of each polygon is 
+        calculated (if it cannot be calculated then the midle point of the polygon 
+        is used) and used as the intial position of the apex. Then, another iterative 
+        process is performed in which each iteration calculates a new position of 
+        the apex until all the edges of the polyhedron formed have an angle greater 
+        than 50 degrees respect to the horizontal plane. All the apexes obtained
+        in each iteration are used in the following iteration as its bot points.
 
-        i = 0
-        while self.z < self.z_max:
-            if (self.top_points[:, None] == self.points[i]).all(-1).any():
+        The outer apexes are replaced by the nearest shell point to ensure the
+        connection between the structure and the shell.
+
+        """
+
+        iteration = 0
+
+        while True:
+            optimal_points = []
+            if iteration == 0: 
+                bot_points, simplices = self.__initial_points()
+                bot_points_pr = bot_points[:,:2]
+                initial_len = len(simplices)
+                self.__add_base(simplices, bot_points)
+
+            else:
+                print(f"iteration {iteration}")
+                bot_points_pr = bot_points[:,:2]
+                simplices = tessellate_points(initial_len, bot_points_pr)
+                # plot_tessellation(bot_points_pr,simplices)
+
+            for i,indice in enumerate(simplices):
+                # Obtain the base points from tessellation
+                base_points = bot_points[indice]
+                try:
+                    initial_point = find_POI(base_points)
+                except:
+                    initial_point = np.mean(base_points,axis=0)
+
+                optimal_point = find_apex(base_points, initial_point)
+
+                if optimal_point[-1] >= self.z_max:
+                    optimal_points.extend(base_points)
+                else:
+                    optimal_points.append(optimal_point)
+                    self.polyhedrons[f"{iteration}_{i}"] = {"base_points": base_points, "apex": optimal_point}
+
+            if len([x for x in self.polyhedrons.keys() if x.startswith(f"{iteration}_")]) == 0:
                 break
-            nbrs = NearestNeighbors(algorithm="kd_tree").fit(self.points)
-            _, indices = nbrs.radius_neighbors([self.points[i]], radius=1.3*self.r, return_distance=True, sort_results=True)
-            self.points_to_join = []
-            pnts = self.points[indices[0]]
+            
+            joined_points, self.polyhedrons = self.__join_hull_and_shell(self.polyhedrons, optimal_points, self.lateral_points)
+            bot_points = np.unique(np.array(joined_points), axis=0)
 
-            #Select one point to evaluate
-            current_point = pnts[0,:]
-            # print(f"current point: {current_point} is shell point {isin(self.shell_points, current_point)}")
-            self.connections[i] = {"point": current_point, "connections": {}, "connections_below" :{}}
+            iteration += 1
 
-            #Filter the neighbours of the point to keep only the ones above it
-            indx_pos_above = np.where(pnts[:,-1] > current_point[-1])
-            #Array of this points
-            points_above = pnts[indx_pos_above]
-            indx_above = indices[0][indx_pos_above]
+        self.__dict_to_graph()
 
-            fixed_points_above = points_above[(points_above[:, None] == self.fixed_points).all(-1).any(-1)]
-            not_fixed_points_above = points_above[~(points_above[:, None] == self.fixed_points).all(-1).any(-1)]
-            index_not_fixed_points_above = indx_above[~(points_above[:, None] == self.fixed_points).all(-1).any(-1)]
+    def __add_base(self, simplex, points):
+        """ Add the base triangulation to the graph to facilitate printing it.
 
-            available_quadrants = [1,2,3,4]
+        Arguments:
+            simplex {np.ndarray} -- Array of simplices
+            points {np.ndarray} -- Array of points
+        
+        """
+        _, simplex = sort_simplices(points[:,:2][simplex], simplex, points[:,:2])
+        for s in simplex:
+            simplex_points = points[s]
+            for point in [(simplex_points[i], simplex_points[(i + 1) % len(simplex_points)]) for i in range(len(simplex_points))]:
+                self.G.add_edge(tuple(point[0]), tuple(point[1]))
+        
+        
+    def __initial_points(self):
+        """ Generate the initial points of the mesh. The points are generated
+        using the Douglas-Peucker algorithm to reduce the density of points in the
+        peroimeter of the convex hull. Then, Delauany triangulation is used to
+        generate the simplices until the area of the simplices is close to the
+        desired area.
 
-            if len(fixed_points_above) > 0:
-                for point in fixed_points_above:
-                    union_angle = np.arcsin(np.divide(np.matmul(point-current_point, np.array([0,0,1])), np.linalg.norm(point - current_point)))*180/np.pi
-                    quadrant = determinate_quadrant(point, current_point)
-                    if union_angle >= 44.9 and quadrant in available_quadrants:
-                        self.__add_connection(point, i, quadrant, "connections", True)
-                        available_quadrants.remove(quadrant)
+        Returns:
+            np.ndarray -- Array of points
+            np.ndarray -- Array of simplices
+        
+        """
 
-            # print(f"{len(self.points_to_join)} fixed points joined, remaining quadrants {available_quadrants}")
-            j = 0
-            while len(available_quadrants) > 0 and j < len(not_fixed_points_above):
-                point = not_fixed_points_above[j]
-                union_angle = np.arcsin(np.divide(np.matmul(point-current_point, np.array([0,0,1])), np.linalg.norm(point - current_point)))*180/np.pi
-                quadrant = determinate_quadrant(point, current_point)
+        dea = Delaunay(self.base_points[:,:2])
+        indices = dea.convex_hull
+        hull = self.base_points[np.unique(indices)]
 
-                if union_angle >= 44.9:
-                    #If the angle is correct and it is in an empty quadrant, it joins
-                    if quadrant in available_quadrants:
-                        # print(f"union angle: {union_angle} between {point} and current point joined in quadrant {quadrant}")
-                        self.__add_connection(point, i, quadrant, "connections", True)
-                        available_quadrants.remove(quadrant)
+        section_points = np.array(list(sorted(hull, key=lambda x : polar_angle_sort(x,np.mean(hull, axis=0)))))
+        section_points = np.append(section_points, [section_points[0]], axis=0)
+        section_line = LineString(section_points)
+        # Aplicar el algoritmo de Douglas-Peucker para reducir la densidad de puntos
+        simplified_line = section_line.simplify(self.L/10)
+        simplified_hull = np.array(simplified_line.coords)
+
+        current_area = 0
+        min_val = 0.1
+        max_val = 20
+
+        while not np.isclose(current_area, self.pore_area, atol= 0.2):
+            current_val = (min_val + max_val)/2
+            opt = f"qa{current_val}"
+            t = triangulate({"vertices": simplified_hull[:,:2]}, opt)
+            triang_points = np.array(t["vertices"].tolist())
+            simplices = np.array(t["triangles"].tolist())
+            current_area =  np.mean([area_polygon(triang_points[x]) for x in sort_simplices(triang_points[simplices], simplices, triang_points)[1]])
+
+            if current_area < self.pore_area:
+                min_val = current_val
+            else:
+                max_val = current_val
+
+        triang_points_3d = np.c_[triang_points, np.zeros(triang_points.shape[0])]
+        
+        return triang_points_3d, simplices
+
+    def __join_hull_and_shell(self, tetra_dict, points, shell):
+        """ Join the hull and the shell of the triangulation.
+
+        Arguments:
+            tetra_dict {dict} -- Dictionary of polyhedrons
+            points {np.ndarray} -- Array of points
+            shell {np.ndarray} -- Array of points of the shell
+
+        Returns:
+            np.ndarray -- Array of points with the shell
+            dict -- Dictionary of polyhedrons with the shell
+        
+        """
+        points = np.array(points)
+        inner_points = points[:,:2]
+        dea = Delaunay(inner_points)
+        indices = dea.convex_hull
+
+        hull = points[np.unique(indices)]
+        closer_points = list(map(lambda x: min_dist(shell,x), hull))
+
+        for old,new in closer_points:
+            tetra_dict = update_polyhedrons_dict(tetra_dict, old, new)
+            points[(points == old).all(-1)] = new
   
-                    # If the angle is correct but its quadrant is occupied, it is moved to an available quadrant
-                    else:
-                        destiny_quadrant = available_quadrants[0]
-                        new_point = generate_point_in_quadrant(current_point, self.r, 1, destiny_quadrant)[0]
-                        if not in_volume(new_point, self.shell_points):
-                            break
-
-                        # print(f"union angle: {union_angle} between {point} and current point joined in quadrant {destiny_quadrant}  as new point {new_point} because quadrant {quadrant} is ocupied")
-                        self.__add_point(new_point, index_not_fixed_points_above[j], i, destiny_quadrant, "connections")
-                        available_quadrants.remove(destiny_quadrant)
-
-                #If the angle is not correct, it is moved to an available quadrant with a correct angle
-                else:
-                    destiny_quadrant = available_quadrants[0]
-                    new_point = generate_point_in_quadrant(current_point, self.r, 1, destiny_quadrant)[0]
-                    if not in_volume(new_point, self.shell_points):
-                        break
-
-                    # print(f"union angle: {union_angle} between {point} and current point joined in quadrant {destiny_quadrant}  as new point {new_point} because angle is not correct")
-                    self.__add_point(new_point, index_not_fixed_points_above[j], i, destiny_quadrant, "connections")
-                    available_quadrants.remove(destiny_quadrant)
-
-
-                j+=1
-            if len(available_quadrants) > 0:
-                # print(f"quadrants {available_quadrants} left, generating new points in those quadrants")
-                for quadrant in available_quadrants:
-                    new_point = generate_point_in_quadrant(current_point, self.r, 1, quadrant)[0]
-                    if not in_volume(new_point, self.shell_points):
-                        nearest_shell_points = self.shell_points[self.kd_tree.query_ball_point(current_point, self.r)]
-                        available_nearest_shell_points = nearest_shell_points[np.where(angle(nearest_shell_points, current_point, np.array([0,0,1])) > 44.9)[0]]
-                        for shell_point in available_nearest_shell_points:
-                            if quadrant == determinate_quadrant(shell_point, current_point):
-                                self.__insert_point(shell_point, i, quadrant, "connections")
-                    else:
-                        self.__insert_point(new_point, i, quadrant, "connections")
-
-                    # print(f"new point {new_point} generated in quadrant {quadrant}")
-
-            # print(f"points joined: {self.points_to_join}")
-            local_dist = np.max(np.linalg.norm(self.points_to_join - current_point, axis=1)) if len(self.points_to_join) > 0 else 0
-            self.max_global_dist = local_dist if local_dist > self.max_global_dist else self.max_global_dist
-            self.z = np.max(exclude_points(self.fixed_points,self.shell_points)[:,2])
-            i+=1
-            # print("--------------------------------------------------")
-
-        reversed_points = self.points[np.argsort(self.points[:, 2])[::-1]]
-        nbrs = NearestNeighbors(algorithm="kd_tree").fit(reversed_points)
-
-        for p in reversed_points:
-            if (self.bot_points[:, None] == p).all(-1).any():
-                break
-            indx_point = np.where(np.all(self.points == p, axis=1))[0][0]
-            if indx_point not in self.connections.keys():
-                self.connections[indx_point] = {"point": p, "connections": {}, "connections_below" :{}}
-            _, indices = nbrs.radius_neighbors([p], radius=1.3*self.r, return_distance=True, sort_results=True)
-            pnts = reversed_points[indices[0]]
-            #Select one point to evaluate
-            current_point = pnts[0,:]
-            #Filter the neighbours of the point to keep only the ones below it
-            indx_pos_below = np.where(pnts[:,-1] < current_point[-1])
-            #Array of this points
-            points_below = pnts[indx_pos_below]
-            available_quadrants = [1,2,3,4]
-
-            for point in points_below:
-                #TODO: change to function
-                union_angle = np.arcsin(np.divide(np.matmul(point-current_point, np.array([0,0,-1])), np.linalg.norm(point - current_point)))*180/np.pi
-                quadrant = determinate_quadrant(point, current_point)
-                if union_angle >= 44.9 and quadrant in available_quadrants:
-                    self.__add_connection(point, indx_point, quadrant, "connections_below", False)
-                    available_quadrants.remove(quadrant)
-
-        self.__generate_graph()
-        # plot_graph(self.G)
-        self.__remove_close_edges()
-        plot_graph(self.G)
-        return self.G
-
-    def __remove_close_edges(self):
-        init_edges = len(self.G.edges())
-        nodes = np.array(self.G.nodes()) 
-        tree_points = KDTree(nodes)
-        for segment in self.G.edges():
-            p1,p2 = np.array(segment)
-            mid_point = (p1+p2)/2
-            observable_points = np.unique(np.concatenate([x[1:] for x in tree_points.query_ball_point([p1,p2,mid_point], self.max_global_dist)], dtype= int, casting= "unsafe"))
-            valid_points = exclude_points(nodes[observable_points],[p1,p2, mid_point])
-
-            observable_segments = []
-            for valid_point in valid_points:  
-                point_nodes = self.G.neighbors(tuple(valid_point))
-                for n in point_nodes:
-                    if not isin(np.array(segment), np.array(n)).any() and isin(nodes[observable_points], np.array(n)).any():
-                        observable_segments.append(np.array([valid_point,n]))
-
-            observable_segments = np.unique(np.array(list(map(lambda x: x[np.argsort(x[:,0])], observable_segments))), axis=0)
-            min_nbr_current_segment = min(list(map(lambda x: calculate_neighbors_in_node(self.G,x), [p1,p2])))
-            local_segments_to_remove = []
-            for s in observable_segments:
-                if calculate_segments_dist(s, (p1,p2)) < 0.1:
-                    nbr_node = list(map(lambda x: calculate_neighbors_in_node(self.G,x), s))
-                    if min(nbr_node) > min_nbr_current_segment:
-                        local_segments_to_remove.append(tuple(map(tuple,s)))
-
-                    else:
-                        self.G.remove_edge(tuple(p1), tuple(p2))
-                        local_segments_to_remove.clear()
-                        break
-
-            if len(local_segments_to_remove) >= 1:
-                if  len(set(chain(*local_segments_to_remove))) % 2 != 0:
-                    self.G.remove_edge(tuple(p1), tuple(p2))
-                else:
-                    self.G.remove_edges_from(local_segments_to_remove) 
-
-        print(f"Initially were {init_edges} edges. {init_edges - len(self.G.edges())} edges were removed")
-
-    def __add_point(self, point, array_index, connection_idx, quadrant, connection_type,):
-        self.points[array_index] = point
-        self.fixed_points = np.vstack((self.fixed_points, point))
-        self.connections[connection_idx][connection_type].update({quadrant: point})
-        self.points_to_join.append(point)
+        return points, tetra_dict
     
-    def __insert_point(self, point, connection_idx, quadrant, connection_type):
-        self.points = calculate_position(self.points, point)
-        self.fixed_points = np.vstack((self.fixed_points, point))
-        self.connections[connection_idx][connection_type].update({quadrant: point})
-        self.points_to_join.append(point)
+    def __dict_to_graph(self):
+        """ Convert a dictionary of polyhedrons to a graph. Not printable edges 
+        won't be added and the highest nodes will be connected to the top of the
+        shell.
 
-    def __add_connection(self, point, connection_idx, quadrant, connection_type, fix_point= True):
-        self.connections[connection_idx][connection_type].update({quadrant: point})
-        if fix_point:
-            self.fixed_points = np.vstack((self.fixed_points, point))
-            self.points_to_join.append(point)
+        Arguments:
+            dict {dict} -- Dictionary of polyhedrons
+            lateral_points {np.ndarray} -- Array of points of the shell
+            max_value {float} -- Maximum value of the z axis
+        
+        Returns:
+            nx.Graph -- Graph of the structure
+        
+        """
+        max_global_dist = 0
+        for v in self.polyhedrons.values():
+            for i, p in enumerate(v["base_points"]):
+                local_dist = np.linalg.norm(v["apex"] - p)
+                max_global_dist = local_dist if local_dist > max_global_dist else max_global_dist
+                if len(v["base_points"]) == 3:
+                    self.G.add_edge(tuple(p), tuple(v["apex"]))
+                else:  
+                    previous = v["base_points"][i-1] if i > 0 else v["base_points"][-1]
+                    following = v["base_points"][(i+1)] if i < len(v["base_points"])-1 else v["base_points"][0]
+                    if between_points(np.array([previous, p, following]), v["apex"]) or isin(self.lateral_points, v["apex"]):
+                        self.G.add_edge(tuple(p), tuple(v["apex"]))
 
-    def __generate_graph(self):
-        for value in self.connections.values():
-            tuples_points = list(map(tuple,[value['point']] + list(value.get('connections', {}).values()) + list(value.get('connections_below', {}).values())))
-            self.G.add_nodes_from(list(map(tuple,tuples_points)))
-            for i in range(1,len(tuples_points)):
-                self.G.add_edge(tuples_points[0], tuples_points[i])
+        nodes = list(self.G.nodes())
+        to_remove = []
+        for node in nodes:
+            neighb = list(self.G.neighbors(node))
+            for n in neighb:
+                if n[2] > node[2]:
+                    break
+            else:
+                to_remove.append([node, neighb])
 
+        for node, neighb in to_remove:
+            self.G.remove_node(node)
+            new_node = tuple(np.array([node[0], node[1], self.z_max]))
+            self.G.add_node(new_node)
+            for n in neighb:
+                self.G.add_edge(new_node, n)
+
+        self.G = remove_close_edges(self.G, max_global_dist)
+
+    
     def save_graph(self):
         pickle.dump(self.G, open(os.path.join(self.output_path, "G.pickle"),"wb"))
         pickle.dump(self.G, open(os.path.join(self.tmp_path, "G.pickle"),"wb"))

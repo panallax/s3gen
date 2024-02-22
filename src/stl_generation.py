@@ -28,10 +28,9 @@ class STLGen():
     def generate_stl(self):
             
         doc = App.newDocument()
-
         objs = []
         for n in self.G.nodes():
-            objs.append(self.__create_sphere(App.Vector(*n), 0.5))
+            objs.append(self.__create_sphere(App.Vector(*n), 0.2))
 
         for e in self.G.edges():
             objs.append(self.__create_cylinder(App.Vector(*e[0]), App.Vector(*e[1]), 0.4))
@@ -42,5 +41,4 @@ class STLGen():
         Part.show(final_shape, "final_shape")
         doc.recompute()
         mesh = MeshPart.meshFromShape(final_shape, LinearDeflection=0.01, AngularDeflection=0.523599, Relative=False)
- 
         mesh.write(os.path.join(self.output_path, "mesh.stl"))   

@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.spatial.distance import pdist, squareform
 from scipy.spatial import Delaunay
-from utils.utetra import update_tetrahedrons_dict
+from utils.utetra import update_polyhedrons_dict
 
 def generate_coords_tensor(n, base_points) -> np.ndarray:
 
@@ -45,21 +45,9 @@ def generate_coords_tensor(n, base_points) -> np.ndarray:
 
     return puntos_generados
 
-def check_point(apex_pos, base_points) -> None:
-    """Checks the angles between the apex and the base points."""
-
-    f1 = (np.degrees(np.arccos(-(base_points[0,-1] - apex_pos[-1])/np.linalg.norm([base_points[0,0] - apex_pos[0], base_points[0,1] - apex_pos[1], base_points[0,2] - apex_pos[2]]))) - 45) + \
-        (np.degrees(np.arccos(-(base_points[1,-1] - apex_pos[-1])/np.linalg.norm([base_points[1,0] - apex_pos[0], base_points[1,1] - apex_pos[1], base_points[1,2] - apex_pos[2]]))) - 45) + \
-        (np.degrees(np.arccos(-(base_points[2,-1] - apex_pos[-1])/np.linalg.norm([base_points[2,0] - apex_pos[0], base_points[2,1] - apex_pos[1], base_points[2,2] - apex_pos[2]]))) - 45) 
-
-    f2 = np.degrees(np.arccos(-(base_points[0,-1] - apex_pos[-1])/np.linalg.norm([base_points[0,0] - apex_pos[0], base_points[0,1] - apex_pos[1], base_points[0,2] - apex_pos[2]])))
-    f3 = np.degrees(np.arccos(-(base_points[1,-1] - apex_pos[-1])/np.linalg.norm([base_points[1,0] - apex_pos[0], base_points[1,1] - apex_pos[1], base_points[1,2] - apex_pos[2]])))
-    f4 = np.degrees(np.arccos(-(base_points[2,-1] - apex_pos[-1])/np.linalg.norm([base_points[2,0] - apex_pos[0], base_points[2,1] - apex_pos[1], base_points[2,2] - apex_pos[2]])))
-
-
-    print(f1,f2,f3,f4)
 
 def eval_objective_function(apex_pos, base_points) -> float:
+    "Not used"
     """Evaluates the objective function. The objective function is the sum of the angles between the apex and the base points."""
 
     f1 = (np.degrees(np.arccos(-(base_points[0,-1] - apex_pos[-1])/np.linalg.norm([base_points[0,0] - apex_pos[0], base_points[0,1] - apex_pos[1], base_points[0,2] - apex_pos[2]]))) - 45) 
@@ -74,6 +62,7 @@ def eval_objective_function(apex_pos, base_points) -> float:
 
 
 def remove_short_edges(points,cp_dict, tol= 0.2):
+  "Not used"
   """Remove short edges from the triangulation"""
 
   points = np.array(points)
@@ -95,7 +84,7 @@ def remove_short_edges(points,cp_dict, tol= 0.2):
     for elem in points_to_rm:
       new_point =  np.mean(points[np.array(elem)], axis=0)
       new_points = np.append(new_points, [new_point], axis= 0)
-      cp_dict = update_tetrahedrons_dict(cp_dict, bot_points_pr[elem,:], new_point)
+      cp_dict = update_polyhedrons_dict(cp_dict, bot_points_pr[elem,:], new_point)
 
     points = new_points
     bot_points_pr = new_points[:,:2]
@@ -110,6 +99,7 @@ def remove_short_edges(points,cp_dict, tol= 0.2):
   return  new_points, cp_dict
 
 def remove_small_areas(rm_points, cp_dict, tol= 0.05):
+  "Not used"
   """Remove small areas from the triangulation. The small areas are defined by 
     the area of the triangle formed by the points of the triangulation."""
   
@@ -129,10 +119,9 @@ def remove_small_areas(rm_points, cp_dict, tol= 0.05):
       # plt.plot(a[:,0], a[:,1])
       # plt.scatter(apex[0],apex[1],c='black')
       neighbors = get_simplices(tri2,vertex)
-      # print(neighbors)
       bari = np.mean(rm_points[neighbors], axis=0)
       new_points[index] = bari
-      cp_dict = update_tetrahedrons_dict(cp_dict, apex, bari)
+      cp_dict = update_polyhedrons_dict(cp_dict, apex, bari)
       # plt.scatter(bari[0], bari[1], c ='black')
       # plt.plot(rm_points_pr[neighbors,0], rm_points_pr[neighbors,1], 'or')
       # plt.plot(rm_points_pr[vertex,0], rm_points_pr[vertex,1], 'ob')
@@ -142,12 +131,12 @@ def remove_small_areas(rm_points, cp_dict, tol= 0.05):
   return new_points, cp_dict
 
 def get_simplices(self, vertex):
+    "Not used"
     "Find all simplices this `vertex` belongs to"
     visited = set()
     queue = [self.vertex_to_simplex[vertex]]
     while queue:
         simplex = queue.pop()
-        # print(self.simplices[simplex])
         for i, s in enumerate(self.neighbors[simplex]):
             if self.simplices[simplex][i] != vertex and s != -1 and s not in visited:
                 queue.append(s)
@@ -191,32 +180,3 @@ def join_paths(list_of_tuples):
     grouped_list = [tuple(group) for group in groups]
     return grouped_list
 
-def min_dist(points,point):
-  return points[np.argmin(np.linalg.norm(points-point, axis=1))]
-
-def join_hull_and_shell(tetra_dict, points, shell):
-  """ Join the hull and the shell of the triangulation.
-
-  Arguments:
-      tetra_dict {dict} -- Dictionary of tetrahedrons
-      points {np.ndarray} -- Array of points
-      shell {np.ndarray} -- Array of points of the shell
-
-  Returns:
-      np.ndarray -- Array of points with the shell
-      dict -- Dictionary of tetrahedrons with the shell
-  
-  """
-  inner_points = points[:,:2]
-  dea = Delaunay(inner_points)
-  indices = dea.convex_hull
-  hull = inner_points[np.unique(indices)]
-  shell_pr = shell[:,:2]
-  closer_points = list(map(lambda x: min_dist(shell_pr,x), hull))
-
-  for i,v in enumerate(hull):
-    closer_point = shell[np.where(np.all(shell_pr == closer_points[i], axis =1))[0]][0]
-    points[np.where(np.all(inner_points == v, axis =1))[0]] = closer_point
-    tetra_dict = update_tetrahedrons_dict(tetra_dict, v, closer_point)
-
-  return points, tetra_dict

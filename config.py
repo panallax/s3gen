@@ -3,4 +3,4 @@ OUTPUTPATH = "data/output"
 DATAPAHT = "data"
 TMPPATH = "tmp"
 STLFILE = "data/Cylinder.stl"
-PORERADIUS = 0.5
+PORERADIUS = 5 #mm
