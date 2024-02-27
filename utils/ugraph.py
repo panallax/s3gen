@@ -242,4 +242,27 @@ def shell_graph(D, lateral, d):
 
     return g
 
+def connectivity(G):
+    """
+    Compute the connectivity of a graph. The connectivity is a list of nodes and its
+    neighbors, the angle between the node and its neighbors and the distance between
+    the node and its neighbors.
 
+    Arguments:
+        G {networkx.classes.graph.Graph} -- Graph
+
+    Returns:
+        list -- List of connectivity
+    """
+    
+    conn_list = []
+    sorted_nodes = sorted(G.nodes(), key=lambda x: x[2])
+
+    for n in sorted_nodes:
+        neigh = list(G.neighbors(n))
+        neigh_idx = list(map(lambda x: sorted_nodes.index(x), neigh))
+        neigh_angle = angle(np.array(n), np.array(neigh))
+        neigh_dist = np.linalg.norm(np.array(n) - np.array(neigh), axis=1)
+        conn_list.append([np.array(n), [neigh_idx, neigh_angle, neigh_dist]])
+    
+    return conn_list

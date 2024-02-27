@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.spatial.distance import pdist, squareform
 from scipy.spatial import Delaunay
-from utils.utetra import update_polyhedrons_dict
+from utils.upoly import update_polyhedrons_dict
 
 def generate_coords_tensor(n, base_points) -> np.ndarray:
 

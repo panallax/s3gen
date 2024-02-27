@@ -1,33 +1,21 @@
 import numpy as np
 from scipy.spatial.distance import cdist, squareform, pdist 
 
-def angle(points, ref, plane):
+def angle(ref, points):
     """
-    Compute the angle between a set of points and a reference point and the horizontal plane
-    
-    Parameters
-    ----------
-    point (n) : numpy.ndarray (n, 3, m)
-        Array of points
-    ref (m) : numpy.ndarray (m, 3)
-        Reference point
-    plane : numpy.ndarray (1, 3)
-        Normal vector of the plane
+    Calculate the angle between the vector defined by the reference point and 
+    the set of points and the horizontal plane.
 
-    Returns
-    -------
-    numpy.ndarray
-        Array of angles (n, 1, m)
-    
+    Arguments:
+        ref {np.ndarray} -- Reference point
+        points {np.ndarray} -- Array of points
+
+    Returns:
+        np.ndarray -- Array of angles
     """
 
-    if len(points.shape) <= 2:
-      norm_product = np.linalg.norm(points-ref)
-      return np.arcsin(np.divide(np. matmul(points-ref, plane), norm_product))*180/np.pi
-    plane_vecs = np.tile(np.array(plane).T, (ref.shape[0],1,1))
-    norm_product = np.reshape(np.linalg.norm(points-ref[:,np.newaxis], axis=2), (ref.shape[0], points.shape[1],1))
-
-    return np.reshape(np.arcsin(np.divide(np. matmul(points-ref[:,np.newaxis], plane_vecs), norm_product))*180/np.pi, (ref.shape[0], 1, points.shape[1]))
+    vecs = points - ref
+    return np.degrees(np.arctan2(vecs[:, 2], np.sqrt(vecs[:, 0]**2 + vecs[:, 1]**2)))
 
 
 def isin(points, point):

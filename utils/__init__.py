@@ -5,8 +5,9 @@ from utils.unodes import angle, isin, exclude_points, between_points, polar_angl
 from utils.uopt import generate_coords_tensor, eval_objective_function, \
                         remove_short_edges, remove_small_areas, get_simplices, \
                         join_paths
-from utils.utetra import update_polyhedrons_dict, merge_sorted_simplices, \
+from utils.upoly import update_polyhedrons_dict, merge_sorted_simplices, \
                         sort_simplices, tessellate_points, area_polygon, neighbours,\
                         find_POI, find_apex
 from utils.utils import parse_ouput_folfer, parsed_path
-from utils.ugraph import remove_close_edges, calculate_neighbors_in_node, adjacency_matrix
+from utils.ugraph import remove_close_edges, calculate_neighbors_in_node, adjacency_matrix, \
+                        connectivity

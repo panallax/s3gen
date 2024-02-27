@@ -9,7 +9,7 @@ from triangle import triangulate
 from utils import tessellate_points, polar_angle_sort, area_polygon, sort_simplices, \
                     adjacency_matrix, update_polyhedrons_dict, find_POI, find_apex, \
                     min_dist, between_points, remove_close_edges, isin, find_POI, \
-                    find_apex
+                    find_apex, connectivity
 
 class MeshGen:
 
@@ -231,4 +231,7 @@ class MeshGen:
 
     def save_adjacency_matrix(self):   
         nodes, matrix = adjacency_matrix(self.G)
-        np.savez(os.path.join(self.output_path, "adjacency_matrix.npz"), nodes=nodes, matrix=matrix)
+        connectivity_list = connectivity(self.G)
+        np.savez(os.path.join(self.output_path, "adjacency_matrix.npz"),nodes=nodes, 
+                                                                        matrix=matrix, 
+                                                                        conn= connectivity_list)
