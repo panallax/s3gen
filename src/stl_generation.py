@@ -30,10 +30,10 @@ class STLGen():
         doc = App.newDocument()
         objs = []
         for n in self.G.nodes():
-            objs.append(self.__create_sphere(App.Vector(*n), 0.2))
+            objs.append(self.__create_sphere(App.Vector(*n), 0.4))
 
         for e in self.G.edges():
-            objs.append(self.__create_cylinder(App.Vector(*e[0]), App.Vector(*e[1]), 0.4))
+            objs.append(self.__create_cylinder(App.Vector(*e[0]), App.Vector(*e[1]), 0.8))
 
         
         objsShapes = list(map(lambda obj : Part.Shape(obj), objs))

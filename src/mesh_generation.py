@@ -215,12 +215,32 @@ class MeshGen:
             else:
                 to_remove.append([node, neighb])
 
+        new_nodes = []
         for node, neighb in to_remove:
             self.G.remove_node(node)
             new_node = tuple(np.array([node[0], node[1], self.z_max]))
+            self.polyhedrons = update_polyhedrons_dict(self.polyhedrons, np.array(node), np.array(new_node))
             self.G.add_node(new_node)
+            new_nodes.append(new_node)
             for n in neighb:
                 self.G.add_edge(new_node, n)
+
+        new_nodes = np.array(new_nodes)
+        adpt, self.polyhedrons = self.__join_hull_and_shell(self.polyhedrons, 
+                                                                 new_nodes, 
+                                                                 self.top_points[np.unique(Delaunay(self.top_points[:,:2]).convex_hull)])
+        
+        for i, p in enumerate(~(new_nodes[:, None] == adpt).all(-1).any(-1)):
+            if p:
+                point = tuple(new_nodes[i])
+                n = self.G.neighbors(point)
+                self.G.remove_node(point)
+                self.G.add_node(tuple(adpt[i]))
+                for node in n:
+                    self.G.add_edge(tuple(adpt[i]), node)
+
+        simplex = Delaunay(adpt[:,:2]).simplices
+        self.__add_base(simplex, adpt)
 
         self.G = remove_close_edges(self.G, max_global_dist)
 
