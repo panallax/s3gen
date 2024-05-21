@@ -266,3 +266,49 @@ def connectivity(G):
         conn_list.append([np.array(n), [neigh_idx, neigh_angle, neigh_dist]])
     
     return conn_list
+
+def split_graph(G):
+    """
+    Split the graph into two subgraphs: the base and the top.
+    The base subgraph contains all nodes at the lowest height.
+    The top subgraph contains all nodes at the highest height.
+    """
+
+    sorted_nodes = sorted(G.nodes(), key=lambda x: x[2])
+    base_height = sorted_nodes[0][2]
+    top_height = sorted_nodes[-1][2]
+    base = G.subgraph(list(filter(lambda x: x[2] == base_height, G.nodes())))
+    top = G.subgraph(list(filter(lambda x: x[2] == top_height, G.nodes())))
+
+    return base, top, sorted_nodes
+
+def delaunay_path(G, start_node):
+    """
+    Given a graph G and a start node, return a path that traverses all edges in the graph.
+    The path is generated using a depth-first search traversal of the graph.
+
+    Arguments:
+        G : networkx.Graph
+            The graph to traverse.
+
+        start_node : tuple
+            The node to start the traversal from.
+
+    Returns:
+        traversal_path : list
+            A list of edges that form a path that traverses all edges in the graph.
+    """
+
+    visited_edges = []
+    traversal_path = []
+    
+    def dfs(node):
+        for neighbor in G.neighbors(node):
+            if (node, neighbor) not in visited_edges and (neighbor, node) not in visited_edges:
+                visited_edges.append((node, neighbor))
+                traversal_path.append((node, neighbor))
+                dfs(neighbor)
+    
+    dfs(start_node)
+
+    return traversal_path

@@ -155,3 +155,17 @@ def remove_closer_points(tetra_dict, points, shell_points):
   else:
     return tetra_dict, points
   
+def distance(p1,p2):
+    """
+    Calculate the distance between two points.
+
+    Arguments:
+        p1 {np.ndarray} -- Point 1
+        p2 {np.ndarray} -- Point 2
+
+    Returns:
+        float -- Distance between the two points
+    """
+    p1 = np.array(p1)
+    p2 = np.array(p2)
+    return np.linalg.norm(p1-p2)
