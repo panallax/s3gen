@@ -4,6 +4,7 @@ import networkx as nx
 import config
 import os
 from utils import split_graph, delaunay_path, distance
+import pymesh
 
 class GCodeGen:
 
@@ -13,6 +14,8 @@ class GCodeGen:
         self.output_path = os.path.dirname(graph_path)
         self.file = open(os.path.join(self.output_path, "graph.gcode"), 'w')
         self.__set_origin()
+        self.current_point = (0,0,0)
+        self.extrusion = 0
         self.z_offset = config.LAYERHEIGHT * (config.BOTTOMLAYERS - 1)
         self.__start_gcode()
         
@@ -26,7 +29,9 @@ class GCodeGen:
         self.file.write("G90    ;use absolute coordinates\n")
         self.file.write("G92 E0    ;reset extruder position\n")
         self.file.write("G28    ;home all axes\n")
-        self.file.write("M83    ;use relative distances for extrusion\n")
+        self.file.write("M92 E424.9    ;Set Esteps\n")
+        self.file.write("M500    ;Store settings\n")
+        # self.file.write("M83    ;use relative distances for extrusion\n")
         self.file.write(f"M190 S{config.BEDTEMP}    ;set bed temperature to 60 and wait\n")
         self.file.write(f"M109 S{config.EXTRUDERTEMP}    ;set extruder temperature to 200 and wait\n")
         self.file.write(f"G0 X5 Y5 Z{config.LAYERHEIGHT}\n")
@@ -39,12 +44,13 @@ class GCodeGen:
         self.file.write("G92 X0 Y0 Z0    ;set current position as origin\n")
 
     def __end_gcode(self):
-        self.file.write("G1 E-1 F600\n")
         self.file.write("G91 \n")
-        self.file.write("G1 Z10 E-5  ;raise the extruder 1 cm\n".format(config.LAYERHEIGHT))
+        self.file.write("G1 E-2 F2700\n")
+        self.file.write("G1 Z1 E-2 F2400 ;raise the extruder 1 cm\n".format(config.LAYERHEIGHT))
         self.file.write(f"G0 X{-self.X_origin}    ;move to the initial point\n")
-        self.file.write("M104 S0    ;turn off the extruder\n")
-        self.file.write("M140 S0    ;turn off the bed\n")
+        # self.file.write("M104 S0    ;turn off the extruder\n")
+        # self.file.write("M140 S0    ;turn off the bed\n")
+        # self.file.write("M106 S0    ;turn off the fan\n")
         self.file.write("M84    ;disable motors\n")
         
     def __set_origin(self):
@@ -54,16 +60,24 @@ class GCodeGen:
     
     def main(self):
         self.base, self.top, self.sorted_nodles = split_graph(self.G)
+
         self.__write_base_path()
 
         self.file.write("G1 F{:.3f}\n".format(config.NO_PLANAR_FEEDRATE))
 
         self.queue = self.printing_queue()
-        for node in self.queue:
+        a = []
+        for n in self.queue:
+            if n[2] != 60:
+                a.append(n)
+        
+        # for node in self.queue:
+        self.first = True
+        for node in a:
             polyhedron_path = self.base_nodes(node)
             self.__write_polihedron_path(polyhedron_path)
     
-        self.__write_top_path()
+        # self.__write_top_path()
 
     def __write_base_path(self):
         """
@@ -73,26 +87,36 @@ class GCodeGen:
         on the edge and prints the edge.
         """
         self.file.write("; start base printing\n")
-        current_node = initial_point = list(self.base)[0]
-        path = delaunay_path(self.base, current_node)
+        initial_point = list(self.base)[0]
+        path = delaunay_path(self.base, initial_point)
         for z in range(config.BOTTOMLAYERS):
-            z_layer = current_node[2] + z * config.LAYERHEIGHT 
-            self.__move_to_point((initial_point[0], initial_point[1], z_layer), 0.5)
-
+            z_layer = initial_point[2] + z * config.LAYERHEIGHT 
+            self.__move_to_point_2d((initial_point[0], initial_point[1], z_layer), 5,5)
+            self.file.write("G0 F600\n")
+            self.current_point = initial_point
             for edge in path:
-                if edge[0] == current_node:
+                if edge[0] == self.current_point:
                     self.file.write("G1 X{:.3f} Y{:.3f} Z{:.3f} E{:.3f}\n".format(edge[1][0], 
                                                                                   edge[1][1], 
-                                                                                  z_layer, 
-                                                                                  self.__extrusion(edge[0], edge[1])))
+                                                                                  z_layer,
+                                                                                  self.__extrusion(edge[0], edge[1], FR = 0.5)))
                 else:
-                    self.__move_to_point(np.array(edge[0]) + np.array([0,0, z_layer]), 0.5)
+                    self.__move_to_point_2d(np.array(edge[0]) + np.array([0,0, z_layer]), 5,5)
+                    self.file.write("G0 F600\n")
                     self.file.write("G1 X{:.3f} Y{:.3f} Z{:.3f} E{:.3f}\n".format(edge[1][0], 
                                                                                   edge[1][1], 
                                                                                   z_layer, 
-                                                                                  self.__extrusion(edge[0], edge[1])))
+                                                                                  self.__extrusion(edge[0], edge[1], FR = 0.5)))
 
-                current_node = edge[1]
+                self.current_point = edge[1]
+
+        for i in self.base:
+            point_with_offset = np.array(i) + np.array([0,0, config.BOTTOMLAYERS*self.z_offset + config.OUTTER_RADIUS])
+            self.__move_to_point(point_with_offset, 5,5)
+            self.extrusion += 3.5 # 3.5mm of over extrusion for semi-sphere of 0.55mm radius
+            self.file.write("G1 E{:.3f} F{:.3f}\n".format(self.extrusion, config.NO_PLANAR_FEEDRATE))
+            self.current_point = point_with_offset
+
 
     def __write_top_path(self):
         """
@@ -102,26 +126,26 @@ class GCodeGen:
         on the edge and prints the edge.
         """
         self.file.write("; start top printing\n")
-        current_node = initial_point = self.queue[-1]
-        path = delaunay_path(self.top, current_node)
+        initial_point = self.queue[-1]
+        path = delaunay_path(self.top, initial_point)
         for z in range(config.TOPLAYERS):
             z_layer = initial_point[2] + z * config.LAYERHEIGHT 
-            self.__move_to_point((initial_point[0], initial_point[1], z_layer), 0.5)
-
+            self.__move_to_point((initial_point[0], initial_point[1], z_layer), 10, 10)
+            self.current_point = initial_point
             for edge in path:
-                if edge[0] == current_node:
+                if edge[0] == self.current_point:
                     self.file.write("G1 X{:.3f} Y{:.3f} Z{:.3f} E{:.3f}\n".format(edge[1][0], 
                                                                                   edge[1][1], 
                                                                                   z_layer, 
                                                                                   self.__extrusion(edge[0], edge[1])))
                 else:
-                    self.__move_to_point(np.array(edge[0]) + np.array([0,0,  z * config.LAYERHEIGHT]), 0.5)
+                    self.__move_to_point(np.array(edge[0]) + np.array([0,0,  z * config.LAYERHEIGHT]), 10,10)
                     self.file.write("G1 X{:.3f} Y{:.3f} Z{:.3f} E{:.3f}\n".format(edge[1][0], 
                                                                                   edge[1][1], 
                                                                                   z_layer, 
                                                                                   self.__extrusion(edge[0], edge[1])))
 
-                current_node = edge[1]
+                self.current_point = edge[1]
 
     def __write_polihedron_path(self, polyhedron_path):
         """
@@ -130,25 +154,78 @@ class GCodeGen:
         not contiguous to the previous one, the extruder moves to the first point 
         on the edge and prints the edge.
         """
-        for base, apex in polyhedron_path:
-            self.__move_to_point((base[0], base[1], base[2] + self.z_offset))
-            self.file.write("G1 X{:.3f} Y{:.3f} Z{:.3f} E{:.3f}\n".format(apex[0], 
-                                                                          apex[1], 
-                                                                          apex[2] + self.z_offset, 
-                                                                          self.__extrusion(base, apex)))
-    def __move_to_point(self, point, retraction_height = 1):
+        for it, (base, apex) in enumerate(polyhedron_path):
+
+            adapt_base = self.calculate_base(base, apex) + np.array([0,0, self.z_offset])
+            # if not self.first:
+            self.__move_to_point(adapt_base, 10)
+            self.file.write("G4 S10  ;Espeo 10 segundos\n")
+            self.file.write("M400 \n")
+            adapt_apex = self.calculate_apex(adapt_base, apex + np.array([0,0, self.z_offset]))
+            self.file.write("G1 X{:.3f} Y{:.3f} Z{:.3f} E{:.3f} F{:.3F}\n".format(adapt_apex[0], 
+                                                                          adapt_apex[1], 
+                                                                          adapt_apex[2], 
+                                                                          self.__extrusion(adapt_base, adapt_apex, 0.5),
+                                                                    config.NO_PLANAR_FEEDRATE))
+            self.current_point = adapt_apex
+            self.first = False 
+        
+        # self.__move_to_point(apex + np.array([0,0,self.z_offset]), 10, 10)
+
+        # self.extrusion += 1
+        # self.file.write("G0 E{:.3f} F500 \n".format(self.extrusion))
+
+    def __move_to_point(self, point, retraction_height = 10, retraction = 0, over_extrusion = 0.5):
         """
         Move the extruder to a given point. The extruder is raised by 
         retraction_height mm before moving to the point. The extruder 
         moves in the XY plane to the point and then goes down to the
         Z coordinate of the point.
         """
+        self.extrusion -= retraction
+        # self.file.write(f"M117 Subo    \n")
+        self.file.write("G4 S5  ;Espeo 5 segundos\n")
+        self.file.write("G1 X{:.3f} Y{:.3f} Z{:.3f} F600 E{:.3f}\n".format(self.current_point[0],
+                                                                            self.current_point[1],
+                                                                            self.current_point[2]+ retraction_height,
+                                                                            self.extrusion))                                                           
+        # self.file.write("G4 S5  ;Espeo 5 segundos\n")
+        
+        self.file.write(f"M117 Muevo a {point[0], point[1]}     \n")
+        self.file.write("G0 X{:.3f} Y{:.3f} F2000\n".format(point[0], point[1]))
+        self.file.write(f"M117 Bajo a {point[0]}    \n")
+        self.file.write("G0 Z{:.3f} F600\n".format(point[2]))
+        self.extrusion += retraction + over_extrusion
+        self.file.write(f"M117 Extrusion {self.extrusion}    ;\n")
+        self.file.write("G0 E{:.3f} F600\n".format(self.extrusion))
+        self.file.write("M400\n")
+        self.current_point = point
 
-        self.file.write("G91    ;set relative coords\n")
-        self.file.write("G0 Z{:.3f}  ;raise the extruder {} mm\n".format(retraction_height, retraction_height))
-        self.file.write("G90    ;set absolute coords\n")
-        self.file.write("G0 X{:.3f} Y{:.3f}    ;move above the initial point\n".format(point[0], point[1]))
-        self.file.write("G0 Z{:.3f}    ;go down to the initial point\n".format(point[2]))
+    def __move_to_point_2d(self, point, retraction_height = 5, retraction = 10):
+        """
+        Move the extruder to a given point. The extruder is raised by 
+        retraction_height mm before moving to the point. The extruder 
+        moves in the XY plane to the point and then goes down to the
+        Z coordinate of the point.
+        """
+        self.extrusion -= retraction
+        # self.file.write(f"M117 Subo    \n")
+        # self.file.write("G1 X{:.3f} Y{:.3f} Z{:.3f} F600 E{:.3f}\n".format(self.current_point[0],
+        #                                                                     self.current_point[1],
+        #                                                                     self.current_point[2]+ retraction_height,
+        #                                                                     self.extrusion))  
+ 
+        mid_point = (np.array(point) + np.array(self.current_point))/2 + np.array([0,0,config.LAYERHEIGHT])             
+
+        self.file.write("G0 X{:.3f} Y{:.3f} Z{:.3f} E{:.3f}\n".format(mid_point[0], mid_point[1], mid_point[2], self.extrusion))
+        self.extrusion += retraction
+    
+        self.file.write("G0 X{:.3f} Y{:.3f} Z{:.3f} E{:.3f}\n".format(point[0], point[1], point[2], self.extrusion))
+        # self.file.write("G0 Z{:.3f} F600\n".format(point[2]))
+        # self.file.write(f"M117 Extrusion {self.extrusion}    ;\n")
+        # self.file.write("G0 E{:.3f} \n".format(self.extrusion))
+        # self.file.write("M400\n")
+        self.current_point = point
 
 
     def printing_queue(self):
@@ -165,8 +242,27 @@ class GCodeGen:
         
         return base_path
     
+    def calculate_apex(self, base, apex):
 
-    def __extrusion(self, pnt1, pnt2 = None):
+        m1 = pymesh.generate_cylinder(base, apex, 0.4, 0.4)
+        m2 = pymesh.generate_icosphere(0.5, apex)
+        intersect = pymesh.boolean(m1,m2, "intersection").vertices
+        min_intersect = intersect[np.argmin(intersect[:,2])]
+        L = np.linalg.norm(apex-base)
+        x2p = apex - np.linalg.norm(min_intersect - apex)/L * (apex - base)
+
+        return x2p
+    
+    def calculate_base(self, base, apex):
+        base = base + np.array([0,0, self.z_offset])
+        m1 = pymesh.generate_cylinder(base, apex, 0.4, 0.4)
+        m2 = pymesh.generate_icosphere(0.5, base)
+        intersect = pymesh.boolean(m1,m2, "intersection").vertices
+        max_intersect = max(intersect, key=lambda x: x[2])
+
+        return np.array(max_intersect)
+
+    def __extrusion(self, pnt1, pnt2 = None, FR = 1):
         """
         Calculate the extrusion distance given the distance to move the extruder.
         The extrusion distance is calculated as the distance to move the extruder
@@ -177,7 +273,9 @@ class GCodeGen:
         else:
             distance = np.linalg.norm(np.array(pnt2) - np.array(pnt1))
 
-        return (config.EXTRUSIONWIDTH/config.FILAMENTWIDTH)**2 * distance
+        self.extrusion += FR*(config.EXTRUSIONWIDTH/config.FILAMENTWIDTH)**2 * distance
+
+        return self.extrusion
     
 if __name__ == "__main__":
-    GCodeGen("/home/alex/Desktop/mesh-gen/data/output/Cylinder_21-05-17-17/G.pickle")
+    GCodeGen("/home/alex/Downloads/one_layer/G_2.pickle")

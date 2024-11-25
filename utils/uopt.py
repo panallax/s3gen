@@ -64,7 +64,7 @@ def eval_objective_function(apex_pos, base_points) -> float:
 def remove_short_edges(points,cp_dict, tol= 0.2):
   "Not used"
   """Remove short edges from the triangulation"""
-
+  tol = 0.15
   points = np.array(points)
   bot_points_pr = points[:,:2]
   while True:
@@ -80,14 +80,60 @@ def remove_short_edges(points,cp_dict, tol= 0.2):
     #   plt.plot(bot_points_pr[np.array(points_to_rm[i])][:,0], bot_points_pr[np.array(points_to_rm[i])][:,1])
     # plt.show()
 
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.axes_grid1.inset_locator import inset_axes, mark_inset
+    pts = []
     new_points = np.delete(points, x, axis=0)
     for elem in points_to_rm:
       new_point =  np.mean(points[np.array(elem)], axis=0)
+      pts.append(new_point)
       new_points = np.append(new_points, [new_point], axis= 0)
       cp_dict = update_polyhedrons_dict(cp_dict, bot_points_pr[elem,:], new_point)
 
+
     points = new_points
     bot_points_pr = new_points[:,:2]
+
+    # fig, ax = plt.subplots(figsize=(10, 10))
+    # ax.set_xlim(-1.7,2.5)
+    # ax.set_ylim(-1.7,2.5)
+    # ax.set_xlabel("X [mm]")
+    # ax.set_ylabel("Y [mm]")
+    # ax.scatter(*np.array(pts)[:,:2].T, c = "black", zorder= 10)
+    # tri = Delaunay(bot_points_pr)
+    # ax.triplot(points[:,0], points[:,1], tri.simplices, linestyle= "dotted", c = "cornflowerblue")
+    # for i in range(len(unique_tuples)):
+    #   plt.plot(bot_points_pr[np.array(unique_tuples[i])][:,0], bot_points_pr[np.array(unique_tuples[i])][:,1], c= "red")
+      
+    # points_ = new_points
+    # bot_points_pr_ = new_points[:,:2]
+
+
+    # tri_ = Delaunay(bot_points_pr_)
+    # ax.triplot(points_[:,0], points_[:,1], tri_.simplices, c = "green")
+
+    # ax_inset = inset_axes(ax, width="30%", height="30%", loc='upper right')  # Ajusta el tamaño y posición del zoom
+    # ax_inset.scatter(*np.array(pts)[:,:2].T, c="black", zorder=10)
+    # ax_inset.triplot(points[:,0], points[:,1], tri.simplices, linestyle="dotted", c="cornflowerblue")
+
+    # for j in range(len(unique_tuples)):
+    #     ax_inset.plot(bot_points_pr[np.array(unique_tuples[j])][:,0], bot_points_pr[np.array(unique_tuples[j])][:,1], c="red")
+
+    # ax_inset.triplot(points_[:,0], points_[:,1], tri_.simplices, c = "green")
+    # # Definir los límites para el zoom en el inset
+    # ax_inset.set_xlim(-0.55, -0.15)  # Ajusta estos valores según la región que quieres ampliar
+    # ax_inset.set_ylim(1.1,1.4)
+
+    # # Opcional: eliminar ticks del inset
+    # ax_inset.set_xticks([])
+    # ax_inset.set_yticks([])
+
+    # # Conectar la zona de zoom con el gráfico principal
+    # mark_inset(ax, ax_inset, loc1=2, loc2=4, fc="none", ec="0.5")
+
+    # # Mostrar el gráfico
+    # plt.show()
+    # break
 
   new_points, cp_dict = remove_small_areas(new_points, cp_dict)
   x,y = np.where((squareform(pdist(bot_points_pr)) < tol) & (squareform(pdist(bot_points_pr))>0))

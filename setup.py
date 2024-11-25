@@ -13,6 +13,7 @@ setup(
         "numpy",
         "matplotlib",
         "shapely",
-        "triangle"
+        "triangle",
+        "trimesh",
     ]
 )

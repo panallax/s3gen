@@ -4,6 +4,8 @@ from scipy.spatial import KDTree, Delaunay
 from scipy.spatial.distance import cdist
 from utils import isin, calculate_segments_dist, exclude_points, angle
 from itertools import chain
+import config
+
 
 def remove_close_edges(G, max_global_dist):
     """
@@ -23,9 +25,13 @@ def remove_close_edges(G, max_global_dist):
     """
 
     nodes = np.array(G.nodes())
-    edges = np.array(G.edges()) 
+    edges = G.edges()
     tree_points = KDTree(nodes)
+    print(G.edges())
     for segment in edges:
+        print(segment)
+        if segment not in G.edges():
+            continue
         p1,p2 = np.array(segment)
         observable_points = np.unique(np.concatenate([x[1:] for x in tree_points.query_ball_point([p1,p2], max_global_dist)], dtype= int, casting= "unsafe"))
         valid_points = exclude_points(nodes[observable_points],np.array([p1,p2]))
@@ -41,7 +47,7 @@ def remove_close_edges(G, max_global_dist):
         min_nbr_current_segment = min(list(map(lambda x: calculate_neighbors_in_node(G,x), [p1,p2])))
         local_segments_to_remove = []
         for s in observable_segments:
-            if calculate_segments_dist(s, (p1,p2)) < 0.4:
+            if calculate_segments_dist(s, (p1,p2)) < config.EXTRUSIONWIDTH:
                 nbr_node = list(map(lambda x: calculate_neighbors_in_node(G,x), s))
                 if min(nbr_node) > min_nbr_current_segment:
                     local_segments_to_remove.append(tuple(map(tuple,s)))
@@ -55,7 +61,10 @@ def remove_close_edges(G, max_global_dist):
                     break
         if len(local_segments_to_remove) >= 1:
             if len(set(chain(*local_segments_to_remove))) % 2 != 0:
-                G.remove_edge(tuple(p1), tuple(p2))
+                try:
+                    G.remove_edge(tuple(p1), tuple(p2))
+                except:
+                    pass
             else:
                 G.remove_edges_from(local_segments_to_remove) 
 
@@ -188,8 +197,10 @@ def check_connection(G, origin, point, d, D= None):
     Returns:
         bool -- True if the segment can be added to the graph, False otherwise
     """
+    vecs = point - origin
 
-    if angle(origin, point, np.array([0,0,-1])) < 44:
+    angle = np.degrees(np.arctan2(vecs[2], np.sqrt(vecs[ 0]**2 + vecs[1]**2)))
+    if angle < 44:
         return False
     
     if len(G.nodes()) < 3:

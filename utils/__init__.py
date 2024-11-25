@@ -7,7 +7,7 @@ from utils.uopt import generate_coords_tensor, eval_objective_function, \
                         join_paths
 from utils.upoly import update_polyhedrons_dict, merge_sorted_simplices, \
                         sort_simplices, tessellate_points, area_polygon, neighbours,\
-                        find_POI, find_apex
+                        find_POI, find_apex, get_growth_vect, calculate_number_of_simplices
 from utils.utils import parse_ouput_folfer, parsed_path
 from utils.ugraph import remove_close_edges, calculate_neighbors_in_node, adjacency_matrix, \
-                        connectivity, split_graph, delaunay_path
+                        connectivity, split_graph, delaunay_path, check_connection

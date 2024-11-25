@@ -1,8 +1,10 @@
 import numpy as np
 from scipy.spatial import Delaunay
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, LinearRing, LineString
 from shapely.ops import polylabel
-from utils import polar_angle_sort
+from utils import polar_angle_sort, angle
+import config
+import triangle as tr
 
 def update_polyhedrons_dict(tetra_dict, old_point, new_point):
   """
@@ -16,7 +18,17 @@ def update_polyhedrons_dict(tetra_dict, old_point, new_point):
   Returns:
       dict -- Updated dictionary of polyhedrons
   """
-  return {k:{"base_points": v["base_points"], "apex": new_point  if (v['apex'] == old_point).all() else v["apex"]} for k,v in tetra_dict.items()}
+
+
+  # return {k:{"base_points": v["base_points"], "apex": new_point if (v['apex'] == old_point).all() 
+  #                                                               else v["apex"]} 
+  #                                                               for k,v in tetra_dict.items()}
+  if old_point.ndim > 1:
+      return {k:{"base_points": v["base_points"], "apex": new_point  if (v['apex'][:2] == old_point).all(1).any() else v["apex"]} for k,v in tetra_dict.items()}
+  if old_point.shape[0] == 2:
+    return {k:{"base_points": v["base_points"], "apex": new_point  if (v['apex'][:2] == old_point).all().any() else v["apex"]} for k,v in tetra_dict.items()}
+  else:
+    return {k:{"base_points": v["base_points"], "apex": new_point  if (v['apex'] == old_point).all() else v["apex"]} for k,v in tetra_dict.items()}
 
 def merge_sorted_simplices(s1, s2):
   """
@@ -99,8 +111,8 @@ def tessellate_points(initial_len, points):
       list -- Simplices list
   """
 
-  indices = Delaunay(points)
-  dea = indices.simplices
+  indices = tr.triangulate({'vertices': points[:,:2]})
+  dea = indices["triangles"]
   simplices = points[dea]
   areas, sorted_idx_dea = sort_simplices(simplices, dea, points)
   simplices = points[sorted_idx_dea]
@@ -109,9 +121,9 @@ def tessellate_points(initial_len, points):
   sorted_areas = list(np.array(areas)[sorted_areas_idx])
   sorted_simplices = list(simplices[sorted_areas_idx])
   sorted_dea = list(dea[sorted_areas_idx])
- 
+    
 
-  while len(sorted_simplices) > initial_len:
+  while len(sorted_simplices) >= initial_len:
     simplex = sorted_simplices[0]
     area_simplex = sorted_areas[0]
     idx,n = neighbours(simplex, sorted_simplices)
@@ -145,7 +157,8 @@ def area_polygon(points):
   center = np.mean(points, axis=0)
   sorted_points = sorted(points, key=lambda p: polar_angle_sort(p, center))
   # Aplicar la fórmula de Shoelace
-  area = 0.5 * abs(sum(x0*y1 - x1*y0 for ((x0, y0), (x1, y1)) in zip(sorted_points, sorted_points[1:] + [sorted_points[0]])))
+  area = 0.5 * np.linalg.norm(sum(np.cross(x1,x2) for (x1,x2) in zip(sorted_points, 
+                                                                     np.vstack((sorted_points[1:],[sorted_points[0]])))))
   
   return area
 
@@ -203,7 +216,7 @@ def find_POI(points):
   return np.hstack((x,z_coord))
 
 
-def find_apex(base_points, apex_pos):
+def find_apex(base_points, apex_proj, growth_vect):
   """
   Calculate the apex position of a polygon given the base points and 
   a initial apex position. The apex position will be the point that
@@ -219,16 +232,49 @@ def find_apex(base_points, apex_pos):
   """
 
   found = False
+  delta = 0.05
+  max_it = 200
+  it = 0
+  apex_pos = apex_proj
   while not found:
-    angles = []
-    for i in range(len(base_points)):
-      f = (np.degrees(np.arcsin(-(base_points[i,-1] - apex_pos[-1])/np.linalg.norm([base_points[i,0] - apex_pos[0], base_points[i,1] - apex_pos[1], base_points[i,2] - apex_pos[2]]))))
-      angles.append(f>50)
-
-    found = all(angles)
+    found = (-angle(apex_pos, base_points) > 50).all()
     if not found:
-      apex_pos[2] += 0.05
-  
+      if it < max_it:
+        apex_pos = apex_pos + growth_vect*delta
+      if it == max_it:
+        apex_pos = apex_proj
+      else:
+        apex_pos[2] += 0.05
+
+      delta += 0.05 if it != max_it else 0 
+    it += 1
   return apex_pos
 
 
+def section_props(mesh, z):
+  section = mesh.section(np.array([0,0,1]), np.array([0,0,z]))
+
+  return section.centroid, section.length
+
+
+def get_growth_vect(mesh, point, z_2):
+  center_1, len_1 = section_props(mesh, point[-1])
+  center_2, len_2 = section_props(mesh, z_2)
+  delta = center_2 - center_1
+  k = len_2/len_1
+  projection = point*k + delta
+  growth_vect = projection - point
+
+  return growth_vect
+
+
+def calculate_number_of_simplices(mesh, z_1, inital_simplices):
+  z_max = mesh.bounds[1][2]
+  _, d_1 = section_props(mesh, z_1)
+  _, d_2= section_props(mesh, config.PORERADIUS + z_1 if config.PORERADIUS + z_1 < z_max 
+                              else z_max - 1e-6)
+
+  delta = (d_2/d_1)**2
+  num_simplices = int(np.round(inital_simplices*delta))
+
+  return num_simplices

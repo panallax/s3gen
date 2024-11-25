@@ -7,7 +7,12 @@ from stl import mesh
 from scipy.spatial import Delaunay
 from shapely.geometry import LineString
 from triangle import triangulate
-
+import matplotlib
+matplotlib.rcParams.update({'font.size': 16})
+matplotlib.rcParams['mathtext.fontset'] = 'custom'
+matplotlib.rcParams['mathtext.rm'] = 'Bitstream Vera Sans'
+matplotlib.rcParams['mathtext.it'] = 'Bitstream Vera Sans:italic'
+matplotlib.rcParams['mathtext.bf'] = 'Bitstream Vera Sans:bold'
 
 def exclude_points(arr, values_to_remove):
   new_arr = arr[~(arr==values_to_remove[:,None]).all(-1).any(0)]
@@ -72,6 +77,8 @@ top_points = points[np.where(points[:,-1] > np.max(points[:,-1]) - 0.1)]
 lateral_poins = exclude_points(points, bot_points)
 lateral_poins = exclude_points(lateral_poins, top_points)
 
+angulo_paso = 5
+angulo = 0
 for i in range(6):
   fig = plt.figure(figsize=(12,12))
   ax = fig.add_subplot(projection = "3d")
@@ -84,6 +91,8 @@ for i in range(6):
   ax.set_zlim3d([0.0, 35.0])
   ax.set_zlabel('Z [mm]')
   ax.scatter(*points.T)
+  ax.view_init(elev=30, azim=angulo * angulo_paso)
+  angulo += 1
   plt.savefig(f"/home/alex/Desktop/mesh-gen/data/files/{i}.png", dpi=200)
 
 for i in range(6):
@@ -99,11 +108,13 @@ for i in range(6):
   ax.set_zlabel('Z [mm]')
 
   ax.scatter(*bot_points[np.unique(Delaunay(bot_points[:,:2]).convex_hull)].T)
+  ax.view_init(elev=30, azim=angulo * angulo_paso)
+  angulo += 1
   plt.savefig(f"/home/alex/Desktop/mesh-gen/data/files/{i+5}.png", dpi=200)
 
 L = 5 #mm
 pore_area = L**2*np.sqrt(3)/4 #mm^2
-bot,_ = initial_points(L, pore_area, bot_points)
+bot,simplices = initial_points(L, pore_area, bot_points)
 for i in range(6):
   fig = plt.figure(figsize=(12,12))
   ax = fig.add_subplot(projection = "3d")
@@ -117,13 +128,36 @@ for i in range(6):
   ax.set_zlabel('Z [mm]')
 
   ax.scatter(*bot.T)
+  ax.view_init(elev=30, azim=angulo * angulo_paso)
+  angulo += 1
   plt.savefig(f"/home/alex/Desktop/mesh-gen/data/files/{i+10}.png", dpi=200)
+
 
 capas = []
 for i in range(9):
   capas.append([elem for k,elem in tetra.items() if k.startswith(str(i)+"_")])
-    
-m = 11
+
+
+for i in range(6):
+  fig = plt.figure(figsize=(12,12))
+  ax = fig.add_subplot(projection = "3d")
+  ax.set_xlim3d([-15.0, 15.0])
+  ax.set_xlabel('X [mm]')
+
+  ax.set_ylim3d([-15.0, 15.0])
+  ax.set_ylabel('Y [mm]')
+
+  ax.set_zlim3d([0.0, 35.0])
+  ax.set_zlabel('Z [mm]')
+
+
+  ax.triplot(bot[:,:2][:,0], bot[:,:2][:,1], simplices, c = "tab:blue")
+  ax.scatter(*bot.T, c="tab:orange")
+  ax.view_init(elev=30, azim=angulo * angulo_paso)
+  angulo += 1
+  plt.savefig(f"/home/alex/Desktop/mesh-gen/data/files/{i+15}.png", dpi=200)
+
+m = 20
 acc = []
 for c in capas:
   for s in c:
@@ -143,42 +177,42 @@ for c in capas:
         # ax.scatter(elem["base_points"][:, 0], elem["base_points"][:, 1], elem["base_points"][:,2], facecolors='none', edgecolors='black')
         # ax.scatter(elem["apex"][0], elem["apex"][1], elem["apex"][2], facecolors='none', edgecolors='green')
       el = elem
-      ax.scatter(*bot.T, color= "blue")
-      ax.scatter(*el["base_points"].T, color="blue")
+      ax.scatter(*bot.T, color= "tab:orange")
+      ax.scatter(*el["base_points"].T, color="tab:orange")
       for i,p in enumerate(el["base_points"]):
-        ax.plot([el["base_points"][i,0],el["apex"][0]],[el["base_points"][i,1],el["apex"][1]],[el["base_points"][i,2],el["apex"][2]], "blue")
-    plt.savefig(f"/home/alex/Desktop/mesh-gen/data/files/{m+3}.png", dpi=200)
+        ax.plot([el["base_points"][i,0],el["apex"][0]],[el["base_points"][i,1],el["apex"][1]],[el["base_points"][i,2],el["apex"][2]], "tab:blue")
+    ax.view_init(elev=30, azim=angulo * angulo_paso)
+    angulo += 1
+    plt.savefig(f"/home/alex/Desktop/mesh-gen/data/files/{m+1}.png", dpi=200)
     plt.close()
     m += 1
     # plt.show()
 
-seg_acc = []
-for seg in g.edges():
-  seg_acc.append(seg)
-  fig = plt.figure(figsize=(15,15))
-  ax = fig.add_subplot( projection="3d")
-  ax.set_xlim3d([-15.0, 15.0])
-  ax.set_xlabel('X [mm]')
+# seg_acc = []
+# for seg in g.edges():
+#   seg_acc.append(seg)
+#   fig = plt.figure(figsize=(15,15))
+#   ax = fig.add_subplot( projection="3d")
+#   ax.set_xlim3d([-15.0, 15.0])
+#   ax.set_xlabel('X [mm]')
 
-  ax.set_ylim3d([-15.0, 15.0])
-  ax.set_ylabel('Y [mm]')
+#   ax.set_ylim3d([-15.0, 15.0])
+#   ax.set_ylabel('Y [mm]')
 
-  ax.set_zlim3d([0.0, 35.0])
-  ax.set_zlabel('Z [mm]')
-  for n, elem in enumerate(acc):
-    # for j in range(n):
-      # ax.scatter(elem["base_points"][:, 0], elem["base_points"][:, 1], elem["base_points"][:,2], facecolors='none', edgecolors='black')
-      # ax.scatter(elem["apex"][0], elem["apex"][1], elem["apex"][2], facecolors='none', edgecolors='green')
-    el = elem
-    for i,p in enumerate(el["base_points"]):
-      ax.plot([el["base_points"][i,0],el["apex"][0]],[el["base_points"][i,1],el["apex"][1]],[el["base_points"][i,2],el["apex"][2]], "blue")
+#   ax.set_zlim3d([0.0, 35.0])
+#   ax.set_zlabel('Z [mm]')
+#   for n, elem in enumerate(acc):
+#     # for j in range(n):
+#       # ax.scatter(elem["base_points"][:, 0], elem["base_points"][:, 1], elem["base_points"][:,2], facecolors='none', edgecolors='black')
+#       # ax.scatter(elem["apex"][0], elem["apex"][1], elem["apex"][2], facecolors='none', edgecolors='green')
+#     el = elem
+#     for i,p in enumerate(el["base_points"]):
+#       ax.plot([el["base_points"][i,0],el["apex"][0]],[el["base_points"][i,1],el["apex"][1]],[el["base_points"][i,2],el["apex"][2]], "blue")
   
-  for s in seg_acc:
-    ax.plot(*[[s[0][0],s[1][0]],[s[0][1],s[1][1]],[s[0][2],s[1][2]]], color="red")
-  plt.savefig(f"/home/alex/Desktop/mesh-gen/data/files/{m+3}.png", dpi=200)
-  plt.close()
-  m += 1
-  # plt.show()
+#   for s in seg_acc:
+#     ax.plot(*[[s[0][0],s[1][0]],[s[0][1],s[1][1]],[s[0][2],s[1][2]]], color="red")
+#   plt.savefig(f"/home/alex/Desktop/mesh-gen/data/files/{m+3}.png", dpi=200)
+#   plt.close()
+#   m += 1
+#   # plt.show()
 
-
-  

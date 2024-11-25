@@ -1,6 +1,7 @@
 import numpy as np
 np.seterr(all="ignore")
 from scipy.spatial import Delaunay
+import config
 import os
 import networkx as nx
 import pickle
@@ -9,11 +10,12 @@ from triangle import triangulate
 from utils import tessellate_points, polar_angle_sort, area_polygon, sort_simplices, \
                     adjacency_matrix, update_polyhedrons_dict, find_POI, find_apex, \
                     min_dist, between_points, remove_close_edges, isin, find_POI, \
-                    find_apex, connectivity
+                    find_apex, connectivity, get_growth_vect, calculate_number_of_simplices, plot_tessellation, print_dict
 
 class MeshGen:
 
-    def __init__(self,points, base_points, top_points, lateral_points, radius, output_path, tmp_path):
+    def __init__(self,mesh, points, base_points, top_points, lateral_points, radius, output_path, tmp_path):
+        self.mesh = mesh
         self.points = points
         self.base_points = base_points
         self.top_points = top_points
@@ -50,19 +52,19 @@ class MeshGen:
         """
 
         iteration = 0
-
+        shll = []
         while True:
             optimal_points = []
             if iteration == 0: 
                 bot_points, simplices = self.__initial_points()
-                bot_points_pr = bot_points[:,:2]
-                initial_len = len(simplices)
+                # initial_sect = LineString(bot_points_pr[np.unique(Delaunay(bot_points_pr).convex_hull)]).length
+                num_simplices = len(simplices)
                 self.__add_base(simplices, bot_points)
 
             else:
                 print(f"iteration {iteration}")
-                bot_points_pr = bot_points[:,:2]
-                simplices = tessellate_points(initial_len, bot_points_pr)
+                num_simplices = calculate_number_of_simplices(self.mesh, np.mean(bot_points[:,-1]), num_simplices)
+                simplices = tessellate_points(num_simplices, bot_points)
                 # plot_tessellation(bot_points_pr,simplices)
 
             for i,indice in enumerate(simplices):
@@ -73,8 +75,11 @@ class MeshGen:
                 except:
                     initial_point = np.mean(base_points,axis=0)
 
-                optimal_point = find_apex(base_points, initial_point)
-
+                growth_vect = get_growth_vect(self.mesh, 
+                                              initial_point,
+                                              initial_point[2] + config.PORERADIUS if initial_point[2] + config.PORERADIUS <= self.z_max 
+                                                                                    else self.z_max - 1e-6)
+                optimal_point = find_apex(base_points, initial_point, growth_vect)
                 if optimal_point[-1] >= self.z_max:
                     optimal_points.extend(base_points)
                 else:
@@ -83,13 +88,13 @@ class MeshGen:
 
             if len([x for x in self.polyhedrons.keys() if x.startswith(f"{iteration}_")]) == 0:
                 break
-            
             joined_points, self.polyhedrons = self.__join_hull_and_shell(self.polyhedrons, optimal_points, self.lateral_points)
             bot_points = np.unique(np.array(joined_points), axis=0)
 
             iteration += 1
 
         self.__dict_to_graph()
+        print_dict(self.points, self.polyhedrons)
 
     def __add_base(self, simplex, points):
         """ Add the base triangulation to the graph to facilitate printing it.
@@ -103,7 +108,7 @@ class MeshGen:
         for s in simplex:
             simplex_points = points[s]
             for point in [(simplex_points[i], simplex_points[(i + 1) % len(simplex_points)]) for i in range(len(simplex_points))]:
-                self.G.add_edge(tuple(point[0]), tuple(point[1]))
+                self.G.add_edge(tuple(point[0]), tuple(point[1]), length = np.linalg.norm(point[1] - point[0]))
         
         
     def __initial_points(self):
@@ -141,7 +146,6 @@ class MeshGen:
             triang_points = np.array(t["vertices"].tolist())
             simplices = np.array(t["triangles"].tolist())
             current_area =  np.mean([area_polygon(triang_points[x]) for x in sort_simplices(triang_points[simplices], simplices, triang_points)[1]])
-
             if current_area < self.pore_area:
                 min_val = current_val
             else:
@@ -177,6 +181,7 @@ class MeshGen:
             points[(points == old).all(-1)] = new
   
         return points, tetra_dict
+
     
     def __dict_to_graph(self):
         """ Convert a dictionary of polyhedrons to a graph. Not printable edges 
@@ -198,12 +203,12 @@ class MeshGen:
                 local_dist = np.linalg.norm(v["apex"] - p)
                 max_global_dist = local_dist if local_dist > max_global_dist else max_global_dist
                 if len(v["base_points"]) == 3:
-                    self.G.add_edge(tuple(p), tuple(v["apex"]))
+                    self.G.add_edge(tuple(p), tuple(v["apex"]), length= np.linalg.norm(v["apex"] - p))
                 else:  
                     previous = v["base_points"][i-1] if i > 0 else v["base_points"][-1]
                     following = v["base_points"][(i+1)] if i < len(v["base_points"])-1 else v["base_points"][0]
                     if between_points(np.array([previous, p, following]), v["apex"]) or isin(self.lateral_points, v["apex"]):
-                        self.G.add_edge(tuple(p), tuple(v["apex"]))
+                        self.G.add_edge(tuple(p), tuple(v["apex"]), length= np.linalg.norm(v["apex"] - p))
 
         nodes = list(self.G.nodes())
         to_remove = []
@@ -223,7 +228,7 @@ class MeshGen:
             self.G.add_node(new_node)
             new_nodes.append(new_node)
             for n in neighb:
-                self.G.add_edge(new_node, n)
+                self.G.add_edge(new_node, n, length= np.linalg.norm(np.array(new_node) - np.array(n)))
 
         new_nodes = np.array(new_nodes)
         adpt, self.polyhedrons = self.__join_hull_and_shell(self.polyhedrons, 
@@ -237,15 +242,16 @@ class MeshGen:
                 self.G.remove_node(point)
                 self.G.add_node(tuple(adpt[i]))
                 for node in n:
-                    self.G.add_edge(tuple(adpt[i]), node)
+                    self.G.add_edge(tuple(adpt[i]), node, length= np.linalg.norm(adpt[i] - np.array(node)))
 
         simplex = Delaunay(adpt[:,:2]).simplices
         self.__add_base(simplex, adpt)
 
         self.G = remove_close_edges(self.G, max_global_dist)
+        self.G.remove_nodes_from(list(nx.isolates(self.G)))
 
-    
     def save_graph(self):
+        pickle.dump(self.polyhedrons, open(os.path.join(self.tmp_path, "tetra.pickle"),"wb"))
         pickle.dump(self.G, open(os.path.join(self.output_path, "G.pickle"),"wb"))
         pickle.dump(self.G, open(os.path.join(self.tmp_path, "G.pickle"),"wb"))
 

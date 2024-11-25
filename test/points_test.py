@@ -13,6 +13,7 @@ from itertools import chain
 import matplotlib.pyplot as plt
 import config
 from time import time
+
 class MeshGen:
 
     def __init__(self, shell_points, radius, output_path, tmp_path):

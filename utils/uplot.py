@@ -13,9 +13,12 @@ def plot_Dealunay(points):
     """
 
     points = np.array(points)
+
     if points.shape[1] == 3:
         points = points[:,:2]
     indices = Delaunay(points).simplices
+    plt.figure(figsize=(10,10))
+    plt.axes().set_aspect('equal')
     plt.triplot(points[:,0], points[:,1], indices)
     plt.plot(points[:,0], points[:,1], 'o')
     plt.show()
@@ -38,7 +41,7 @@ def plot_graph(G):
     ax.set_zlabel("z")
     plt.show()
 
-def print_dict(poly_dict):
+def print_dict(points, poly_dict):
   """
   Print the dictionary of polyhedrons.
 
@@ -48,24 +51,30 @@ def print_dict(poly_dict):
 
   fig = plt.figure(figsize=(15,15))
   ax = fig.add_subplot(111, projection="3d")
+  ax.scatter(
+      *points.T,
+      s=2,
+      facecolors='none', edgecolors='gray', alpha=0.5
+  )
   for k,elem in poly_dict.items():
-    ax.scatter(elem["base_points"][:, 0], elem["base_points"][:, 1], elem["base_points"][:,2], facecolors='none', edgecolors='black')
-    ax.scatter(elem["apex"][0], elem["apex"][1], elem["apex"][2], facecolors='none', edgecolors='green')
+    # ax.scatter(elem["base_points"][:, 0], elem["base_points"][:, 1], elem["base_points"][:,2], c='black')
+    ax.scatter(elem["apex"][0], elem["apex"][1], elem["apex"][2], c='orange', s= 10)
     for i,p in enumerate(elem["base_points"]):
 
       if len(elem["base_points"]) == 3:
-        plt.plot([elem["base_points"][i,0],elem["apex"][0]],[elem["base_points"][i,1],elem["apex"][1]],[elem["base_points"][i,2],elem["apex"][2]], "blue")
+        plt.plot([elem["base_points"][i,0],elem["apex"][0]],[elem["base_points"][i,1],elem["apex"][1]],[elem["base_points"][i,2],elem["apex"][2]], "tab:blue")
       else:  
         previous = elem["base_points"][i-1] if i > 0 else elem["base_points"][-1]
         following = elem["base_points"][(i+1)] if i < len(elem["base_points"])-1 else elem["base_points"][0]
-        if between_points(np.array([previous, p, following]), elem["apex"]):
-          plt.plot([elem["base_points"][i,0],elem["apex"][0]],[elem["base_points"][i,1],elem["apex"][1]],[elem["base_points"][i,2],elem["apex"][2]], "blue")
+        # if between_points(np.array([previous, p, following]), elem["apex"]):
+        plt.plot([elem["base_points"][i,0],elem["apex"][0]],[elem["base_points"][i,1],elem["apex"][1]],[elem["base_points"][i,2],elem["apex"][2]], "tab:blue")
      
-  ax.set_xlabel('X')
-  ax.set_ylabel('Y')
-  ax.set_zlabel('Z')
+  ax.set_xlabel('X [mm]', fontsize=16)
+  ax.set_ylabel('Y [mm]', fontsize=16)
+  ax.set_zlabel('Z [mm]', fontsize=16)
+  plt.tight_layout()
   plt.show()
-
+  # fig.savefig("hole_structure.svg", format="svg", dpi=1200)
 
 def plot_tessellation(points, dea):
   """
@@ -82,7 +91,11 @@ def plot_tessellation(points, dea):
     for par in consecutive_pairs:
       x_values = [par[0][0], par[1][0]]
       y_values = [par[0][1], par[1][1]]
-      ax.plot(x_values, y_values, marker='o', color="green")
+      ax.plot(x_values, y_values, color="royalblue")
 
+  ax.scatter(*points.T, color="orange", zorder=10)
+  ax.set_xlabel("X [mm]")
+  ax.set_ylabel("Y [mm]")
   ax.set_aspect('equal', adjustable='datalim')
+  plt.tight_layout()
   plt.show()

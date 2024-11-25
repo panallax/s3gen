@@ -41,4 +41,5 @@ class STLGen():
         Part.show(final_shape, "final_shape")
         doc.recompute()
         mesh = MeshPart.meshFromShape(final_shape, LinearDeflection=0.01, AngularDeflection=0.523599, Relative=False)
-        mesh.write(os.path.join(self.output_path, "mesh.stl"))   
+        # doc.saveAs(os.path.join(self.output_path, "mesh.FCStd")) 
+        mesh.write(os.path.join(self.output_path, "mesh.stl"))

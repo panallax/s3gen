@@ -1,7 +1,6 @@
 import numpy as np
-from stl import mesh
 from scipy.spatial import Delaunay, cKDTree
-
+import trimesh
 
 def in_volume(p, hull):
     """ Test if the points in p are in the volume.
@@ -29,13 +28,14 @@ def extract_points_from_STL(file):
     Returns:
         np.array: coordinates of the points.
     """
-    m = mesh.Mesh.from_file("../" + file)
-    points = np.unique(m.points.reshape([-1,3]), axis=0)
-    bot_points = points[points[:,2] == m.z.min()]
-    top_points = points[points[:,2] == m.z.max()]
-    lateral_points = points[(points[:,2] != m.z.min()) & (points[:,2] != m.z.max())]
+    mesh = trimesh.load("../" + file)
+    points = mesh.vertices
+    z_min,z_max = mesh.bounds[:,2]
+    bot_points = points[points[:,2] <= z_min + 1e-6]
+    top_points = points[points[:,2] >= z_max - 1e-6]
+    lateral_points = points[(points[:,2] != z_min) & (points[:,2] != z_max)]
     
-    return points, bot_points, top_points, lateral_points
+    return mesh, points, bot_points, top_points, lateral_points
 
 
 def caracteristic_distsance(points):
