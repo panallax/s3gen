@@ -9,7 +9,7 @@ setup(
         "networkx",
         "scikit-learn",
         "numpy-stl",
-        "scipy >= 1.11.0",
+        "scipy",
         "numpy",
         "matplotlib",
         "shapely",

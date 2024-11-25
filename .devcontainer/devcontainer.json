@@ -1,0 +1,7 @@
+{
+    "name": "pymesh_dev",
+    "dockerComposeFile": "../docker-compose.yml",
+    "service": "pymesh_dev",
+    "workspaceFolder": "/workspace",
+    "shutdownAction": "stopCompose"
+  }

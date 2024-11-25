@@ -1,0 +1,9 @@
+services:
+  pymesh_dev:
+    build:  # Usa el Dockerfile para construir la imagen
+      context: .  # Usa el directorio actual como contexto
+    volumes:
+      - .:/workspace  # Monta todo el proyecto
+
+    working_dir: /workspace
+    tty: true
