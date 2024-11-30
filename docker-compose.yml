@@ -1,9 +1,9 @@
 services:
-  pymesh_dev:
+  mesh-gen:
     build:  # Usa el Dockerfile para construir la imagen
       context: .  # Usa el directorio actual como contexto
     volumes:
-      - .:/workspace  # Monta todo el proyecto
+      - .:/mesh-gen  # Monta todo el proyecto
 
-    working_dir: /workspace
+    working_dir: /mesh-gen
     tty: true

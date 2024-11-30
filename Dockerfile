@@ -1,8 +1,8 @@
-FROM  pymesh/pymesh:py3.7
+FROM xcimer/pymesh:latest-amd64
 
-WORKDIR /workspace
+WORKDIR /mesh-gen
 
-COPY . /workspace
+COPY . /mesh-gen
 
 RUN pip install --no-cache-dir -e .
 
