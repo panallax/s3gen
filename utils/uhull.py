@@ -31,11 +31,20 @@ def extract_points_from_STL(file):
     mesh = trimesh.load("../" + file)
     points = mesh.vertices
     z_min,z_max = mesh.bounds[:,2]
-    bot_points = points[points[:,2] <= z_min + 1e-6]
+    bot_points = mesh.section(np.array([0,0,1]), np.array([0,0,z_min])).vertices
     top_points = points[points[:,2] >= z_max - 1e-6]
-    lateral_points = points[(points[:,2] != z_min) & (points[:,2] != z_max)]
-    
-    return mesh, points, bot_points, top_points, lateral_points
+
+    lateral_faces = [i for i, normal in enumerate(mesh.face_normals) if abs(normal[2]) < 0.5]
+    lateral_mesh = mesh.submesh([lateral_faces], append=True)
+    connected_components = lateral_mesh.split(only_watertight= False)
+    if len(connected_components) != 1:
+      connected_components.sort(key=lambda x: x.area, reverse=True)
+      lateral_mesh = connected_components[0]
+      inner_mesh = connected_components[1:]
+
+      return mesh.subdivide(), points, bot_points, top_points, lateral_mesh, inner_mesh
+
+    return mesh.subdivide(), points, bot_points, top_points, lateral_mesh, None
 
 
 def caracteristic_distsance(points):

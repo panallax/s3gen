@@ -278,3 +278,10 @@ def calculate_number_of_simplices(mesh, z_1, inital_simplices):
   num_simplices = int(np.round(inital_simplices*delta))
 
   return num_simplices
+
+def pore_area(L= None, pore_area= None):
+  if not pore_area:
+    pore_area = L**2*np.sqrt(3)/4 #mm^2
+  elif not L:
+    L = np.sqrt(pore_area*4/np.sqrt(3))
+  return L, pore_area

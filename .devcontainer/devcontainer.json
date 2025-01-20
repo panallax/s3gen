@@ -1,7 +1,7 @@
 {
-    "name": "pymesh_dev",
+    "name": "mesh",
     "dockerComposeFile": "../docker-compose.yml",
-    "service": "pymesh_dev",
-    "workspaceFolder": "/workspace",
+    "service": "mesh-gen",
+    "workspaceFolder": "/mesh-gen",
     "shutdownAction": "stopCompose"
   }

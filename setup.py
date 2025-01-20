@@ -10,10 +10,11 @@ setup(
         "scikit-learn",
         "numpy-stl",
         "scipy",
-        "numpy",
+        "numpy==1.24.3",
         "matplotlib",
         "shapely",
         "triangle",
         "trimesh",
+        "pytz"
     ]
 )

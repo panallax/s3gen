@@ -9,3 +9,4 @@
 *.png
 __pycache__/
 *.mp4
+*.gcode

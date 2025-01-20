@@ -8,21 +8,21 @@ import shutil
 
 try:
     output_path = parse_ouput_folfer(config.STLFILE, config.OUTPUTPATH)
-    mesh, points, base_points, top_points, lateral_points = extract_points_from_STL(config.STLFILE)
+    mesh, points, base_points, top_points, lateral_mesh = extract_points_from_STL(config.STLFILE)
 
     if len(glob(f"{parsed_path(config.TMPPATH)}/*.pickle")) > 0:
         stl = STLGen(parsed_path(config.TMPPATH), 
                         output_path)
         
         stl.generate_stl()
-        exit()
 
     mesh = MeshGen(mesh,
                     points, 
                     base_points, 
                     top_points, 
-                    lateral_points, 
-                    config.PORERADIUS, 
+                    lateral_mesh, 
+                    config.PORERADIUS,
+                    config.POREAREA, 
                     output_path, 
                     config.TMPPATH)
 

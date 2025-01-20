@@ -10,24 +10,26 @@ from triangle import triangulate
 from utils import tessellate_points, polar_angle_sort, area_polygon, sort_simplices, \
                     adjacency_matrix, update_polyhedrons_dict, find_POI, find_apex, \
                     min_dist, between_points, remove_close_edges, isin, find_POI, \
-                    find_apex, connectivity, get_growth_vect, calculate_number_of_simplices, plot_tessellation, print_dict
+                    find_apex, connectivity, get_growth_vect, calculate_number_of_simplices, \
+                    plot_tessellation, print_dict, pore_area
 
 class MeshGen:
 
-    def __init__(self,mesh, points, base_points, top_points, lateral_points, radius, output_path, tmp_path):
+    def __init__(self,mesh, points, base_points, top_points, lateral_mesh, radius, pore_area, output_path, tmp_path):
         self.mesh = mesh
         self.points = points
         self.base_points = base_points
         self.top_points = top_points
-        self.lateral_points = lateral_points
+        self.lateral_mesh = lateral_mesh
         self.z_max = np.max(self.top_points[:,-1])
         self.L = radius #mm
-        self.pore_area = self.L**2*np.sqrt(3)/4 #mm^2
+        self.pore_area = self.pore_area
         self.polyhedrons = {}
         self.G = nx.Graph()
         self.output_path = output_path
         self.tmp_path = os.path.join("..", tmp_path)
 
+        self.L, self.pore_area = pore_area(self.L, self.pore_area)
 
     def generate_mesh(self):
         """ Generate the mesh of the structure. The generation of the mesh follows
@@ -76,8 +78,8 @@ class MeshGen:
                     initial_point = np.mean(base_points,axis=0)
 
                 growth_vect = get_growth_vect(self.mesh, 
-                                              initial_point,
-                                              initial_point[2] + config.PORERADIUS if initial_point[2] + config.PORERADIUS <= self.z_max 
+                                                initial_point,
+                                                initial_point[2] + config.PORERADIUS if initial_point[2] + config.PORERADIUS <= self.z_max 
                                                                                     else self.z_max - 1e-6)
                 optimal_point = find_apex(base_points, initial_point, growth_vect)
                 if optimal_point[-1] >= self.z_max:

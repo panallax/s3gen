@@ -199,7 +199,7 @@ def join_paths(list_of_tuples):
         
         list -- List of tuples with joined paths
     """
-
+    "Not Used"
     value_group = {}
     groups = []
 
@@ -225,4 +225,3 @@ def join_paths(list_of_tuples):
 
     grouped_list = [tuple(group) for group in groups]
     return grouped_list
-
