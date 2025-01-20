@@ -1,5 +1,3 @@
-import sys
-import config
 import pickle
 import os
 # sys.path.append(config.FREECADPATH)
@@ -8,25 +6,39 @@ import os
 # import MeshPart, Mesh
 # import pymesh
 import numpy as np
-import trimesh
 import pygmsh
 
-G = pickle.load(open( "../tmp/G.pickle", 'rb'))
+class STLGen():
 
-with pygmsh.occ.Geometry() as geom:
-    geom.characteristic_length_max = 0.5
-    geom.characteristic_length_min = 0.5
-    points = []
-    for node in G.nodes():
-        points.append(geom.add_ball(node, 0.5))
-
-    for edge in G.edges():
-        points.append(geom.add_cylinder(np.array(edge[0]), np.array(edge[1]) - np.array(edge[0]), 0.4))
+    def __init__(self, graph_path, output_path):
         
-    geom.boolean_union(points)
-    mesh = geom.generate_mesh()
+        self.G = pickle.load(open(os.path.join(graph_path, "G.pickle"), 'rb'))
+        self.output_path = output_path
+    
+    def generate_stl(self):
+        with pygmsh.occ.Geometry() as geom:
+            geom.characteristic_length_max = 1
+            geom.characteristic_length_min = 1
+            spheres = [geom.add_ball(node, 2) for node in self.G.nodes()]
+            cylinders = [geom.add_cylinder(np.array(edge[0]), np.array(edge[1]) - np.array(edge[0]), 1) for edge in self.G.edges()]
 
-pygmsh.write("mesh.msh")
+            # geom.boolean_union(spheres + cylinders)
+            # print(13123)
+            # mesh = geom.generate_mesh()
+
+            group_size = 100  # Ajusta según el tamaño de tu modelo
+            groups = [spheres[i:i + group_size] + cylinders[i:i + group_size] 
+                    for i in range(0, len(spheres), group_size)]
+
+            combined = groups[0]
+            for group in groups[1:]:
+                combined = geom.boolean_union([combined] + group)
+
+            mesh = geom.generate_mesh()
+        mesh.write("mesh.vtk")
+
+
+
 # vertices = np.array(G.nodes())
 # B = np.array(G.edges())
 # edges = np.array([[np.where((vertices == nodo).all(axis=1))[0][0] for nodo in relacion] for relacion in B])
