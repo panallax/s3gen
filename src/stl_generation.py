@@ -7,36 +7,121 @@ import os
 # import pymesh
 import numpy as np
 import pygmsh
+import gmsh
+from collections import defaultdict
+import multiprocessing
 
 class STLGen():
 
-    def __init__(self, graph_path, output_path):
+    def __init__(self, sphere_radius, cylinder_radius, graph_path, output_path):
         
+        self.sphere_radius = sphere_radius
+        self.cylinder_radius = cylinder_radius
         self.G = pickle.load(open(os.path.join(graph_path, "G.pickle"), 'rb'))
+        self.polygons = pickle.load(open(os.path.join(graph_path, "tetra.pickle"), 'rb'))
         self.output_path = output_path
+
+    @staticmethod
+    def build_tetrahedron(tetra_list, layer, sphere_radius, cylinder_radius, output_path):
+        # with pygmsh.occ.Geometry() as geom:
+        #     geom.characteristic_length_max = 2
+        #     geom.characteristic_length_min = 2
+        #     solid_layer = geom.boolean_union(
+        #         [
+        #             geom.add_ball(node, node_radius)
+        #                 for tetra_dict in tetra_list 
+        #                 for node in np.vstack((tetra_dict["apex"],tetra_dict["base_points"]))
+        #             ]
+        #         + 
+        #         [
+        #             geom.add_cylinder(start, tetra_dict["apex"] - start, cylinder_radius)
+        #                 for tetra_dict in tetra_list 
+        #                 for start in tetra_dict["base_points"]
+        #             ]
+        #     )
+        #     geom.generate_mesh()
+        # return geom, solid_layer
+        gmsh.initialize()
+        gmsh.model.add(f"layer_{layer}")
+        gmsh.option.setNumber("Mesh.CharacteristicLengthMin", 2)
+        gmsh.option.setNumber("Mesh.CharacteristicLengthMax", 2)
+
+        entities = []
+        for tetra_dict in tetra_list:
+            apex = tetra_dict["apex"]
+            base_points = tetra_dict["base_points"]
+
+            for node in np.vstack((apex, base_points)):
+                sphere = gmsh.model.occ.addSphere(node[0], node[1], node[2], sphere_radius)
+                entities.append((3, sphere))  # (dimension, tag)
+
+            for start in base_points:
+                dx, dy, dz = apex - start
+                cylinder = gmsh.model.occ.addCylinder(
+                    start[0], start[1], start[2], dx, dy, dz, cylinder_radius
+                )
+                entities.append((3, cylinder))  # (dimension, tag)
+
+        gmsh.model.occ.synchronize()
+        fused = gmsh.model.occ.fuse(entities, entities)
+        gmsh.model.occ.synchronize()
+
+        gmsh.model.occ.removeAllDuplicates()
+        gmsh.model.mesh.generate(3)
+
+        tmp_file = os.path.join(output_path, f"tmp_{layer}.stl")
+        gmsh.write(tmp_file)
+        gmsh.finalize()
+
+        return tmp_file
+        
+    def process_layer(self, args):
+        # try:
+        layer, layer_tetra = args
+        return self.build_tetrahedron(layer_tetra, layer, self.sphere_radius, self.cylinder_radius, self.output_path)
+        # final_path = os.path.join(self.output_path, f"tmp_{layer}.stl")
+
+        # except Exception as e:
+        #     return f"Error en capa {layer}: {e}"
+        # geom, solids = self.build_tetrahedron(layer_tetra, self.sphere_radius, self.cylinder_radius)
+        # tmp_file = f"tmp_{layer}.stl"
+        # pygmsh.write(os.path.join(self.output_path, tmp_file))
+    
+        # with multiprocessing.Pool(processes = multiprocessing.cpu_count()) as pool:
+        #     solids = pool.starmap(self.build_tetrahedron, [(t, self.sphere_radius, self.cylinder_radius, geom) for t in layer_tetra])
+        # with pygmsh.occ.Geometry() as geom:
+        # return [self.build_tetrahedron(t, self.sphere_radius, self.cylinder_radius, geom) for t in layer_tetra]
+        # return self.build_tetrahedron(layer_tetra, self.sphere_radius, self.cylinder_radius, geom)
+        
+        # return tmp_file
     
     def generate_stl(self):
-        with pygmsh.occ.Geometry() as geom:
-            geom.characteristic_length_max = 1
-            geom.characteristic_length_min = 1
-            spheres = [geom.add_ball(node, 2) for node in self.G.nodes()]
-            cylinders = [geom.add_cylinder(np.array(edge[0]), np.array(edge[1]) - np.array(edge[0]), 1) for edge in self.G.edges()]
+        
+        layers = defaultdict(list)
+        for key, value in self.polygons.items():
+            layers[key.split("_")[0]].append(value)
 
-            # geom.boolean_union(spheres + cylinders)
-            # print(13123)
+
+        for layer, layer_tetra in layers.items():
+            final_path = os.path.join(self.output_path, f"layer_{layer}.stl")
+            self.process_layer((layer, layer_tetra))
+            # args = [(layer, t) for layer,t in layers.items()]
+            # with multiprocessing.Pool(processes = multiprocessing.cpu_count() - 1) as pool:
+            # results = pool.map(self.process_layer, args)
+                # with pygmsh.occ.Geometry() as geom:
+                #     geom.characteristic_length_max = 2
+                #     geom.characteristic_length_min = 2
+                #     layers_solids = self.process_layer(t, geom)
+                #     geom.generate_mesh()
+                #     tmp_file = f"tmp_{layer}.stl"
+                #     pygmsh.write(os.path.join(self.output_path, tmp_file))
+    
+
+                # layers_solids.extend(solids)
+            
+            # geom.boolean_union(solids)
+
             # mesh = geom.generate_mesh()
-
-            group_size = 100  # Ajusta según el tamaño de tu modelo
-            groups = [spheres[i:i + group_size] + cylinders[i:i + group_size] 
-                    for i in range(0, len(spheres), group_size)]
-
-            combined = groups[0]
-            for group in groups[1:]:
-                combined = geom.boolean_union([combined] + group)
-
-            mesh = geom.generate_mesh()
-        mesh.write("mesh.vtk")
-
 
 
 # vertices = np.array(G.nodes())
