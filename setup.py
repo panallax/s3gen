@@ -7,14 +7,13 @@ setup(
     packages=find_packages(),
     install_requires=[
         "networkx",
-        "scikit-learn",
-        "numpy-stl",
         "scipy",
         "numpy==1.24.3",
         "matplotlib",
         "shapely",
         "triangle",
         "trimesh",
-        "pytz"
+        "pytz",
+        "pygmsh"
     ]
 )

@@ -20,3 +20,9 @@ BEDDIMENSIONS = (200, 200) # Bed dimensions in mm
 
 BOTTOMLAYERS = 2    # Number of layers to print at the bottom
 TOPLAYERS = 2    # Number of layers to print at the top
+
+
+###### Mesh Parameters ######
+
+INITIAL_SPHERE_RADIUS = 3
+INITIAL_CYLINDER_RADIUS = 2

@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.spatial import Delaunay, cKDTree
 import trimesh
+from utils.unodes import polar_angle_sort
 
 def in_volume(p, hull):
     """ Test if the points in p are in the volume.
@@ -56,6 +57,7 @@ def caracteristic_distsance(points):
     Returns:
         float: caracteristic distance.
     """
+    "Not Used"
     kd_tree = cKDTree(points)   
     total_dist = 0.0  
     for point in points:
@@ -81,3 +83,31 @@ def z_shell_points(points, outter_points, lateral_points, d, L = 5):
 #   section_line = LineString(s).simplify(L/10).coords
 
   return np.array(section_line)
+
+def detect_holes(mesh, z):
+
+  path_3D = mesh.section(np.array([0,0,1]), np.array([0,0,z]))
+  path_2D, transform = path_3D.to_planar()
+  path_2D.rezero()
+  section = path_2D.polygons_closed
+
+  holes = []
+  points = []
+  segments = []
+  offset = 0
+  for i,pts in enumerate(section):
+    pts = np.unique(pts.simplify(0.8).exterior.coords, axis= 0)
+    n = len(pts)
+    if i != 0:
+      holes.append(np.mean(pts, axis=0))
+    pts = sorted(pts, key= lambda x: polar_angle_sort(x, np.mean(pts, axis=0)))
+    points.extend(pts)
+
+    segments.extend([[offset + i, offset + (i + 1) % n] for i in range(n)])
+    offset += n
+
+  points = np.array(points)
+  segments = np.array(segments)
+  transform[np.abs(transform) < 1e-10] = 0
+
+  return points, segments, holes, transform

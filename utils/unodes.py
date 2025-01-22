@@ -29,10 +29,16 @@ def isin(points, point):
     Returns:
         bool -- True if the point is in the set of points, False otherwise
     """
-    if len(point) > 3:
-        return (points[:, None] == point).all(-1).any(-1)
+    if isinstance(points, list):
+        points = np.array(points)
+    if isinstance(point, list):
+        point = np.array(point)
+
+    if len(point.shape) >= 2 and point.shape[1] >= 2:
+        result = np.any(np.all(points[:, np.newaxis] == point, axis=-1), axis=1)
     else:
-        return (points == point).all(-1).any()
+        result = (points == point).all(-1).any()
+    return result
     
 
 def exclude_points(arr, values_to_remove):
@@ -169,3 +175,69 @@ def distance(p1,p2):
     p1 = np.array(p1)
     p2 = np.array(p2)
     return np.linalg.norm(p1-p2)
+
+
+def group_segments(segments):
+    parent = {}
+
+    def find(node):
+        # Find the representative of the set (with path compression).
+        if parent[node] != node:
+            parent[node] = find(parent[node])
+        return parent[node]
+
+    def union(node1, node2):
+        # Join two roots
+        root1 = find(node1)
+        root2 = find(node2)
+        if root1 != root2:
+            parent[root2] = root1
+
+    # Initialise nodes in Union-Find
+    for seg in segments:
+        for node in seg:
+            if node not in parent:
+                parent[node] = node
+
+    # Process segments to join components
+    for seg in segments:
+        union(seg[0], seg[1])
+
+    # Group nodes by component
+    groups = {}
+    for node in parent:
+        root = find(node)
+        if root not in groups:
+            groups[root] = []
+        groups[root].append(node)
+
+    group_list = list(groups.values())
+
+    return group_list
+
+
+def generate_segments(points, external_indices, internal_indices_dict):
+    external_indices = sorted(external_indices, key= lambda x: polar_angle_sort(points[x], np.mean(points[external_indices], axis= 0)))
+    external_segments = [
+        (external_indices[i], external_indices[(i + 1) % len(external_indices)])
+        for i in range(len(external_indices))
+    ]
+
+    internal_segments = []
+    if internal_indices_dict:
+      for internal_idx in internal_indices_dict.values():
+          internal_idx = sorted(internal_idx, key= lambda x: polar_angle_sort(points[x], np.mean(points[internal_idx], axis= 0)))
+          segments = [
+              (internal_idx[i], internal_idx[(i + 1) % len(internal_idx)])
+              for i in range(len(internal_idx))
+          ]
+          internal_segments.extend(segments)
+
+
+    return external_segments + internal_segments
+
+def valid(array):
+  if "010" in "".join(['1' if val else '0' for val in array]):
+     return False
+  return True
+

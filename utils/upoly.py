@@ -1,10 +1,9 @@
 import numpy as np
-from scipy.spatial import Delaunay
-from shapely.geometry import Polygon, LinearRing, LineString
+from shapely.geometry import Polygon
 from shapely.ops import polylabel
-from utils import polar_angle_sort, angle
+from utils import polar_angle_sort, angle, generate_segments, group_segments
 import config
-import triangle as tr
+import triangle
 
 def update_polyhedrons_dict(tetra_dict, old_point, new_point):
   """
@@ -94,7 +93,7 @@ def sort_simplices(simplices, idx_simplices, points):
   sorted_simplices = np.array(list(map(lambda s: sorted(s, key=lambda x : polar_angle_sort(points[x],np.mean(points[s], axis=0))), idx_simplices)))
   return areas, sorted_simplices
 
-def tessellate_points(initial_len, points):
+def tessellate_points(initial_len, mesh, points, outter_points_idx, inner_points_dict):
   """
   Tessellate a set of points from a intial Delaunay triangulation until the number
   of simplices is equal to the initial one. The tessellation is done by merging 
@@ -111,9 +110,22 @@ def tessellate_points(initial_len, points):
       list -- Simplices list
   """
 
-  indices = tr.triangulate({'vertices': points[:,:2]})
-  dea = indices["triangles"]
+  if inner_points_dict:
+    holes = [np.mean(points[x][:,:2], axis= 0) for x in inner_points_dict.values()]
+  else:
+    holes = None
+  points_pr = points[:,:2]
+  segments =  generate_segments(points_pr, outter_points_idx, inner_points_dict if inner_points_dict else None)
+
+  t = triangle.triangulate({"vertices": points_pr, "segments": segments, **({"holes": holes} if holes else {})}, opts = "p")
+  
+  dea = t["triangles"]
   simplices = points[dea]
+
+  segments_groups = sorted(group_segments(t["segments"]), key= len, reverse= True)
+  outter_points = points[segments_groups[0]]
+  inner_points =  [points[idx] for idx in segments_groups[1:]]
+
   areas, sorted_idx_dea = sort_simplices(simplices, dea, points)
   simplices = points[sorted_idx_dea]
 
@@ -121,7 +133,7 @@ def tessellate_points(initial_len, points):
   sorted_areas = list(np.array(areas)[sorted_areas_idx])
   sorted_simplices = list(simplices[sorted_areas_idx])
   sorted_dea = list(dea[sorted_areas_idx])
-    
+
 
   while len(sorted_simplices) >= initial_len:
     simplex = sorted_simplices[0]
@@ -141,7 +153,7 @@ def tessellate_points(initial_len, points):
     sorted_simplices.insert(pos, merged_simplex)
     sorted_dea.insert(pos, merged_dea)
 
-  return sorted_dea
+  return sorted_dea, points, outter_points, inner_points
 
 def area_polygon(points):
   """
@@ -279,7 +291,7 @@ def calculate_number_of_simplices(mesh, z_1, inital_simplices):
 
   return num_simplices
 
-def pore_area(L= None, pore_area= None):
+def initial_area(L= None, pore_area= None):
   if not pore_area:
     pore_area = L**2*np.sqrt(3)/4 #mm^2
   elif not L:
