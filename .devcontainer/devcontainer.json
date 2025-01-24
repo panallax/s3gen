@@ -1,7 +1,14 @@
 {
-    "name": "mesh",
+    "name": "mesh-gen",
     "dockerComposeFile": "../docker-compose.yml",
     "service": "mesh-gen",
     "workspaceFolder": "/mesh-gen",
-    "shutdownAction": "stopCompose"
+    "shutdownAction": "stopCompose",
+    "customizations": {
+      "vscode": {
+        "extensions": [
+          "ms-python.python"
+        ]
+      }
+    }
   }
