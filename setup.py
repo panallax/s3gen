@@ -8,7 +8,7 @@ setup(
     install_requires=[
         "networkx",
         "scipy",
-        "numpy==1.24.3",
+        "numpy",
         "matplotlib",
         "shapely",
         "triangle",
