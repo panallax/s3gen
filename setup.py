@@ -5,15 +5,18 @@ setup(
     version="1.0.0",
     description="Generate mesh for 3D printing",
     packages=find_packages(),
+    py_modules=["config"],
     install_requires=[
         "networkx",
         "scipy",
-        "numpy",
+        "numpy  ",
         "matplotlib",
         "shapely",
         "triangle",
         "trimesh",
         "pytz",
-        "pygmsh"
+        "pygmsh",
+        "rtree",
+        "gmsh"
     ]
 )

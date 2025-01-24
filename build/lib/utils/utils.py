@@ -16,7 +16,7 @@ def parse_ouput_folfer(file_path, output_folder):
     folder_name = f"{os.path.splitext(file_name)[0]}_{current_time}"
     output_path = os.path.join(parsed_path(output_folder),folder_name)
     if not os.path.exists(output_path):
-        os.makedirs(output_path)
+        os.mkdir(output_path)
     print(f"Output folder: {output_path}")
     
     return output_path
