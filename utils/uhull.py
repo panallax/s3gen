@@ -30,6 +30,8 @@ def extract_points_from_STL(file):
         np.array: coordinates of the points.
     """
     mesh = trimesh.load("../" + file)
+    print("Processing file: {}".format(file))
+    
     points = mesh.vertices
     z_min,z_max = mesh.bounds[:,2]
     bot_points = mesh.section(np.array([0,0,1]), np.array([0,0,z_min])).vertices

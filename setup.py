@@ -15,8 +15,6 @@ setup(
         "triangle",
         "trimesh",
         "pytz",
-        "pygmsh",
-        "rtree",
-        "gmsh"
+        "manifold3d"
     ]
 )

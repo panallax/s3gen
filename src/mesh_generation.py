@@ -128,7 +128,7 @@ class MeshGen:
                                                                                                         outter_shell_apex_idx, inner_shell_apex_idx_dict)
             iteration += 1
 
-        self.__dict_to_graph(outter_shell_apex_idx, inner_shell_apex_idx_dict)
+        self.__dict_to_graph()
         print_dict(self.points, self.polyhedrons)
 
     def __add_base(self, simplex, points):
@@ -249,25 +249,25 @@ class MeshGen:
                         self.G.add_edge(tuple(p), tuple(v["apex"]), length= np.linalg.norm(v["apex"] - p))
         
         # Move the nodes to the top of the shell
-        # nodes = list(self.G.nodes())
-        # to_remove = []
-        # for node in nodes:
-        #     neighb = list(self.G.neighbors(node))
-        #     for n in neighb:
-        #         if n[2] > node[2]:
-        #             break
-        #     else:
-        #         to_remove.append([node, neighb])
+        nodes = list(self.G.nodes())
+        to_remove = []
+        for node in nodes:
+            neighb = list(self.G.neighbors(node))
+            for n in neighb:
+                if n[2] > node[2]:
+                    break
+            else:
+                to_remove.append([node, neighb])
 
-        # new_nodes = []
-        # for node, neighb in to_remove:
-        #     self.G.remove_node(node)
-        #     new_node = tuple(np.array([node[0], node[1], self.z_max]))
-        #     self.polyhedrons = update_polyhedrons_dict(self.polyhedrons, np.array(node), np.array(new_node))
-        #     self.G.add_node(new_node)
-        #     new_nodes.append(new_node)
-        #     for n in neighb:
-        #         self.G.add_edge(new_node, n, length= np.linalg.norm(np.array(new_node) - np.array(n)))
+        new_nodes = []
+        for node, neighb in to_remove:
+            self.G.remove_node(node)
+            new_node = tuple(np.array([node[0], node[1], self.z_max]))
+            self.polyhedrons = update_polyhedrons_dict(self.polyhedrons, np.array(node), np.array(new_node))
+            self.G.add_node(new_node)
+            new_nodes.append(new_node)
+            for n in neighb:
+                self.G.add_edge(new_node, n, length= np.linalg.norm(np.array(new_node) - np.array(n)))
         
         # # Move the outter and inner nodes to the perimeter of the top section
         # new_nodes = np.array(new_nodes)
@@ -300,4 +300,4 @@ class MeshGen:
         connectivity_list = connectivity(self.G)
         np.savez(os.path.join(self.output_path, "adjacency_matrix.npz"),nodes=nodes, 
                                                                         matrix=matrix, 
-                                                                        conn= connectivity_list)
+                                                                        conn= connectivity_list, dtype=object)

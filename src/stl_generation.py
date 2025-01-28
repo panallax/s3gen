@@ -90,20 +90,21 @@ class STLGen:
         batch_size = 100
         num_processes = max(1, multiprocessing.cpu_count() - 1)
         meshes = []
+
+        if self.sphere_radius != 0:
+            print(f"Processing {len(nodes)} spheres using {num_processes} processes...")
+            node_batches = [nodes[i:i+batch_size] for i in range(0, len(nodes), batch_size)]
         
-        print(f"Processing {len(nodes)} spheres using {num_processes} processes...")
-        node_batches = [nodes[i:i+batch_size] for i in range(0, len(nodes), batch_size)]
-        
-        with ProcessPoolExecutor(max_workers=num_processes) as executor:
-            futures = [executor.submit(self.process_batch, batch, 'spheres') 
-                      for batch in node_batches]
+            with ProcessPoolExecutor(max_workers=num_processes) as executor:
+                futures = [executor.submit(self.process_batch, batch, 'spheres') 
+                        for batch in node_batches]
+                
+                for i, future in enumerate(as_completed(futures)):
+                    result = future.result()
+                    if result is not None:
+                        meshes.append(result)
+                    print(f"Completed sphere batch {i+1}/{len(node_batches)}")
             
-            for i, future in enumerate(as_completed(futures)):
-                result = future.result()
-                if result is not None:
-                    meshes.append(result)
-                print(f"Completed sphere batch {i+1}/{len(node_batches)}")
-        
         print(f"Processing {len(edges)} cylinders...")
         edge_batches = [edges[i:i+batch_size] for i in range(0, len(edges), batch_size)]
         
