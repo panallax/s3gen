@@ -1,6 +1,5 @@
 import trimesh
 import numpy as np
-import networkx as nx
 import pickle
 import multiprocessing
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -16,7 +15,7 @@ class STLGen:
         """
         Load the graph from a pickle file
         """
-        with open(pickle_path, 'rb') as f:
+        with open(pickle_path + "/G.pickle", 'rb') as f:
             return pickle.load(f)
     
     def get_nodes_and_edges(self):
@@ -86,7 +85,7 @@ class STLGen:
                 return trimesh.util.concatenate(batch_meshes)
         return None
 
-    def generate_mesh(self):
+    def generate_stl(self):
         nodes, edges = self.get_nodes_and_edges()
         batch_size = 100
         num_processes = max(1, multiprocessing.cpu_count() - 1)
@@ -121,37 +120,38 @@ class STLGen:
                 print(f"Completed cylinder batch {i+1}/{len(edge_batches)}")
 
         print("Joining all results...")
-        final_mesh = meshes[0]
+        self.final_mesh = meshes[0]
         for i, mesh in enumerate(meshes[1:], 1):
             try:
-                tmp_mesh = trimesh.boolean.union([final_mesh, mesh], engine='manifold')
+                tmp_mesh = trimesh.boolean.union([self.final_mesh, mesh], engine='manifold')
                 if tmp_mesh.is_volume:
-                    final_mesh = tmp_mesh
+                    self.final_mesh = tmp_mesh
                     print(f"Joined {i+1}/{len(meshes)} components")
                 else:
-                    final_mesh = trimesh.util.concatenate([final_mesh, mesh])
+                    self.final_mesh = trimesh.util.concatenate([self.final_mesh, mesh])
                     print(f"Concatenated {i+1}/{len(meshes)} components (fallback)")
-            except Exception as e:
-                print(e)
-                final_mesh = trimesh.util.concatenate([final_mesh, mesh])
-                print(f"Concatenados {i+1}/{len(meshes)} componentes (fallback)")
+            except:
+                self.final_mesh = trimesh.util.concatenate([self.final_mesh, mesh])
+                print(f"Concatenated {i+1}/{len(meshes)} components (fallback)")
         
         print("Cleaning final mesh...")
-        final_mesh.update_faces(final_mesh.unique_faces())
-        final_mesh.update_faces(final_mesh.nondegenerate_faces())
-        final_mesh.fill_holes()
-        final_mesh.fix_normals()
+        self.final_mesh.update_faces(self.final_mesh.unique_faces())
+        self.final_mesh.update_faces(self.final_mesh.nondegenerate_faces())
+        self.final_mesh.fill_holes()
+        self.final_mesh.fix_normals()
         
-        return final_mesh
-    def save_mesh(self, mesh, filename):
+        self.save_mesh()
+
+    def save_mesh(self):
         """
         Save the mesh in STL format
         """
-        mesh.export(filename)
+        print("Saving mesh...")
+        self.final_mesh.export(self.output_path + "/mesh.stl")
 
 if __name__ == "__main__":
-    pickle_path = r"..\tmp\G.pickle"
-    output_path = "test.stl"
+    pickle_path = "../tmp/G.pickle"
+    output_path = "../tmp"
     
     generator = STLGen(
         pickle_path=pickle_path,
@@ -159,7 +159,7 @@ if __name__ == "__main__":
         cylinder_radius=1
     )
     
-    mesh = generator.generate_mesh()
+    mesh = generator.generate_stl()
     
     generator.save_mesh(mesh, output_path)
     print(f"Mesh saved in: {output_path}")

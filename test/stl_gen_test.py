@@ -9,7 +9,6 @@ import numpy as np
 import pygmsh
 import gmsh
 from collections import defaultdict
-import multiprocessing
 
 class STLGen():
 

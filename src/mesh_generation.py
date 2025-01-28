@@ -199,7 +199,7 @@ class MeshGen:
                         closer_points = trimesh.proximity.closest_point(mesh, apexes[inner_points_idx])[0]
                         for i,p in enumerate(apexes[inner_points_idx]):
                             if not np.isclose(p, closer_points[i]).all():
-                                if abs(p[2] - closer_points[i][2]) >5:
+                                if abs(p[2] - closer_points[i][2]) > 5:
                                     break
 
                                 apexes[np.argwhere((apexes == p).all(-1))[0][0]] = closer_points[i]
@@ -221,7 +221,7 @@ class MeshGen:
 
             return apexes, tetra_dict, inner_points_idx_dict, inner_mesh
     
-    def __dict_to_graph(self, outter_shell_apex_idx, inner_shell_apex_idx_dict):
+    def __dict_to_graph(self):
         """ Convert a dictionary of polyhedrons to a graph. Not printable edges 
         won't be added and the highest nodes will be connected to the top of the
         shell.
