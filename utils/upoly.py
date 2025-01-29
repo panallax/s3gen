@@ -2,7 +2,7 @@ import numpy as np
 from shapely.geometry import Polygon
 from shapely.ops import polylabel
 from utils import polar_angle_sort, angle, generate_segments, group_segments
-import config
+from config import config
 import triangle
 
 def update_polyhedrons_dict(tetra_dict, old_point, new_point):
@@ -283,7 +283,7 @@ def get_growth_vect(mesh, point, z_2):
 def calculate_number_of_simplices(mesh, z_1, inital_simplices):
   z_max = mesh.bounds[1][2]
   _, d_1 = section_props(mesh, z_1)
-  _, d_2= section_props(mesh, config.PORERADIUS + z_1 if config.PORERADIUS + z_1 < z_max 
+  _, d_2= section_props(mesh, config.mesh.PORERADIUS + z_1 if config.mesh.PORERADIUS + z_1 < z_max 
                               else z_max - 1e-6)
 
   delta = (d_2/d_1)**2

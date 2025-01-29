@@ -1,22 +1,22 @@
 import pickle
 import numpy as np
 import networkx as nx
-import config
+from config import config
 import os
 from utils import split_graph, delaunay_path, distance
 import pymesh
 
 class GCodeGen:
 
-    def __init__(self, graph_path, **kwargs):
-        
+    def __init__(self, graph_path, config, **kwargs):
+        self.config = config
         self.G = pickle.load(open(graph_path, 'rb'))
         self.output_path = os.path.dirname(graph_path)
         self.file = open(os.path.join(self.output_path, "graph.gcode"), 'w')
         self.__set_origin()
         self.current_point = (0,0,0)
         self.extrusion = 0
-        self.z_offset = config.LAYERHEIGHT * (config.BOTTOMLAYERS - 1)
+        self.z_offset = self.config.printing.LAYERHEIGHT * (self.config.printing.BOTTOMLAYERS - 1)
         self.__start_gcode()
         
         self.main()
@@ -32,9 +32,9 @@ class GCodeGen:
         self.file.write("M92 E424.9    ;Set Esteps\n")
         self.file.write("M500    ;Store settings\n")
         # self.file.write("M83    ;use relative distances for extrusion\n")
-        self.file.write(f"M190 S{config.BEDTEMP}    ;set bed temperature to 60 and wait\n")
-        self.file.write(f"M109 S{config.EXTRUDERTEMP}    ;set extruder temperature to 200 and wait\n")
-        self.file.write(f"G0 X5 Y5 Z{config.LAYERHEIGHT}\n")
+        self.file.write(f"M190 S{self.config.printing.BEDTEMP}    ;set bed temperature to 60 and wait\n")
+        self.file.write(f"M109 S{self.config.printing.EXTRUDERTEMP}    ;set extruder temperature to 200 and wait\n")
+        self.file.write(f"G0 X5 Y5 Z{self.config.printing.LAYERHEIGHT}\n")
         self.file.write("G1 F600\n")
         self.file.write("G1 Y150 E{:.3f}\n".format(self.__extrusion(145)))
         self.file.write("G1 Y5 E{:.3f}\n".format(self.__extrusion(145)))
@@ -46,7 +46,7 @@ class GCodeGen:
     def __end_gcode(self):
         self.file.write("G91 \n")
         self.file.write("G1 E-2 F2700\n")
-        self.file.write("G1 Z1 E-2 F2400 ;raise the extruder 1 cm\n".format(config.LAYERHEIGHT))
+        self.file.write("G1 Z1 E-2 F2400 ;raise the extruder 1 cm\n".format(self.config.printing.LAYERHEIGHT))
         self.file.write(f"G0 X{-self.X_origin}    ;move to the initial point\n")
         # self.file.write("M104 S0    ;turn off the extruder\n")
         # self.file.write("M140 S0    ;turn off the bed\n")
@@ -54,16 +54,16 @@ class GCodeGen:
         self.file.write("M84    ;disable motors\n")
         
     def __set_origin(self):
-        self.X_origin = config.BEDDIMENSIONS[0] / 2
-        self.Y_origin = config.BEDDIMENSIONS[1] / 2
-        self.Z_origin = config.LAYERHEIGHT
+        self.X_origin = self.config.printing.BEDDIMENSIONS[0] / 2
+        self.Y_origin = self.config.printing.BEDDIMENSIONS[1] / 2
+        self.Z_origin = self.config.printing.LAYERHEIGHT
     
     def main(self):
         self.base, self.top, self.sorted_nodles = split_graph(self.G)
 
         self.__write_base_path()
 
-        self.file.write("G1 F{:.3f}\n".format(config.NO_PLANAR_FEEDRATE))
+        self.file.write("G1 F{:.3f}\n".format(self.config.printing.NO_PLANAR_FEEDRATE))
 
         self.queue = self.printing_queue()
         a = []
@@ -89,8 +89,8 @@ class GCodeGen:
         self.file.write("; start base printing\n")
         initial_point = list(self.base)[0]
         path = delaunay_path(self.base, initial_point)
-        for z in range(config.BOTTOMLAYERS):
-            z_layer = initial_point[2] + z * config.LAYERHEIGHT 
+        for z in range(self.config.printing.BOTTOMLAYERS):
+            z_layer = initial_point[2] + z * self.config.printing.LAYERHEIGHT 
             self.__move_to_point_2d((initial_point[0], initial_point[1], z_layer), 5,5)
             self.file.write("G0 F600\n")
             self.current_point = initial_point
@@ -111,10 +111,10 @@ class GCodeGen:
                 self.current_point = edge[1]
 
         for i in self.base:
-            point_with_offset = np.array(i) + np.array([0,0, config.BOTTOMLAYERS*self.z_offset + config.OUTTER_RADIUS])
+            point_with_offset = np.array(i) + np.array([0,0, self.config.printing.BOTTOMLAYERS*self.z_offset + self.config.printing.OUTTER_RADIUS])
             self.__move_to_point(point_with_offset, 5,5)
             self.extrusion += 3.5 # 3.5mm of over extrusion for semi-sphere of 0.55mm radius
-            self.file.write("G1 E{:.3f} F{:.3f}\n".format(self.extrusion, config.NO_PLANAR_FEEDRATE))
+            self.file.write("G1 E{:.3f} F{:.3f}\n".format(self.extrusion, self.config.printing.NO_PLANAR_FEEDRATE))
             self.current_point = point_with_offset
 
 
@@ -128,8 +128,8 @@ class GCodeGen:
         self.file.write("; start top printing\n")
         initial_point = self.queue[-1]
         path = delaunay_path(self.top, initial_point)
-        for z in range(config.TOPLAYERS):
-            z_layer = initial_point[2] + z * config.LAYERHEIGHT 
+        for z in range(self.config.printing.TOPLAYERS):
+            z_layer = initial_point[2] + z * self.config.printing.LAYERHEIGHT 
             self.__move_to_point((initial_point[0], initial_point[1], z_layer), 10, 10)
             self.current_point = initial_point
             for edge in path:
@@ -139,7 +139,7 @@ class GCodeGen:
                                                                                   z_layer, 
                                                                                   self.__extrusion(edge[0], edge[1])))
                 else:
-                    self.__move_to_point(np.array(edge[0]) + np.array([0,0,  z * config.LAYERHEIGHT]), 10,10)
+                    self.__move_to_point(np.array(edge[0]) + np.array([0,0,  z * self.config.printing.LAYERHEIGHT]), 10,10)
                     self.file.write("G1 X{:.3f} Y{:.3f} Z{:.3f} E{:.3f}\n".format(edge[1][0], 
                                                                                   edge[1][1], 
                                                                                   z_layer, 
@@ -166,7 +166,7 @@ class GCodeGen:
                                                                           adapt_apex[1], 
                                                                           adapt_apex[2], 
                                                                           self.__extrusion(adapt_base, adapt_apex, 0.5),
-                                                                    config.NO_PLANAR_FEEDRATE))
+                                                                    self.config.printing.NO_PLANAR_FEEDRATE))
             self.current_point = adapt_apex
             self.first = False 
         
@@ -215,7 +215,7 @@ class GCodeGen:
         #                                                                     self.current_point[2]+ retraction_height,
         #                                                                     self.extrusion))  
  
-        mid_point = (np.array(point) + np.array(self.current_point))/2 + np.array([0,0,config.LAYERHEIGHT])             
+        mid_point = (np.array(point) + np.array(self.current_point))/2 + np.array([0,0,self.config.printing.LAYERHEIGHT])             
 
         self.file.write("G0 X{:.3f} Y{:.3f} Z{:.3f} E{:.3f}\n".format(mid_point[0], mid_point[1], mid_point[2], self.extrusion))
         self.extrusion += retraction
@@ -273,9 +273,9 @@ class GCodeGen:
         else:
             distance = np.linalg.norm(np.array(pnt2) - np.array(pnt1))
 
-        self.extrusion += FR*(config.EXTRUSIONWIDTH/config.FILAMENTWIDTH)**2 * distance
+        self.extrusion += FR*(self.config.printing.EXTRUSIONWIDTH/self.config.printing.FILAMENTWIDTH)**2 * distance
 
         return self.extrusion
     
 if __name__ == "__main__":
-    GCodeGen("/home/alex/Downloads/one_layer/G_2.pickle")
+    GCodeGen("/home/alex/Downloads/one_layer/G_2.pickle", config)

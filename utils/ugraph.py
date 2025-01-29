@@ -4,7 +4,7 @@ from scipy.spatial import KDTree, Delaunay
 from scipy.spatial.distance import cdist
 from utils import isin, calculate_segments_dist, exclude_points, angle
 from itertools import chain
-import config
+from config import config
 
 
 def remove_close_edges(G, max_global_dist):
@@ -47,7 +47,7 @@ def remove_close_edges(G, max_global_dist):
         min_nbr_current_segment = min(list(map(lambda x: calculate_neighbors_in_node(G,x), [p1,p2])))
         local_segments_to_remove = []
         for s in observable_segments:
-            if calculate_segments_dist(s, (p1,p2)) < config.EXTRUSIONWIDTH:
+            if calculate_segments_dist(s, (p1,p2)) < config.printing.EXTRUSIONWIDTH:
                 nbr_node = list(map(lambda x: calculate_neighbors_in_node(G,x), s))
                 if min(nbr_node) > min_nbr_current_segment:
                     local_segments_to_remove.append(tuple(map(tuple,s)))
