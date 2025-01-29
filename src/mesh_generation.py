@@ -16,7 +16,10 @@ from utils import tessellate_points, polar_angle_sort, area_polygon, sort_simpli
 
 class MeshGen:
 
-    def __init__(self,mesh, points, base_points, top_points, lateral_mesh, inner_mesh, radius, pore_area, output_path, tmp_path):
+    def __init__(self,mesh, points, base_points, top_points, lateral_mesh, 
+                 inner_mesh, radius, pore_area, output_path, tmp_path, logger):
+        self.logger = logger
+        
         self.mesh = mesh
         self.points = points
         self.base_points = base_points
@@ -32,6 +35,7 @@ class MeshGen:
         self.tmp_path = os.path.join("..", tmp_path)
 
         self.L, self.pore_area = initial_area(self.L, self.pore_area)
+        self.logger.info(f"Initial pore area: {self.pore_area} mm² and initial radius: {self.L} mm")
 
     def generate_mesh(self):
         """ Generate the mesh of the structure. The generation of the mesh follows
@@ -64,9 +68,10 @@ class MeshGen:
             if iteration == 0:
                 bot_points, simplices, outter_shell_pts, inner_shell_pts = self.__initial_points(self.mesh, self.pore_area)
                 num_simplices = len(simplices)
+                self.logger.debug(f"Initial number of simplices: {num_simplices}")
 
             else:
-                print(f"iteration {iteration}")
+                self.logger.debug(f"iteration {iteration}")
                 simplices, bot_points, outter_shell_pts, inner_shell_pts = tessellate_points(num_simplices, self.lateral_mesh, bot_points,
                                                                                             outter_shell_apex_idx, inner_shell_apex_idx_dict)
                 # plot_tessellation(bot_points[:,:2],simplices)
@@ -119,6 +124,7 @@ class MeshGen:
                                         break
 
             if len([x for x in self.polyhedrons.keys() if x.startswith(f"{iteration}_")]) == 0:
+                self.logger.info("No polyhedrons created. Process finished.")
                 break
 
             optimal_points = np.array(optimal_points)
@@ -157,6 +163,7 @@ class MeshGen:
         it = 0
         while not np.isclose(current_area, pore_area, atol = pore_area*0.05):
             if it == max_it:
+                self.logger.error("Maximum number of iterations reached. Desired pore area cannot be reached.")
                 raise Exception("Maximum number of iterations reached. Desired pore area cannot be reached.")
 
             current_val = (min_val + max_val)/2
@@ -294,6 +301,7 @@ class MeshGen:
         pickle.dump(self.polyhedrons, open(os.path.join(self.tmp_path, "tetra.pickle"),"wb"))
         pickle.dump(self.G, open(os.path.join(self.output_path, "G.pickle"),"wb"))
         pickle.dump(self.G, open(os.path.join(self.tmp_path, "G.pickle"),"wb"))
+        self.logger.info(f"Graph saved in {os.path.join(self.output_path, 'G.pickle')}")
 
     def save_adjacency_matrix(self):   
         nodes, matrix = adjacency_matrix(self.G)
@@ -301,3 +309,5 @@ class MeshGen:
         np.savez(os.path.join(self.output_path, "adjacency_matrix.npz"),nodes=nodes, 
                                                                         matrix=matrix, 
                                                                         conn= connectivity_list, dtype=object)
+        self.logger.info(f"Adjacency matrix and connectivity arrays saved in \
+                         {os.path.join(self.output_path, 'adjacency_matrix.npz')}")

@@ -5,6 +5,7 @@ TMPPATH = "tmp"
 STLFILE = "data/Part.stl"
 PORERADIUS = None #mm
 POREAREA = 80
+SHOW_LOGS_IN_CONSOLE = True
 
 ###### 3D Printing Parameters ######
 
