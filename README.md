@@ -13,6 +13,19 @@ Config file contains one data class for each of the main modules of the package,
 
 Moreover, the parameter ```SHOW_LOGS_IN_CONSOLE``` can be set to ```False``` to turn off the logs in console, if it is set ```True```, logs will be prompted in console and registered in log file. The default is ```True```.
 
+User is encouraged to use the default folder structure, but different folders can be used by setting the following environment variables:
+
+* ```MESHGEN_BASE_DIR```: Project base directory
+* ```MESHGEN_DATA_DIR```: Data directory
+* ```MESHGEN_OUTPUT_DIR```: Results directory
+* ```MESHGEN_TMP_DIR```: Temporary directory
+* ```MESHGEN_STL_FILE```: Input STL file path
+
+e.g.:
+
+```
+export MESHGEN_STL_FILE=/path/to/you/stl/file.stl
+```
 #### Execute in _src_:
 
 ```python run.py```

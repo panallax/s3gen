@@ -2,6 +2,7 @@ from pathlib import Path
 from dataclasses import dataclass
 from utils.logger import Logger
 from typing import ClassVar, Optional
+import os
 
 @dataclass
 class PrintingConfig:
@@ -52,6 +53,13 @@ class MeshConfig:
 class PathConfig:
     """System paths configuration
     
+    Paths can be configured using environment variables:
+    - MESHGEN_BASE_DIR: Project base directory
+    - MESHGEN_DATA_DIR: Data directory
+    - MESHGEN_OUTPUT_DIR: Results directory
+    - MESHGEN_TMP_DIR: Temporary directory
+    - MESHGEN_STL_FILE: Input STL file path
+    
     Attributes:
         BASE_PATH (Path): Project's base directory
         DATA_PATH (Path): Data directory
@@ -59,11 +67,16 @@ class PathConfig:
         TMP_PATH (Path): Temporary files directory
         STL_FILE (Path): Input STL file path
     """
-    BASE_PATH: Path = Path(__file__).parent
-    DATA_PATH: Path = Path("data")
-    OUTPUT_PATH: Path = BASE_PATH / DATA_PATH / "output"
-    TMP_PATH: Path = Path("tmp")
-    STL_FILE: Path = BASE_PATH/ DATA_PATH / "Part.stl"
+    BASE_PATH: Path = Path(os.getenv('MESHGEN_BASE_DIR', 
+                                      Path(__file__).parent))
+    DATA_PATH: Path = Path(os.getenv('MESHGEN_DATA_DIR', 
+                                      BASE_PATH / "data"))
+    OUTPUT_PATH = Path(os.getenv('MESHGEN_OUTPUT_DIR', 
+                                        DATA_PATH / "output"))
+    TMP_PATH: Path = Path(os.getenv('MESHGEN_TMP_DIR', 
+                                     BASE_PATH / "tmp"))
+    STL_FILE: Path = Path(os.getenv('MESHGEN_STL_FILE', 
+                                     DATA_PATH / "Part.stl"))
 
 
 class Config:
