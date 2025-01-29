@@ -5,7 +5,19 @@ from typing import ClassVar, Optional
 
 @dataclass
 class PrintingConfig:
-    """Parámetros de impresión 3D"""
+    """3D printing parameters
+
+    Attributes:
+        EXTRUSION_WIDTH (float): Width of the extruded filament in mm
+        FILAMENT_WIDTH (float): Diameter of the raw filament in mm
+        BED_TEMP (int): Build plate temperature in Celsius
+        EXTRUDER_TEMP (int): Extruder temperature in Celsius
+        FEED_RATE (int): Print speed in mm/min
+        NO_PLANAR_FEEDRATE (int): Speed for non-planar movements in mm/min
+        BED_DIMENSIONS (tuple): Build plate dimensions (x, y) in mm
+        BOTTOM_LAYERS (int): Number of bottom layers
+        TOP_LAYERS (int): Number of top layers
+    """
     EXTRUSION_WIDTH: float = 0.8    # mm
     OUTTER_RADIUS: float = 0.55     # mm
     FILAMENT_WIDTH: float = 1.75    # mm
@@ -23,7 +35,14 @@ class PrintingConfig:
 
 @dataclass
 class MeshConfig:
-    """Mesh generation parameters"""
+    """Mesh generation parameters
+    
+    Attributes:
+        INITIAL_SPHERE_RADIUS (float): Initial radius for sphere generation in mm
+        INITIAL_CYLINDER_RADIUS (float): Initial radius for cylinder generation in mm
+        PORE_RADIUS (float): Pore radius in mm
+        PORE_AREA (int): Pore area in mm^2
+    """
     INITIAL_SPHERE_RADIUS: float = 2
     INITIAL_CYLINDER_RADIUS: float = 2
     PORE_RADIUS: float = None  # mm
@@ -31,7 +50,15 @@ class MeshConfig:
 
 @dataclass
 class PathConfig:
-    """Paths configuration"""
+    """System paths configuration
+    
+    Attributes:
+        BASE_PATH (Path): Project's base directory
+        DATA_PATH (Path): Data directory
+        OUTPUT_PATH (Path): Results directory
+        TMP_PATH (Path): Temporary files directory
+        STL_FILE (Path): Input STL file path
+    """
     BASE_PATH: Path = Path(__file__).parent
     DATA_PATH: Path = Path("data")
     OUTPUT_PATH: Path = BASE_PATH / DATA_PATH / "output"
@@ -40,7 +67,11 @@ class PathConfig:
 
 
 class Config:
-    """Global configuration"""
+    """Global application configuration
+    
+    This class manages all configuration aspects of the application,
+    including printer settings, mesh parameters, and system paths.
+    """
     _instance: ClassVar[Optional["Config"]] = None
     _initialized: ClassVar[bool] = False
     
@@ -54,13 +85,20 @@ class Config:
             self.printing = PrintingConfig()
             self.mesh = MeshConfig()
             self.paths = PathConfig()
-            
+
             self.SHOW_LOGS_IN_CONSOLE = True
 
             self._initialized = True
     
     def validate(self, logger: Logger):
-        """Validate paths"""
+        """Validate most important configuration parameters
+        Args:
+            logger: logger instance for validation messages
+            
+        Raises:
+            ConfigurationError: If any configuration is invalid
+        """
+
         if not logger:
             raise ValueError("Logger is required")
         
