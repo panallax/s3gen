@@ -24,7 +24,7 @@ User is encouraged to use the default folder structure, but different folders ca
 e.g.:
 
 ```
-export MESHGEN_STL_FILE=/path/to/you/stl/file.stl
+export MESHGEN_STL_FILE=/path/to/your/stl/file.stl
 ```
 #### Execute in _src_:
 
