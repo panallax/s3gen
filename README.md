@@ -11,30 +11,37 @@ A Python tool for generating and processing 3D stochastic strut-based self-suppo
    ```
 - Install package:
 
-``` pip install -e .```
+   ``` pip install -e .```
 
 -  Place your STL file:
-   - Put your input STL file in the `data` directory
+   - Put the input STL file in the `data` directory
 
 - Run with Docker Compose (optional):
+
+   ```
    docker-compose up --build
+   ```
 
-    If you prefer more control, you can use Docker directly:
+   If you prefer more control, you can use Docker directly:
 
-    1. Build the image:
-    docker build -t meshgen .
+   1. Build the image:
 
-    2. Run the container:
-    docker run -v $(pwd)/data:/app/data \\
-                -v $(pwd)/tmp:/app/tmp \\
-                -e MESHGEN_STL_FILE=/app/data/_your.stl_ \\
-                meshgen
+   ```
+   docker build -t meshgen .
+   ```
+   2. Run the container:
 
+   ```
+   docker run -v $(pwd)/data:/app/data \\
+               -v $(pwd)/tmp:/app/tmp \\
+               -e MESHGEN_STL_FILE=/app/data/_your.stl_ \\
+               meshgen
+   ```
 - Execute in _src_:
 
 ```python run.py```
 
-For clean run first remove any file in ```tmp``` folder.
+   For clean run first remove any file in ```tmp``` folder.
 
 ## Configuration:
 
