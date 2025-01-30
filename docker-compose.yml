@@ -1,9 +1,11 @@
-services:
-  mesh-gen:
-    build:  # Usa el Dockerfile para construir la imagen
-      context: .  # Usa el directorio actual como contexto
-    volumes:
-      - .:/mesh-gen  # Monta todo el proyecto
+version: '3.8'
 
-    working_dir: /mesh-gen
-    tty: true
+services:
+  meshgen:
+    build: .
+    volumes:
+      - ./data:/app/data
+      - ./tmp:/app/tmp
+    environment:
+      - MESHGEN_STL_FILE=/app/data/Part.stl
+      - SHOW_LOGS_IN_CONSOLE=true
