@@ -34,12 +34,12 @@ A Python tool for generating and processing 3D stochastic strut-based self-suppo
    ```
    docker run -v $(pwd)/data:/app/data \\
                -v $(pwd)/tmp:/app/tmp \\
-               -e MESHGEN_STL_FILE=/app/data/_your.stl_ \\
+               -e MESHGEN_STL_FILE=/app/data/_your_.stl \\
                meshgen
    ```
 - Execute in _src_:
 
-```python run.py```
+   ```python run.py```
 
    For clean run first remove any file in ```tmp``` folder.
 
