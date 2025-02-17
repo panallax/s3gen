@@ -1,234 +1,184 @@
-import pickle
-import os
-# sys.path.append(config.FREECADPATH)
-# import FreeCAD as App
-# import Part
-# import MeshPart, Mesh
-# import pymesh
+import trimesh
 import numpy as np
-import pygmsh
-import gmsh
-from collections import defaultdict
+import pickle
+import multiprocessing
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
-class STLGen():
+class STLGen:
+    def __init__(self, sphere_radius, cylinder_radius, graph_path, output_path, logger):
+        self.logger = logger
 
-    def __init__(self, sphere_radius, cylinder_radius, graph_path, output_path):
-        
         self.sphere_radius = sphere_radius
         self.cylinder_radius = cylinder_radius
-        self.G = pickle.load(open(os.path.join(graph_path, "G.pickle"), 'rb'))
-        self.polygons = pickle.load(open(os.path.join(graph_path, "tetra.pickle"), 'rb'))
+        self.graph = self.load_graph(graph_path)
         self.output_path = output_path
+        
+    def load_graph(self, pickle_path):
+        """
+        Load the graph from a pickle file
+        """
+        with open(pickle_path + "/G.pickle", 'rb') as f:
+            self.logger.info("Loading graph from pickle file: {}".format(pickle_path + "/G.pickle", 'rb'))
+            return pickle.load(f)
+    
+    def get_nodes_and_edges(self):
+        """
+        Convert the graph from NetworkX to numpy arrays
+        """
+        nodes = np.array(list(self.graph.nodes()))
+        edges = np.array(list(self.graph.edges()))
+        
+        return nodes, edges
 
     @staticmethod
-    def build_tetrahedron(tetra_list, layer, sphere_radius, cylinder_radius, output_path):
-        # with pygmsh.occ.Geometry() as geom:
-        #     geom.characteristic_length_max = 2
-        #     geom.characteristic_length_min = 2
-        #     solid_layer = geom.boolean_union(
-        #         [
-        #             geom.add_ball(node, node_radius)
-        #                 for tetra_dict in tetra_list 
-        #                 for node in np.vstack((tetra_dict["apex"],tetra_dict["base_points"]))
-        #             ]
-        #         + 
-        #         [
-        #             geom.add_cylinder(start, tetra_dict["apex"] - start, cylinder_radius)
-        #                 for tetra_dict in tetra_list 
-        #                 for start in tetra_dict["base_points"]
-        #             ]
-        #     )
-        #     geom.generate_mesh()
-        # return geom, solid_layer
-        gmsh.initialize()
-        gmsh.model.add(f"layer_{layer}")
-        gmsh.option.setNumber("Mesh.CharacteristicLengthMin", 1)
-        gmsh.option.setNumber("Mesh.CharacteristicLengthMax", 1)
-
-        entities = []
-        for tetra_dict in tetra_list:
-            apex = tetra_dict["apex"]
-            base_points = tetra_dict["base_points"]
-
-            for node in np.vstack((apex, base_points)):
-                sphere = gmsh.model.occ.addSphere(node[0], node[1], node[2], sphere_radius)
-                entities.append((3, sphere))  # (dimension, tag)
-
-            for start in base_points:
-                dx, dy, dz = apex - start
-                cylinder = gmsh.model.occ.addCylinder(
-                    start[0], start[1], start[2], dx, dy, dz, cylinder_radius
-                )
-                entities.append((3, cylinder))  # (dimension, tag)
-
-        gmsh.model.occ.synchronize()
-        fused = gmsh.model.occ.fuse(entities, entities)
-        gmsh.model.occ.synchronize()
-
-        gmsh.model.occ.removeAllDuplicates()
-        gmsh.model.mesh.generate(3)
-
-        tmp_file = os.path.join(output_path, f"tmp_{layer}.stl")
-        gmsh.write(tmp_file)
-        gmsh.finalize()
-
-        return tmp_file
+    def process_batch(batch_data, batch_type, sphere_radius=2, cylinder_radius=2):
+        """Process a batch of spheres or cylinders"""
+        batch_meshes = []
         
-    def process_layer(self, args):
-        # try:
-        layer, layer_tetra = args
-        return self.build_tetrahedron(layer_tetra, layer, self.sphere_radius, self.cylinder_radius, self.output_path)
-        # final_path = os.path.join(self.output_path, f"tmp_{layer}.stl")
+        try:
+            if batch_type == 'spheres':
+                for node in batch_data:
+                    sphere = trimesh.creation.icosphere(
+                        radius=sphere_radius,
+                        subdivisions=2
+                    )
+                    sphere.apply_translation(node)
+                    batch_meshes.append(sphere)
+            else:  
+                for edge in batch_data['edges']:
+                    start = edge[0]
+                    end = edge[1]
+                    vector = np.array(end) - np.array(start)
+                    length = np.linalg.norm(vector)
+                    direction = vector / length if length != 0 else [1, 0, 0]
 
-        # except Exception as e:
-        #     return f"Error en capa {layer}: {e}"
-        # geom, solids = self.build_tetrahedron(layer_tetra, self.sphere_radius, self.cylinder_radius)
-        # tmp_file = f"tmp_{layer}.stl"
-        # pygmsh.write(os.path.join(self.output_path, tmp_file))
-    
-        # with multiprocessing.Pool(processes = multiprocessing.cpu_count()) as pool:
-        #     solids = pool.starmap(self.build_tetrahedron, [(t, self.sphere_radius, self.cylinder_radius, geom) for t in layer_tetra])
-        # with pygmsh.occ.Geometry() as geom:
-        # return [self.build_tetrahedron(t, self.sphere_radius, self.cylinder_radius, geom) for t in layer_tetra]
-        # return self.build_tetrahedron(layer_tetra, self.sphere_radius, self.cylinder_radius, geom)
-        
-        # return tmp_file
-    
+                    cylinder = trimesh.creation.cylinder(cylinder_radius, 
+                                                        length,
+                                                        sections=16)
+                
+                    cylinder.apply_translation([0, 0, length/2])
+                    rotation = trimesh.geometry.align_vectors([0, 0, 1], direction)
+                    translation = np.eye(4)
+                    translation[:3, 3] = start
+                    transform = translation @ rotation
+
+                    cylinder.apply_transform(transform)
+                    batch_meshes.append(cylinder)
+            
+            if batch_meshes:
+                try:
+                    combined = trimesh.util.concatenate(batch_meshes)
+                    if not combined.is_volume:
+                        combined.fix_normals()
+                        combined.fill_holes()
+                    if combined.is_volume:
+                        return {'mesh': trimesh.boolean.union(batch_meshes, engine='manifold'), 'status': 'success'}
+                    else:
+                        return {'mesh': trimesh.util.concatenate(batch_meshes), 'status': 'concatenated'}
+            
+                except Exception as e:
+                    return {'mesh': trimesh.util.concatenate(batch_meshes), 
+                           'status': 'warning',
+                           'message': f"Cannot join batch meshes: {str(e)}"}
+                
+            return {'mesh': None, 'status': 'empty'}
+        except Exception as e:
+            return {'mesh': None, 'status': 'error', 'message': str(e)}
+
     def generate_stl(self):
+        nodes, edges = self.get_nodes_and_edges()
+        batch_size = 100
+        num_processes = max(1, multiprocessing.cpu_count() - 1)
+        meshes = []
+
+        if self.sphere_radius != 0:
+            self.logger.info(f"Processing {len(nodes)} spheres using {num_processes} processes...")
+            node_batches = [nodes[i:i+batch_size] for i in range(0, len(nodes), batch_size)]
         
-        layers = defaultdict(list)
-        for key, value in self.polygons.items():
-            layers[key.split("_")[0]].append(value)
-
-
-        for layer, layer_tetra in layers.items():
-            final_path = os.path.join(self.output_path, f"layer_{layer}.stl")
-            self.process_layer((layer, layer_tetra))
-            # args = [(layer, t) for layer,t in layers.items()]
-            # with multiprocessing.Pool(processes = multiprocessing.cpu_count() - 1) as pool:
-            # results = pool.map(self.process_layer, args)
-                # with pygmsh.occ.Geometry() as geom:
-                #     geom.characteristic_length_max = 2
-                #     geom.characteristic_length_min = 2
-                #     layers_solids = self.process_layer(t, geom)
-                #     geom.generate_mesh()
-                #     tmp_file = f"tmp_{layer}.stl"
-                #     pygmsh.write(os.path.join(self.output_path, tmp_file))
-    
-
-                # layers_solids.extend(solids)
+            with ProcessPoolExecutor(max_workers=num_processes) as executor:
+                futures = [executor.submit(
+                            self.process_batch, 
+                            batch, 
+                            'spheres', 
+                            self.sphere_radius, 
+                            self.cylinder_radius
+                            ) for batch in node_batches]
+                
+                for i, future in enumerate(as_completed(futures)):
+                    result = future.result()
+                    if result['status'] == 'success':
+                        meshes.append(result['mesh'])
+                        self.logger.info(f"Completed sphere batch {i+1}/{len(node_batches)}")
+                    elif result['status'] == 'warning':
+                        meshes.append(result['mesh'])
+                        self.logger.warning(f"Batch {i+1}/{len(node_batches)}: {result['message']}")
+                    elif result['status'] == 'error':
+                        self.logger.error(f"Error in batch {i+1}/{len(node_batches)}: {result['message']}")
             
-            # geom.boolean_union(solids)
-
-            # mesh = geom.generate_mesh()
-
-
-# vertices = np.array(G.nodes())
-# B = np.array(G.edges())
-# edges = np.array([[np.where((vertices == nodo).all(axis=1))[0][0] for nodo in relacion] for relacion in B])
-# wire_network = pymesh.wires.WireNetwork.create_from_data(vertices, edges)
-# inflator = pymesh.wires.Inflator(wire_network)
-# inflator.set_refinement(2, "loop")
-# inflator.inflate(0.5)
-# mesh = inflator.mesh
-# pymesh.save_mesh("mesh.stl", mesh)
-# def create_cylinder_mesh(start, end, radius, segments=32):
-#     """Crea un cilindro 3D entre dos puntos con un radio dado."""
-#     vector = np.array(end) - np.array(start)
-#     length = np.linalg.norm(vector)
-#     direction = vector / length if length != 0 else [1, 0, 0]
-
-#     cylinder = trimesh.creation.cylinder(radius, length, sections=segments)
-#     cylinder.apply_translation([0,0,length/2])
-
-#     rotation = trimesh.geometry.align_vectors([0, 0, 1], direction)
-
-#     # Trasladar el cilindro al punto inicial
-#     translation = np.eye(4)
-#     translation[:3, 3] = start  # Aplicar traslación al punto inicial
-    
-#     # Combinar la rotación y la traslación
-#     transform = translation @ rotation
-    
-#     # Aplicar la transformación al cilindro
-#     cylinder.apply_transform(transform)
-
-#     return cylinder
-
-# def graph_to_3d_model(graph):
-#     """Convierte un grafo en un modelo 3D con espesores para las barras."""
-#     meshes = []
-#     for node in graph.nodes:
-#         sphere = trimesh.creation.icosphere(radius=0.15)
-#         sphere.apply_translation(np.array(node))
-#         meshes.append(sphere)
-
-#     for edge in graph.edges:
-#         start = edge[0]
-#         end = edge[1]
-#         thickness = 0.1
-#         cylinder = create_cylinder_mesh(start, end, thickness)
-#         meshes.append(cylinder)
-#     print("ada")
-
-#     return trimesh.boolean.union(meshes, engine="manifold")
-
-# mesh = graph_to_3d_model(G)
-
-
-# print(mesh)
-# trimesh.interfaces.gmsh.to_volume(mesh, "abc.msh", mesher_id=10)
-# print("dasdas")
-# mesh.show()
-
-# nodes = [  pymesh.generate_icosphere(0.5, v) for v in vertices]
-# nodes.extend([ pymesh.generate_cylinder(e[0], e[1], 0.4, 0.4) for e in B])
-# print(len(nodes))
-# # tree = pymesh.CSGTree({"union": nodes})
-# mesh = pymesh.boolean(nodes[0], nodes[1], operation="union")
-# for i in nodes[2:]:
-#     mesh = pymesh.boolean(mesh, i, operation="union")
-
-# # mesh = tree.mesh
-# pymesh.save_mesh("mesh1.stl", mesh)
-
-
-
-
-# class STLGen():
-
-#     def __init__(self, graph_path, output_path, **kwargs):
+        self.logger.info(f"Processing {len(edges)} cylinders...")
+        edge_batches = [edges[i:i+batch_size] for i in range(0, len(edges), batch_size)]
         
-#         self.G = pickle.load(open(os.path.join(graph_path, "G.pickle"), 'rb'))
-#         self.output_path = output_path
-
-#     def __create_cylinder(self,point1, point2, diameter):
-#         delta = point2.sub(point1)
-#         cylinder = Part.makeCylinder(diameter / 2.0, delta.Length, point1, delta)  
-    
-#         return cylinder
-    
-#     def __create_sphere(self,center, radius):
-#         sphere = Part.makeSphere(radius, center)
-
-#         return sphere
-
-#     def generate_stl(self):
+        with ProcessPoolExecutor(max_workers=num_processes) as executor:
+            futures = [executor.submit(self.process_batch, 
+                                    {'nodes': nodes, 'edges': batch}, 
+                                    'cylinders',
+                                    self.sphere_radius,
+                                    self.cylinder_radius
+                                    ) for batch in edge_batches]
             
-#         doc = App.newDocument()
-#         objs = []
-#         for n in self.G.nodes():
-#             objs.append(self.__create_sphere(App.Vector(*n), 0.4))
+            for i, future in enumerate(as_completed(futures)):
+                result = future.result()
+                if result['status'] == 'success':
+                    meshes.append(result['mesh'])
+                    self.logger.info(f"Completed cylinder batch {i+1}/{len(edge_batches)}")
+                elif result['status'] == 'warning':
+                    meshes.append(result['mesh'])
+                    self.logger.warning(f"Batch {i+1}/{len(edge_batches)}: {result['message']}")
+                elif result['status'] == 'error':
+                    self.logger.error(f"Error in batch {i+1}/{len(edge_batches)}: {result['message']}")
 
-#         for e in self.G.edges():
-#             objs.append(self.__create_cylinder(App.Vector(*e[0]), App.Vector(*e[1]), 0.8))
-
+        self.logger.info("Joining all results...")
+        self.final_mesh = meshes[0]
+        for i, mesh in enumerate(meshes[1:], 1):
+            try:
+                tmp_mesh = trimesh.boolean.union([self.final_mesh, mesh], engine='manifold')
+                if tmp_mesh.is_volume:
+                    self.final_mesh = tmp_mesh
+                    self.logger.info(f"Joined {i+1}/{len(meshes)} components")
+                else:
+                    self.final_mesh = trimesh.util.concatenate([self.final_mesh, mesh])
+                    self.logger.info(f"Concatenated {i+1}/{len(meshes)} components (fallback), mesh is not volume")
+            except:
+                self.final_mesh = trimesh.util.concatenate([self.final_mesh, mesh])
+                self.logger.warning(f"Concatenated {i+1}/{len(meshes)} components (fallback)")
         
-#         objsShapes = list(map(lambda obj : Part.Shape(obj), objs))
-#         final_shape = Part.makeCompound(objsShapes)
-#         Part.show(final_shape, "final_shape")
-#         doc.recompute()
-#         mesh = MeshPart.meshFromShape(final_shape, LinearDeflection=0.01, AngularDeflection=0.523599, Relative=False)
-#         # doc.saveAs(os.path.join(self.output_path, "mesh.FCStd")) 
-#         mesh.write(os.path.join(self.output_path, "mesh.stl"))
+        self.logger.info("Cleaning final mesh...")
+        self.final_mesh.update_faces(self.final_mesh.unique_faces())
+        self.final_mesh.update_faces(self.final_mesh.nondegenerate_faces())
+        self.final_mesh.fill_holes()
+        self.final_mesh.fix_normals()
+        
+        self.save_mesh()
+        self.final_mesh.show()
 
+    def save_mesh(self):
+        """
+        Save the mesh in STL format
+        """
+        self.logger.info("Saving mesh...")
+        self.final_mesh.export(self.output_path + "/mesh.stl")
+
+if __name__ == "__main__":
+    pickle_path = "../tmp/G.pickle"
+    output_path = "../tmp"
+    
+    generator = STLGen(
+        pickle_path=pickle_path,
+        sphere_radius=2,
+        cylinder_radius=1
+    )
+    
+    mesh = generator.generate_stl()
+    
+    generator.save_mesh(mesh, output_path)
+    mesh.show()

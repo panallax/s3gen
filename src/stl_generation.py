@@ -1,18 +1,20 @@
-import trimesh
 import numpy as np
+from collections import defaultdict
+from itertools import combinations, chain
+import trimesh
+import os
 import pickle
-import multiprocessing
-from concurrent.futures import ProcessPoolExecutor, as_completed
 
 class STLGen:
-    def __init__(self, sphere_radius, cylinder_radius, graph_path, output_path, logger):
-        self.logger = logger
-
-        self.sphere_radius = sphere_radius
-        self.cylinder_radius = cylinder_radius
-        self.graph = self.load_graph(graph_path)
-        self.output_path = output_path
         
+    def __init__(self, graph_path, thickness, n_sides, output_path, logger):
+        self.logger = logger
+        self.thickness = thickness
+        self.graph = self.load_graph(graph_path)
+        self.points = np.array(self.graph.nodes())
+        self.n_sides = n_sides
+        self.output_path = output_path
+
     def load_graph(self, pickle_path):
         """
         Load the graph from a pickle file
@@ -20,165 +22,155 @@ class STLGen:
         with open(pickle_path + "/G.pickle", 'rb') as f:
             self.logger.info("Loading graph from pickle file: {}".format(pickle_path + "/G.pickle", 'rb'))
             return pickle.load(f)
-    
-    def get_nodes_and_edges(self):
-        """
-        Convert the graph from NetworkX to numpy arrays
-        """
-        nodes = np.array(list(self.graph.nodes()))
-        edges = np.array(list(self.graph.edges()))
         
-        return nodes, edges
+    @staticmethod
+    def angle_between_edges(e1,e2, n):
+        
+        v1 = np.array(e1) - n
+        v2 = np.array(e2) - n
+        v1 = v1 / np.linalg.norm(v1)
+        v2 = v2 / np.linalg.norm(v2)
+        sin_val = np.linalg.norm(np.cross(v1, v2))
+        cos_val = np.dot(v1, v2)
+        
+        return np.arctan2(sin_val, cos_val)
+    
+    @staticmethod
+    def compute_basis_vectors(normal):
+
+        normal = np.asarray(normal, dtype=np.float64)
+        normal /= np.linalg.norm(normal)
+        
+        ref = np.array([0., 0., 1.])
+        if np.abs(np.dot(normal, ref)) > 0.9:
+            ref = np.array([1., 0., 0.])
+        
+        u = np.cross(normal, ref)
+        u /= np.linalg.norm(u)
+        v = np.cross(normal, u)
+        
+        return u, v
 
     @staticmethod
-    def process_batch(batch_data, batch_type, sphere_radius=2, cylinder_radius=2):
-        """Process a batch of spheres or cylinders"""
-        batch_meshes = []
+    def vertex_convex_hulls(vertex_polygons):
+        vertex_hulls = {
+            
+            node_idx: [
+                trimesh.convex.convex_hull(np.vstack((polygon_data[0], 
+                                        list(chain.from_iterable(polygon_data[1:]))))), 
+                polygon_data[1:]]
+            
+            for node_idx, polygon_data in vertex_polygons.items()
+        }
+        return vertex_hulls
+    
+    @staticmethod
+    def get_normal_polygon(points):
+        v1, v2 = points[1] - points[0], points[2] - points[0]
+        normal = np.cross(v1, v2)
+        return -normal / np.linalg.norm(normal)
+
+    def remove_faces(self, mesh, vertices):
         
-        try:
-            if batch_type == 'spheres':
-                for node in batch_data:
-                    sphere = trimesh.creation.icosphere(
-                        radius=sphere_radius,
-                        subdivisions=2
-                    )
-                    sphere.apply_translation(node)
-                    batch_meshes.append(sphere)
-            else:  
-                for edge in batch_data['edges']:
-                    start = edge[0]
-                    end = edge[1]
-                    vector = np.array(end) - np.array(start)
-                    length = np.linalg.norm(vector)
-                    direction = vector / length if length != 0 else [1, 0, 0]
+        normals = mesh.face_normals
+        polygons_normals = np.array([self.get_normal_polygon(v) for v in vertices])
+        diff = np.abs(normals[:, None, :] - polygons_normals[None, :, :]) 
+        mask =  ~np.any(np.all(diff <= 1e-6, axis=2), axis=1)
+        mesh.update_faces(mask)
+        return mesh
 
-                    cylinder = trimesh.creation.cylinder(cylinder_radius, 
-                                                        length,
-                                                        sections=16)
-                
-                    cylinder.apply_translation([0, 0, length/2])
-                    rotation = trimesh.geometry.align_vectors([0, 0, 1], direction)
-                    translation = np.eye(4)
-                    translation[:3, 3] = start
-                    transform = translation @ rotation
+    def generate_struts(self, edges_dict):
+        self.logger.info("Generating struts...")
+        return list(
+            map(lambda v: self.remove_faces(
+                trimesh.convex.convex_hull(np.vstack(v)), v), 
+                edges_dict.values())
+        )
 
-                    cylinder.apply_transform(transform)
-                    batch_meshes.append(cylinder)
-            
-            if batch_meshes:
-                try:
-                    combined = trimesh.util.concatenate(batch_meshes)
-                    if not combined.is_volume:
-                        combined.fix_normals()
-                        combined.fill_holes()
-                    if combined.is_volume:
-                        return {'mesh': trimesh.boolean.union(batch_meshes, engine='manifold'), 'status': 'success'}
-                    else:
-                        return {'mesh': trimesh.util.concatenate(batch_meshes), 'status': 'concatenated'}
-            
-                except Exception as e:
-                    return {'mesh': trimesh.util.concatenate(batch_meshes), 
-                           'status': 'warning',
-                           'message': f"Cannot join batch meshes: {str(e)}"}
-                
-            return {'mesh': None, 'status': 'empty'}
-        except Exception as e:
-            return {'mesh': None, 'status': 'error', 'message': str(e)}
-
-    def generate_stl(self):
-        nodes, edges = self.get_nodes_and_edges()
-        batch_size = 100
-        num_processes = max(1, multiprocessing.cpu_count() - 1)
-        meshes = []
-
-        if self.sphere_radius != 0:
-            self.logger.info(f"Processing {len(nodes)} spheres using {num_processes} processes...")
-            node_batches = [nodes[i:i+batch_size] for i in range(0, len(nodes), batch_size)]
+    def create_polygon(self, center, normal, n_sides, radius=1.0, phase=0):
+    
+        center = np.asarray(center, dtype=np.float64)
+        u, v = self.compute_basis_vectors(normal)
+        phase = np.random.rand()*np.pi
+        angles = np.linspace(0, 2*np.pi, n_sides, endpoint=False) + phase
+        cos_angles = np.cos(angles)
+        sin_angles = np.sin(angles)
         
-            with ProcessPoolExecutor(max_workers=num_processes) as executor:
-                futures = [executor.submit(
-                            self.process_batch, 
-                            batch, 
-                            'spheres', 
-                            self.sphere_radius, 
-                            self.cylinder_radius
-                            ) for batch in node_batches]
-                
-                for i, future in enumerate(as_completed(futures)):
-                    result = future.result()
-                    if result['status'] == 'success':
-                        meshes.append(result['mesh'])
-                        self.logger.info(f"Completed sphere batch {i+1}/{len(node_batches)}")
-                    elif result['status'] == 'warning':
-                        meshes.append(result['mesh'])
-                        self.logger.warning(f"Batch {i+1}/{len(node_batches)}: {result['message']}")
-                    elif result['status'] == 'error':
-                        self.logger.error(f"Error in batch {i+1}/{len(node_batches)}: {result['message']}")
-            
-        self.logger.info(f"Processing {len(edges)} cylinders...")
-        edge_batches = [edges[i:i+batch_size] for i in range(0, len(edges), batch_size)]
+        vertices = (center +
+                radius * (np.outer(cos_angles, u) + 
+                            np.outer(sin_angles, v)))
         
-        with ProcessPoolExecutor(max_workers=num_processes) as executor:
-            futures = [executor.submit(self.process_batch, 
-                                    {'nodes': nodes, 'edges': batch}, 
-                                    'cylinders',
-                                    self.sphere_radius,
-                                    self.cylinder_radius
-                                    ) for batch in edge_batches]
-            
-            for i, future in enumerate(as_completed(futures)):
-                result = future.result()
-                if result['status'] == 'success':
-                    meshes.append(result['mesh'])
-                    self.logger.info(f"Completed cylinder batch {i+1}/{len(edge_batches)}")
-                elif result['status'] == 'warning':
-                    meshes.append(result['mesh'])
-                    self.logger.warning(f"Batch {i+1}/{len(edge_batches)}: {result['message']}")
-                elif result['status'] == 'error':
-                    self.logger.error(f"Error in batch {i+1}/{len(edge_batches)}: {result['message']}")
+        return vertices
 
-        self.logger.info("Joining all results...")
-        self.final_mesh = meshes[0]
-        for i, mesh in enumerate(meshes[1:], 1):
-            try:
-                tmp_mesh = trimesh.boolean.union([self.final_mesh, mesh], engine='manifold')
-                if tmp_mesh.is_volume:
-                    self.final_mesh = tmp_mesh
-                    self.logger.info(f"Joined {i+1}/{len(meshes)} components")
+    def create_edge_polygons(self):
+        self.logger.info("Generating polygons in edges...")
+
+        vertex_polygons = {i: [self.points[i]] for i in range(len(self.points))}
+        edges_polygons = defaultdict(list)
+        
+        for idx, node in enumerate(self.graph.nodes()):
+            point = np.array(node)
+            neigh = np.array(list(self.graph.neighbors(node)))
+            comb = combinations(neigh, 2)
+            min_angle = min(self.angle_between_edges(*c, point) for c in comb)
+            min_leng = min(np.linalg.norm(point - np.array(n)) for n in neigh)
+            distance = self.thickness/np.sin(min_angle/2)
+            if distance > min_leng:
+                distance = min_leng
+
+            for n in neigh:
+                edge_vector = point - n
+                edge_length = np.linalg.norm(edge_vector)
+                edge_direction = edge_vector / edge_length
+                center = point - distance*edge_direction
+                polygon = self.create_polygon(center, edge_direction, self.n_sides, self.thickness)
+                vertex_polygons[idx].append(polygon)
+                
+                if (node, n) in edges_polygons:
+                    edges_polygons[(node,n)].append(polygon)
+                elif (n, node) in edges_polygons:
+                    edges_polygons[(n,node)].append(polygon)
                 else:
-                    self.final_mesh = trimesh.util.concatenate([self.final_mesh, mesh])
-                    self.logger.info(f"Concatenated {i+1}/{len(meshes)} components (fallback), mesh is not volume")
-            except:
-                self.final_mesh = trimesh.util.concatenate([self.final_mesh, mesh])
-                self.logger.warning(f"Concatenated {i+1}/{len(meshes)} components (fallback)")
+                    edges_polygons[(node,n)].append(polygon)
         
-        self.logger.info("Cleaning final mesh...")
-        self.final_mesh.update_faces(self.final_mesh.unique_faces())
-        self.final_mesh.update_faces(self.final_mesh.nondegenerate_faces())
-        self.final_mesh.fill_holes()
-        self.final_mesh.fix_normals()
-        
-        self.save_mesh()
-        self.final_mesh.show()
+        return vertex_polygons, edges_polygons
 
-    def save_mesh(self):
-        """
-        Save the mesh in STL format
-        """
-        self.logger.info("Saving mesh...")
-        self.final_mesh.export(self.output_path + "/mesh.stl")
+    def generate_mesh(self, vertex_hulls, struts, loops= 4):
+        self.logger.info("Generating mesh...")
+        mesh = trimesh.util.concatenate(vertex_hulls + struts)
+        mesh.merge_vertices()
+        final_mesh = trimesh.Trimesh(vertices= mesh.vertices, faces= mesh.faces)
+        final_mesh.show()
+        try:
+            final_mesh.subdivide_loop(loops)
+        except ValueError as e:
+            self.logger.error(f"Error while subdividing the mesh: {e}. Retrying with half of loops.")
+            new_loops = max(1, int(loops / 2))
+            try:
+                final_mesh.subdivide_loop(new_loops)
+            except ValueError as e:
+                self.logger.error(f"Error while subdividing the mesh again: {e}. No subdivision can be made. Saving the original mesh.")
+                return final_mesh
+            
+        return final_mesh
+
+    def graph_to_mesh(self, loops= 4):
+        vertex_polygons, edges_polygons = self.create_edge_polygons()
+        self.logger.info("Generating vertices hulls...")
+        vertex_hulls = self.vertex_convex_hulls(vertex_polygons)
+        faceless_vertex_hulls = [self.remove_faces(m,v) for m,v in vertex_hulls.values()]
+        struts = self.generate_struts(edges_polygons)
+        mesh = self.generate_mesh(faceless_vertex_hulls, struts, loops)
+
+        mesh.export(os.path.join(self.output_path, "mesh.stl"))
+        self.logger.success(f"Mesh saved at {self.output_path}")
 
 if __name__ == "__main__":
-    pickle_path = "../tmp/G.pickle"
+    from utils.logger import Logger
+
+    pickle_path = "../tmp"
     output_path = "../tmp"
-    
-    generator = STLGen(
-        pickle_path=pickle_path,
-        sphere_radius=2,
-        cylinder_radius=1
-    )
-    
-    mesh = generator.generate_stl()
-    
-    generator.save_mesh(mesh, output_path)
-    mesh.show()
+    logger = Logger("main")
+    stl = STLGen(graph_path=pickle_path, thickness=0.4 , n_sides= 4, output_path=output_path, logger= logger)
+    stl.graph_to_mesh(4)
+
