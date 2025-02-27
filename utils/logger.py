@@ -15,7 +15,7 @@ class Logger:
     def __init__(self, name: str = "log"):
         self.start_time = datetime.now()
         self.logger = logging.getLogger(name)
-        self.logger.setLevel(logging.INFO)
+        self.logger.setLevel(logging.DEBUG)
         self._show_logs_in_console = True
 
         self.formatter = logging.Formatter(
@@ -83,7 +83,7 @@ class Logger:
 
     def error(self, message: str):
         """Log error"""
-        self.logger.error(self._colored(message, "ERROR"), stacklevel=2)
+        self.logger.error(self._colored(message, "ERROR"), exc_info=True, stacklevel=2)
 
     def finalize(self):
         execution_time = datetime.now() - self.start_time

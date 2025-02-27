@@ -14,6 +14,9 @@ class STLGen:
         self.points = np.array(self.graph.nodes())
         self.n_sides = n_sides
         self.output_path = output_path
+        
+        self.logger.info("Initialized mesh generation process")
+        self.check_connectivity()
 
     def load_graph(self, pickle_path):
         """
@@ -70,13 +73,20 @@ class STLGen:
         normal = np.cross(v1, v2)
         return -normal / np.linalg.norm(normal)
 
+    def check_connectivity(self):
+        invalid_nodes = np.array([node for node, degree in self.graph.degree() if degree < 3])
+        if invalid_nodes.any():
+            with np.printoptions(precision=3, suppress=True):
+                self.logger.error(f"Connectivity Error: The following nodes are not stable: {invalid_nodes}")
+            # raise ValueError(f"There are nodes with less than 2 neighbours. Cannot proceed.")
+
     def remove_faces(self, mesh, vertices):
-        
         normals = mesh.face_normals
         polygons_normals = np.array([self.get_normal_polygon(v) for v in vertices])
         diff = np.abs(normals[:, None, :] - polygons_normals[None, :, :]) 
         mask =  ~np.any(np.all(diff <= 1e-6, axis=2), axis=1)
         mesh.update_faces(mask)
+
         return mesh
 
     def generate_struts(self, edges_dict):
@@ -105,33 +115,30 @@ class STLGen:
     def create_edge_polygons(self):
         self.logger.info("Generating polygons in edges...")
 
-        vertex_polygons = {i: [self.points[i]] for i in range(len(self.points))}
+        self.points = np.array(self.points)
+        vertex_polygons = {i: [self.points[i]] for i in range(len(self.graph.nodes()))}
         edges_polygons = defaultdict(list)
         
         for idx, node in enumerate(self.graph.nodes()):
             point = np.array(node)
-            neigh = np.array(list(self.graph.neighbors(node)))
-            comb = combinations(neigh, 2)
+            neigh = list(self.graph.neighbors(node))
+            comb = list(combinations(neigh, 2))
             min_angle = min(self.angle_between_edges(*c, point) for c in comb)
             min_leng = min(np.linalg.norm(point - np.array(n)) for n in neigh)
             distance = self.thickness/np.sin(min_angle/2)
             if distance > min_leng:
+                self.logger.warning(f"Edge {idx} too short. Subdivision mesh will probably fail. Consider merging close nodes.")
                 distance = min_leng
 
             for n in neigh:
-                edge_vector = point - n
+                edge_vector = point - np.array(n)
                 edge_length = np.linalg.norm(edge_vector)
                 edge_direction = edge_vector / edge_length
                 center = point - distance*edge_direction
+                # print(idx, center)
                 polygon = self.create_polygon(center, edge_direction, self.n_sides, self.thickness)
-                vertex_polygons[idx].append(polygon)
-                
-                if (node, n) in edges_polygons:
-                    edges_polygons[(node,n)].append(polygon)
-                elif (n, node) in edges_polygons:
-                    edges_polygons[(n,node)].append(polygon)
-                else:
-                    edges_polygons[(node,n)].append(polygon)
+                vertex_polygons[idx].append(polygon)   
+                edges_polygons.setdefault((min(node, n), max(node, n)), []).append(polygon)
         
         return vertex_polygons, edges_polygons
 
@@ -140,16 +147,16 @@ class STLGen:
         mesh = trimesh.util.concatenate(vertex_hulls + struts)
         mesh.merge_vertices()
         final_mesh = trimesh.Trimesh(vertices= mesh.vertices, faces= mesh.faces)
-        final_mesh.show()
+        # final_mesh.show()
         try:
             final_mesh.subdivide_loop(loops)
         except ValueError as e:
-            self.logger.error(f"Error while subdividing the mesh: {e}. Retrying with half of loops.")
+            self.logger.warning(f"Error while subdividing the mesh: {e}. Retrying with half of loops.")
             new_loops = max(1, int(loops / 2))
             try:
                 final_mesh.subdivide_loop(new_loops)
             except ValueError as e:
-                self.logger.error(f"Error while subdividing the mesh again: {e}. No subdivision can be made. Saving the original mesh.")
+                self.logger.warning(f"Error while subdividing the mesh again: {e}. No subdivision can be made. Saving the original mesh.")
                 return final_mesh
             
         return final_mesh
@@ -163,6 +170,7 @@ class STLGen:
         mesh = self.generate_mesh(faceless_vertex_hulls, struts, loops)
 
         mesh.export(os.path.join(self.output_path, "mesh.stl"))
+        mesh.show()
         self.logger.success(f"Mesh saved at {self.output_path}")
 
 if __name__ == "__main__":

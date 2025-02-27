@@ -19,7 +19,7 @@ class PrintingConfig:
         BOTTOM_LAYERS (int): Number of bottom layers
         TOP_LAYERS (int): Number of top layers
     """
-    EXTRUSION_WIDTH: float = 0.8    # mm
+    EXTRUSION_WIDTH: float = 2    # mm
     OUTTER_RADIUS: float = 0.55     # mm
     FILAMENT_WIDTH: float = 1.75    # mm
     FEED_RATE: int = 9000           # mm/min
@@ -44,10 +44,12 @@ class MeshConfig:
         PORE_RADIUS (float): Pore radius in mm
         PORE_AREA (int): Pore area in mm^2
     """
-    INITIAL_SPHERE_RADIUS: float = 2
-    INITIAL_CYLINDER_RADIUS: float = 2
+    SECTION_THICKNESS = 0.1
+    N_SIDES = 4
     PORE_RADIUS: float = None  # mm
     PORE_AREA: int = 80
+    BOLTS = True
+    MESH_SUBDIVISION_LOOPS = 0
 
 @dataclass
 class PathConfig:
@@ -76,7 +78,7 @@ class PathConfig:
     TMP_PATH: Path = Path(os.getenv('MESHGEN_TMP_DIR', 
                                      BASE_PATH / "tmp"))
     STL_FILE: Path = Path(os.getenv('MESHGEN_STL_FILE', 
-                                     DATA_PATH / "Part.stl"))
+                                     DATA_PATH / "Cone.stl"))
 
 
 class Config:

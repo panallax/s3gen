@@ -236,8 +236,15 @@ def generate_segments(points, external_indices, internal_indices_dict):
 
     return external_segments + internal_segments
 
-def valid(array):
-  if "010" in "".join(['1' if val else '0' for val in array]):
-     return False
-  return True
+def valid(pts, simplices, shell_simplices, shell_pts, base_points):
+    base_set = {tuple(p) for p in base_points}
+    contour_set = {tuple(p) for p in shell_pts}
+    
+    for idx in shell_simplices:
+        simplex_points = {tuple(pts[i]) for i in simplices[idx]}
+        common_points = simplex_points & base_set
+        # if len(common_points) != len(base_points):
+        if len(common_points) >= 2 and sum(1 for p in common_points if p in contour_set) >= 2:
+            return False 
 
+    return True

@@ -17,7 +17,7 @@ from utils import tessellate_points, polar_angle_sort, area_polygon, sort_simpli
 class MeshGen:
 
     def __init__(self,mesh, points, base_points, top_points, lateral_mesh, 
-                 inner_mesh, radius, pore_area, output_path, tmp_path, logger):
+                 inner_mesh, radius, pore_area, bolts, output_path, tmp_path, logger):
         self.logger = logger
         
         self.mesh = mesh
@@ -29,6 +29,7 @@ class MeshGen:
         self.z_max = np.max(self.top_points[:,-1])
         self.L = radius #mm
         self.pore_area = pore_area
+        self.bolts = bolts
         self.polyhedrons = {}
         self.G = nx.Graph()
         self.output_path = output_path
@@ -64,6 +65,7 @@ class MeshGen:
         banned_points = []
 
         while True:
+        # while iteration < 5:
             optimal_points = []
             if iteration == 0:
                 bot_points, simplices, outter_shell_pts, inner_shell_pts = self.__initial_points(self.mesh, self.pore_area)
@@ -73,7 +75,7 @@ class MeshGen:
             else:
                 self.logger.debug(f"iteration {iteration}")
                 simplices, bot_points, outter_shell_pts, inner_shell_pts = tessellate_points(num_simplices, self.lateral_mesh, bot_points,
-                                                                                            outter_shell_apex_idx, inner_shell_apex_idx_dict)
+                                                                                            outter_shell_apex_idx, inner_shell_apex_idx_dict, self.bolts, self.logger)
                 # plot_tessellation(bot_points[:,:2],simplices)
 
             outter_shell_apex_idx = []
@@ -107,21 +109,24 @@ class MeshGen:
 
                 else:
                     if len(banned_points) == 0 or not isin(base_points, banned_points).any():
+                        if not self.mesh.contains([optimal_point]):
+                            optimal_point = trimesh.proximity.closest_point(self.mesh, [optimal_point])[0].flatten()
+
                         optimal_points.append(optimal_point)
                         self.polyhedrons[f"{iteration}_{i}"] = {"base_points": base_points, "apex": optimal_point}
 
                         outter_shell_points_in_base = isin(base_points, outter_shell_pts)
-                        if np.count_nonzero(outter_shell_points_in_base) > 1:
-                            if valid(outter_shell_points_in_base):
-                                outter_shell_apex_idx.append(len(optimal_points)-1)
+                        if np.count_nonzero(outter_shell_points_in_base) > 1 and len(base_points) == 3:
+                            # if valid(outter_shell_points_in_base):
+                            outter_shell_apex_idx.append(len(optimal_points)-1)
 
                         else:
                             for c,m in enumerate(inner_shell_pts):
                                 inner_shell_points_in_base = isin(base_points, m)
-                                if np.count_nonzero(inner_shell_points_in_base) > 1:
-                                    if valid(inner_shell_points_in_base):
-                                        inner_shell_apex_idx_dict[c].append(len(optimal_points)-1)
-                                        break
+                                if np.count_nonzero(inner_shell_points_in_base) > 1 and len(base_points) == 3:
+                                    # if valid(inner_shell_points_in_base):
+                                    inner_shell_apex_idx_dict[c].append(len(optimal_points)-1)
+                                    break
 
             if len([x for x in self.polyhedrons.keys() if x.startswith(f"{iteration}_")]) == 0:
                 self.logger.info("No polyhedrons created. Process finished.")
@@ -129,9 +134,9 @@ class MeshGen:
 
             optimal_points = np.array(optimal_points)
 
-            bot_points, self.polyhedrons, inner_shell_apex_idx_dict, self.inner_mesh = self.__join_hull_and_shell(self.polyhedrons, self.lateral_mesh, 
-                                                                                                        self.inner_mesh, optimal_points,
-                                                                                                        outter_shell_apex_idx, inner_shell_apex_idx_dict)
+            bot_points, self.polyhedrons, inner_shell_apex_idx_dict, self.inner_mesh = self.__join_hull_and_shell(self.polyhedrons, optimal_points,
+                                                                                                                self.lateral_mesh, outter_shell_apex_idx,
+                                                                                                                self.inner_mesh, inner_shell_apex_idx_dict)
             iteration += 1
 
         self.__dict_to_graph()
@@ -189,7 +194,7 @@ class MeshGen:
         return triang_points, simplices, outter_points, inner_points
 
 
-    def __join_hull_and_shell(self, tetra_dict, lateral_mesh, inner_mesh, apexes, outter_points_idx, inner_points_idx_dict):
+    def __join_hull_and_shell(self, tetra_dict, apexes, lateral_mesh, outter_points_idx, inner_mesh= [], inner_points_idx_dict= {}):
 
         closer_points = trimesh.proximity.closest_point(lateral_mesh, apexes[outter_points_idx])[0]
         for i,p in enumerate(apexes[outter_points_idx]):
@@ -200,14 +205,19 @@ class MeshGen:
         if inner_mesh:
             dead = []
             alive = set()
+            mesh_count = len(inner_mesh)
+
             for num, inner_points_idx in inner_points_idx_dict.items():
                 for j, mesh in enumerate(inner_mesh):
                     if np.isclose(mesh.centroid[:2], np.mean(apexes[inner_points_idx], axis= 0)[:2], atol=10).all():
                         closer_points = trimesh.proximity.closest_point(mesh, apexes[inner_points_idx])[0]
+                        off = 0
                         for i,p in enumerate(apexes[inner_points_idx]):
                             if not np.isclose(p, closer_points[i]).all():
                                 if abs(p[2] - closer_points[i][2]) > 5:
-                                    break
+                                    off += 1
+                                    if off >= int(len(closer_points) * 0.5):
+                                        break
 
                                 apexes[np.argwhere((apexes == p).all(-1))[0][0]] = closer_points[i]
                                 tetra_dict = update_polyhedrons_dict(tetra_dict, p, closer_points[i])
@@ -226,7 +236,10 @@ class MeshGen:
                 for m in sorted(set(range(len(inner_mesh))).difference(alive), reverse= True):
                     del inner_mesh[m]
 
-            return apexes, tetra_dict, inner_points_idx_dict, inner_mesh
+            if self.bolts:
+                self.bolts = False if mesh_count != len(inner_mesh) else True
+
+        return apexes, tetra_dict, inner_points_idx_dict, inner_mesh
     
     def __dict_to_graph(self):
         """ Convert a dictionary of polyhedrons to a graph. Not printable edges 
@@ -247,13 +260,15 @@ class MeshGen:
             for i, p in enumerate(v["base_points"]):
                 local_dist = np.linalg.norm(v["apex"] - p)
                 max_global_dist = local_dist if local_dist > max_global_dist else max_global_dist
-                if len(v["base_points"]) == 3:
-                    self.G.add_edge(tuple(p), tuple(v["apex"]), length= np.linalg.norm(v["apex"] - p))
-                else:  
-                    previous = v["base_points"][i-1] if i > 0 else v["base_points"][-1]
-                    following = v["base_points"][(i+1)] if i < len(v["base_points"])-1 else v["base_points"][0]
-                    if between_points(np.array([previous, p, following]), v["apex"]) or isin(self.lateral_mesh.vertices, v["apex"]):
-                        self.G.add_edge(tuple(p), tuple(v["apex"]), length= np.linalg.norm(v["apex"] - p))
+                self.G.add_edge(tuple(p), tuple(v["apex"]), length= np.linalg.norm(v["apex"] - p))
+
+                # if len(v["base_points"]) == 3:
+                #     self.G.add_edge(tuple(p), tuple(v["apex"]), length= np.linalg.norm(v["apex"] - p))
+                # else:  
+                #     previous = v["base_points"][i-1] if i > 0 else v["base_points"][-1]
+                #     following = v["base_points"][(i+1)] if i < len(v["base_points"])-1 else v["base_points"][0]
+                #     if between_points(np.array([previous, p, following]), v["apex"]) or isin(self.lateral_mesh.vertices, v["apex"]):
+                #         self.G.add_edge(tuple(p), tuple(v["apex"]), length= np.linalg.norm(v["apex"] - p))
         
         # Move the nodes to the top of the shell
         nodes = list(self.G.nodes())
@@ -275,7 +290,7 @@ class MeshGen:
             new_nodes.append(new_node)
             for n in neighb:
                 self.G.add_edge(new_node, n, length= np.linalg.norm(np.array(new_node) - np.array(n)))
-        
+
         # # Move the outter and inner nodes to the perimeter of the top section
         # new_nodes = np.array(new_nodes)
         # adpt, self.polyhedrons = self.__join_hull_and_shell(self.polyhedrons, self.lateral_mesh, 
@@ -298,7 +313,7 @@ class MeshGen:
         # self.G.remove_nodes_from(list(nx.isolates(self.G)))
 
     def save_graph(self):
-        pickle.dump(self.polyhedrons, open(os.path.join(self.tmp_path, "tetra.pickle"),"wb"))
+        # pickle.dump(self.polyhedrons, open(os.path.join(self.tmp_path, "tetra.pickle"),"wb"))
         pickle.dump(self.G, open(os.path.join(self.output_path, "G.pickle"),"wb"))
         pickle.dump(self.G, open(os.path.join(self.tmp_path, "G.pickle"),"wb"))
         self.logger.info(f"Graph saved in {os.path.join(self.output_path, 'G.pickle')}")

@@ -1,7 +1,7 @@
 import numpy as np
 from shapely.geometry import Polygon
 from shapely.ops import polylabel
-from utils import polar_angle_sort, angle, generate_segments, group_segments
+from utils import polar_angle_sort, angle, generate_segments, group_segments, detect_bolts
 from config import config
 import triangle
 
@@ -93,7 +93,7 @@ def sort_simplices(simplices, idx_simplices, points):
   sorted_simplices = np.array(list(map(lambda s: sorted(s, key=lambda x : polar_angle_sort(points[x],np.mean(points[s], axis=0))), idx_simplices)))
   return areas, sorted_simplices
 
-def tessellate_points(initial_len, mesh, points, outter_points_idx, inner_points_dict):
+def tessellate_points(initial_len, mesh, points, outter_points_idx, inner_points_dict, bolts, logger):
   """
   Tessellate a set of points from a intial Delaunay triangulation until the number
   of simplices is equal to the initial one. The tessellation is done by merging 
@@ -118,13 +118,45 @@ def tessellate_points(initial_len, mesh, points, outter_points_idx, inner_points
   segments =  generate_segments(points_pr, outter_points_idx, inner_points_dict if inner_points_dict else None)
 
   t = triangle.triangulate({"vertices": points_pr, "segments": segments, **({"holes": holes} if holes else {})}, opts = "p")
-  
+
   dea = t["triangles"]
   simplices = points[dea]
+
+  # import matplotlib.pyplot as plt
+  # p = np.array(t["vertices"].tolist())
+  # plt.figure(figsize=(20,20))
+  # plt.axes().set_aspect('equal')
+  # plt.triplot(points_pr[:,0], points_pr[:,1], dea)
+  # plt.plot(points_pr[:,0], points_pr[:,1], 'o')
+  # plt.show()
+
+  # import pickle
+  # test_dict = {"dea":dea, "simplices":simplices, "segments": t["segments"], "points": points, "initial_len": initial_len}
+  # pickle.dump(test_dict, open( "./test.pickle","wb"))
 
   segments_groups = sorted(group_segments(t["segments"]), key= len, reverse= True)
   outter_points = points[segments_groups[0]]
   inner_points =  [points[idx] for idx in segments_groups[1:]]
+
+  
+  idxss = [int(item) for sublist in segments_groups for item in sublist]
+  bolts_dea_idx = np.flatnonzero(np.sum(np.isin(dea, idxss), axis=1) >= 2)
+  bolts_dea = dea[bolts_dea_idx]
+  
+  dea = np.delete(dea, bolts_dea_idx, axis= 0)
+  simplices = np.delete(simplices, bolts_dea_idx, axis= 0)
+  initial_len -= len(bolts_dea)
+
+  # if bolts:
+  #   sorted_dict = dict(sorted(inner_points_dict.items(), key=lambda idx: -len(idx[1])))
+  #   bolts = detect_bolts([points[idx] for idx in sorted_dict.values()])
+  #   bolts_idx = [item for key in bolts for item in sorted_dict[key]]
+  #   bolts_dea_idx = np.flatnonzero(np.sum(np.isin(dea, bolts_idx), axis=1) >= 2)
+  #   bolts_dea = dea[bolts_dea_idx]
+    
+  #   dea = np.delete(dea, bolts_dea_idx, axis= 0)
+  #   simplices = np.delete(simplices, bolts_dea_idx, axis= 0)
+  #   initial_len -= len(bolts_dea)
 
   areas, sorted_idx_dea = sort_simplices(simplices, dea, points)
   simplices = points[sorted_idx_dea]
@@ -138,22 +170,27 @@ def tessellate_points(initial_len, mesh, points, outter_points_idx, inner_points
   while len(sorted_simplices) >= initial_len:
     simplex = sorted_simplices[0]
     area_simplex = sorted_areas[0]
-    idx,n = neighbours(simplex, sorted_simplices)
+
+    idx,n = neighbours(simplex, sorted_simplices, logger)
     idx_smaller_neighbor, smaller_area = [(idx[x], sorted_areas[idx[x]]) for x in sorted(range(len(n)), key=lambda k: sorted_areas[idx[k]])][0]
-    merged_dea = merge_sorted_simplices(sorted_dea[0], sorted_dea[idx_smaller_neighbor])
+    # merged_dea = merge_sorted_simplices(sorted_dea[0], sorted_dea[idx_smaller_neighbor])
+    merged_dea = np.unique(np.append(sorted_dea[0], sorted_dea[idx_smaller_neighbor]))
     merged_simplex = points[merged_dea]
     merged_area = area_simplex + smaller_area
 
-    for id in [0,idx_smaller_neighbor-1]: #restamos uno porque cuando quitamos el indice 0 y el otro se adelanta una posición
-      del sorted_areas[id]
-      del sorted_simplices[id]
-      del sorted_dea[id]
+    for _id in [0,idx_smaller_neighbor-1]: #restamos uno porque cuando quitamos el indice 0 y el otro se adelanta una posición
+      del sorted_areas[_id]
+      del sorted_simplices[_id]
+      del sorted_dea[_id]
     pos = np.argsort([abs(sa - merged_area) for sa in sorted_areas])[0]
     sorted_areas.insert(pos, merged_area)
     sorted_simplices.insert(pos, merged_simplex)
     sorted_dea.insert(pos, merged_dea)
 
-  return sorted_dea, points, outter_points, inner_points
+  if bolts:
+      return sorted_dea + list(bolts_dea), points, outter_points, inner_points
+
+  return list(bolts_dea) + sorted_dea, points, outter_points, inner_points
 
 def area_polygon(points):
   """
@@ -174,7 +211,7 @@ def area_polygon(points):
   
   return area
 
-def neighbours(simplex, simplices):
+def neighbours(simplex, simplices, logger):
   """
   Find the neighbours of a simplex and its indices.
 
@@ -186,16 +223,17 @@ def neighbours(simplex, simplices):
       n_idx -- List of indices of the neighbours   
       n -- List of neighbours
   """
-
   n = []
   n_idx = []
-  for pr in [(simplex[i], simplex[(i + 1) % len(simplex)]) for i in range(len(simplex))]:
-    for idx, splx in enumerate(simplices):
-      if np.count_nonzero((splx[:, None] == pr).all(-1).any(-1)) >= 2 and not (splx[:,None] == simplex).all(-1).diagonal().all():
-        n.append(splx)
-        n_idx.append(idx)
+  simplex_set = set(map(tuple, simplex))
 
-  return n_idx,n
+  for idx, splx in enumerate(simplices):
+      splx_set = set(map(tuple, splx))
+      if len(simplex_set.intersection(splx_set)) >= 2 and simplex_set != splx_set:
+          n.append(splx)
+          n_idx.append(idx)
+
+  return n_idx, n
 
 
 def find_POI(points):
@@ -211,6 +249,7 @@ def find_POI(points):
 
   points_pr = points[:,:2]
   z_coord = np.mean(points[:,-1])
+  points_pr = sorted(points_pr, key= lambda x: polar_angle_sort(x, np.mean(points_pr, axis= 0)))
   pairs = tuple([tuple(x) for x in points_pr])
   try:
     polygon = Polygon(pairs)
@@ -244,12 +283,12 @@ def find_apex(base_points, apex_proj, growth_vect):
   """
 
   found = False
-  delta = 0.05
-  max_it = 200
+  delta = 0.1
+  max_it = 500
   it = 0
   apex_pos = apex_proj
   while not found:
-    found = (-angle(apex_pos, base_points) > 50).all()
+    found = (-angle(apex_pos, base_points) > 45).all()
     if not found:
       if it < max_it:
         apex_pos = apex_pos + growth_vect*delta
@@ -265,26 +304,32 @@ def find_apex(base_points, apex_proj, growth_vect):
 
 def section_props(mesh, z):
   section = mesh.section(np.array([0,0,1]), np.array([0,0,z]))
+  dists = np.linalg.norm(section.vertices - section.centroid, axis= 1)
+  max_dist = np.max(dists)
+  min_dist = np.min(dists) if len(section.entities) > 1 else 0
 
-  return section.centroid, section.length
+  return section.centroid, section.length, max_dist, min_dist
 
 
 def get_growth_vect(mesh, point, z_2):
-  center_1, len_1 = section_props(mesh, point[-1])
-  center_2, len_2 = section_props(mesh, z_2)
-  delta = center_2 - center_1
+  center_1, len_1, max_dist, min_dist = section_props(mesh, point[-1])
+  center_2, len_2 = section_props(mesh, z_2)[:2]
+    
+  relative_pos = point - center_1
   k = len_2/len_1
-  projection = point*k + delta
-  growth_vect = projection - point
+  projection = relative_pos*k + center_2
+  growth_vect = (projection - point)
+    
+  alpha = adjustment_factor(np.linalg.norm(relative_pos), min_dist, max_dist)
 
-  return growth_vect
+  return (growth_vect / np.linalg.norm(growth_vect))*np.array([alpha, alpha, 1])
 
 
 def calculate_number_of_simplices(mesh, z_1, inital_simplices):
   z_max = mesh.bounds[1][2]
-  _, d_1 = section_props(mesh, z_1)
-  _, d_2= section_props(mesh, config.mesh.PORERADIUS + z_1 if config.mesh.PORERADIUS + z_1 < z_max 
-                              else z_max - 1e-6)
+  d_1 = section_props(mesh, z_1)[1]
+  d_2= section_props(mesh, config.mesh.PORERADIUS + z_1 if config.mesh.PORERADIUS + z_1 < z_max 
+                              else z_max - 1e-6)[1]
 
   delta = (d_2/d_1)**2
   num_simplices = int(np.round(inital_simplices*delta))
@@ -297,3 +342,22 @@ def initial_area(L= None, pore_area= None):
   elif not L:
     L = np.sqrt(pore_area*4/np.sqrt(3))
   return L, pore_area
+
+def adjustment_factor(x, lower_limit, upper_limit, k=7):
+  """
+  Función tangente hiperbólica ajustada para que tome valores de 0 a 1
+  según la distancia al centro de la sección entre el límite inferior y superior.
+  
+  Arguments:
+      x {float} -- Distancia del punto al centro.
+      lower_limit {float} -- Límite inferior de la sección.
+      upper_limit {float} -- Límite superior de la sección.
+      k {float} -- Factor de pendiente para ajustar la transición.
+      
+  Returns:
+      float -- Valor de la función tangente hiperbólica ajustada en el rango [0,1].
+  """
+  mid_point = (lower_limit + upper_limit) / 2
+  normalized_x = (x - mid_point) / (upper_limit - lower_limit)
+  
+  return 0.5 * (np.tanh(k * normalized_x) + 1)

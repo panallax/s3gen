@@ -1,6 +1,6 @@
 from utils.uplot import plot_Dealunay, plot_graph, print_dict, plot_tessellation
 from utils.uhull import in_volume, extract_points_from_STL, caracteristic_distsance, \
-                        detect_holes
+                        detect_holes, detect_bolts
 from utils.unodes import angle, isin, exclude_points, between_points, polar_angle_sort, \
                         min_dist, calculate_segments_dist, distance, group_segments, \
                         valid, generate_segments

@@ -15,6 +15,8 @@ setup(
         "triangle",
         "trimesh",
         "pytz",
-        "manifold3d"
+        "manifold3d",
+        "rtree",
+        "pyglet<2"
     ]
 )

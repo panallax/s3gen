@@ -29,7 +29,9 @@ def extract_points_from_STL(file):
     Returns:
         np.array: coordinates of the points.
     """
-    mesh = trimesh.load("../" + file)
+    mesh = trimesh.load("../" / file)
+    translation = mesh.bounds[0]
+    mesh.vertices -= translation
     
     points = mesh.vertices
     z_min,z_max = mesh.bounds[:,2]
@@ -112,3 +114,25 @@ def detect_holes(mesh, z):
   transform[np.abs(transform) < 1e-10] = 0
 
   return points, segments, holes, transform
+
+def detect_bolts(points_list, tol=2.0):
+    """
+     Detect bolts by its coordinates in the plane X-Y.
+
+    Args:
+        points_list (numpy array): Nested lists of the different holes points
+        tolerance (float): Margin to determine if a point is on an edge.
+
+    Returns:
+        bolts_idx (numpy array): Indices of which lists of points are bolts holes.
+    """
+
+    mean_points = np.array([np.mean(x[:,:2], axis= 0) for x in points_list])
+    x_min, y_min = mean_points.min(axis=0)
+    x_max, y_max = mean_points.max(axis=0)
+
+    on_edge_x = (np.abs(mean_points[:, 0] - x_min) < tol) | (np.abs(mean_points[:, 0] - x_max) < tol)
+    on_edge_y = (np.abs(mean_points[:, 1] - y_min) < tol) | (np.abs(mean_points[:, 1] - y_max) < tol)
+    bolts_idx =[i for i in range(len(points_list)) if  (on_edge_x[i] & on_edge_y[i])]
+
+    return bolts_idx
