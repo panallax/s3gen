@@ -69,6 +69,7 @@ class MeshGen:
             optimal_points = []
             if iteration == 0:
                 bot_points, simplices, outter_shell_pts, inner_shell_pts = self.__initial_points(self.mesh, self.pore_area)
+                self.__add_base(simplices, bot_points)
                 num_simplices = len(simplices)
                 self.logger.debug(f"Initial number of simplices: {num_simplices}")
 
@@ -140,7 +141,7 @@ class MeshGen:
             iteration += 1
 
         self.__dict_to_graph()
-        print_dict(self.points, self.polyhedrons)
+        # print_dict(self.points, self.polyhedrons)
 
     def __add_base(self, simplex, points):
         """ Add the base triangulation to the graph to facilitate printing it.

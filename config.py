@@ -44,12 +44,13 @@ class MeshConfig:
         PORE_RADIUS (float): Pore radius in mm
         PORE_AREA (int): Pore area in mm^2
     """
-    SECTION_THICKNESS = 0.1
+    SECTION_THICKNESS = 0.5
     N_SIDES = 4
     PORE_RADIUS: float = None  # mm
     PORE_AREA: int = 80
     BOLTS = True
-    MESH_SUBDIVISION_LOOPS = 0
+    MESH_SUBDIVISION_LOOPS = 4
+    MIN_STRUT_ANGLE = 45
 
 @dataclass
 class PathConfig:
@@ -78,7 +79,7 @@ class PathConfig:
     TMP_PATH: Path = Path(os.getenv('MESHGEN_TMP_DIR', 
                                      BASE_PATH / "tmp"))
     STL_FILE: Path = Path(os.getenv('MESHGEN_STL_FILE', 
-                                     DATA_PATH / "Cone.stl"))
+                                     DATA_PATH / "Cone_v2.stl"))
 
 
 class Config:

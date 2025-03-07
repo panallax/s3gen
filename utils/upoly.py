@@ -288,7 +288,7 @@ def find_apex(base_points, apex_proj, growth_vect):
   it = 0
   apex_pos = apex_proj
   while not found:
-    found = (-angle(apex_pos, base_points) > 45).all()
+    found = (-angle(apex_pos, base_points) > config.mesh.MIN_STRUT_ANGLE).all()
     if not found:
       if it < max_it:
         apex_pos = apex_pos + growth_vect*delta

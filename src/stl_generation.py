@@ -78,7 +78,7 @@ class STLGen:
         if invalid_nodes.any():
             with np.printoptions(precision=3, suppress=True):
                 self.logger.error(f"Connectivity Error: The following nodes are not stable: {invalid_nodes}")
-            # raise ValueError(f"There are nodes with less than 2 neighbours. Cannot proceed.")
+            raise ValueError(f"There are nodes with less than 2 neighbours. Cannot proceed.")
 
     def remove_faces(self, mesh, vertices):
         normals = mesh.face_normals
@@ -112,30 +112,126 @@ class STLGen:
         
         return vertices
 
+    def node_geom(self, node):
+
+        point = np.array(node)
+        neigh = list(self.graph.neighbors(node))
+
+        if len(neigh) <= 4:
+            return {
+            "neigh": neigh,
+            "lens": [0],
+            "angles": [4],
+            "edge_pairs": [],
+            "offset": self.thickness
+            }
+
+        comb = list(combinations(neigh, 2))
+        angles = [self.angle_between_edges(*c, point) for c in comb]
+        lens = [np.linalg.norm(point - np.array(n)) for n in neigh]
+        distance = self.thickness/np.sin(min(angles)/2)
+
+        return {"offset": distance, 
+            "lens": lens, 
+            "angles": angles, 
+            "edge_pairs": comb, 
+            "neigh": neigh}
+    
+    def fix_offset(self, node):
+        node_geom = self.node_geom(node)
+        if len(node_geom["neigh"]) <= 4:
+            return self.thickness
+
+        if node_geom["offset"] > min(node_geom["lens"])/2 or min(node_geom["angles"]) < 0.17:
+            min_angle_pair = node_geom["edge_pairs"][np.argmin(node_geom["angles"])]
+            edges_lens = np.linalg.norm(np.array(min_angle_pair) - np.array(node), axis= 1)
+            min_len_edge = min_angle_pair[np.argmin(edges_lens)]
+
+            # self.offset_nodes[min_len_edge] = self.node_geom(min_len_edge)
+            # self.graph.remove_edge(node, min_len_edge)
+            # self.logger.debug(f"Edge {np.array(node)} - {np.array(min_len_edge)} removed")
+
+            check_neighs = self.node_geom(min_len_edge)["neigh"]
+            if len(check_neighs) > 3:
+                self.offset_nodes[min_len_edge] = self.node_geom(min_len_edge)
+                self.graph.remove_edge(node, min_len_edge)
+                # self.logger.debug(f"Edge {np.array(node)} - {np.array(min_len_edge)} removed")
+            else:
+                max_len_edge = min_angle_pair[np.argmax(edges_lens)]
+                check_neighs = self.node_geom(max_len_edge)["neigh"]
+                if len(check_neighs) > 3:
+                    self.offset_nodes[min_len_edge] = self.node_geom(min_len_edge)
+                    self.graph.remove_edge(node, max_len_edge)
+                    # self.logger.debug(f"Edge {np.array(node)} - {np.array(max_len_edge)} removed")
+                else:
+                    return self.thickness
+                    
+            new_geom = self.node_geom(node)
+            if new_geom["offset"] <= min(new_geom["lens"])/2:
+                return new_geom["offset"]
+            else:
+                return self.fix_offset(node)
+
+        else:
+            return node_geom["offset"]
+
+    def find_invalid_nodes(self):
+        invalid_nodes = []
+        for node in self.graph.nodes():
+            node_specs = self.node_geom(node)
+            if all([x < 0.17 for x in node_specs["angles"]]):
+                invalid_nodes.append(node)
+        if invalid_nodes:
+            print(len(invalid_nodes), "nodes removed")
+            # print(invalid_nodes)
+            self.graph.remove_nodes_from(invalid_nodes)
+
+    def calculate_offset_per_node(self):
+        self.offset_nodes = {}
+        invalid_nodes = []
+        init_edges = len(self.graph.edges())
+        for node in self.graph.nodes():
+            node_specs = self.node_geom(node)
+            if node_specs["offset"] > min(node_specs["lens"])/2 or min(node_specs["angles"]) < 0.17:
+                self.offset_nodes[node] = node_specs
+            else:
+                self.offset_nodes[node] = node_specs["offset"]
+        
+        valid_mesh = False
+        self.logger.info("Fixing mesh in process...")
+        while not valid_mesh:
+            for node, geom in self.offset_nodes.items():
+                if isinstance(geom, dict):
+                    new_offset = self.fix_offset(node)
+                    self.offset_nodes[node] = new_offset
+                    break
+            else:
+                valid_mesh = True
+                self.logger.debug(f"Fixing mesh completed. {init_edges - len(self.graph.edges())} edges removes.")
+
     def create_edge_polygons(self):
         self.logger.info("Generating polygons in edges...")
 
-        self.points = np.array(self.points)
+        self.calculate_offset_per_node()
+
         vertex_polygons = {i: [self.points[i]] for i in range(len(self.graph.nodes()))}
         edges_polygons = defaultdict(list)
         
         for idx, node in enumerate(self.graph.nodes()):
             point = np.array(node)
+            node_offset = self.offset_nodes[node]
+            if node_offset > 100:
+                a = self.node_geom(node)
+                self.logger.debug(node)
+                print([x*np.pi/180 for x in a["angles"]])
+                print(a["lens"])
+                print(node_offset)
             neigh = list(self.graph.neighbors(node))
-            comb = list(combinations(neigh, 2))
-            min_angle = min(self.angle_between_edges(*c, point) for c in comb)
-            min_leng = min(np.linalg.norm(point - np.array(n)) for n in neigh)
-            distance = self.thickness/np.sin(min_angle/2)
-            if distance > min_leng:
-                self.logger.warning(f"Edge {idx} too short. Subdivision mesh will probably fail. Consider merging close nodes.")
-                distance = min_leng
-
             for n in neigh:
                 edge_vector = point - np.array(n)
                 edge_length = np.linalg.norm(edge_vector)
                 edge_direction = edge_vector / edge_length
-                center = point - distance*edge_direction
-                # print(idx, center)
+                center = point - node_offset*edge_direction
                 polygon = self.create_polygon(center, edge_direction, self.n_sides, self.thickness)
                 vertex_polygons[idx].append(polygon)   
                 edges_polygons.setdefault((min(node, n), max(node, n)), []).append(polygon)
@@ -149,12 +245,12 @@ class STLGen:
         final_mesh = trimesh.Trimesh(vertices= mesh.vertices, faces= mesh.faces)
         # final_mesh.show()
         try:
-            final_mesh.subdivide_loop(loops)
+            final_mesh = final_mesh.subdivide_loop(loops)
         except ValueError as e:
             self.logger.warning(f"Error while subdividing the mesh: {e}. Retrying with half of loops.")
             new_loops = max(1, int(loops / 2))
             try:
-                final_mesh.subdivide_loop(new_loops)
+                final_mesh = final_mesh.subdivide_loop(new_loops)
             except ValueError as e:
                 self.logger.warning(f"Error while subdividing the mesh again: {e}. No subdivision can be made. Saving the original mesh.")
                 return final_mesh
