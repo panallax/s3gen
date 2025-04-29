@@ -17,7 +17,7 @@ class STLGen:
         """
         Load the graph from a pickle file
         """
-        with open(pickle_path + "/G.pickle", 'rb') as f:
+        with open(pickle_path, 'rb') as f:
             self.logger.info("Loading graph from pickle file: {}".format(pickle_path + "/G.pickle", 'rb'))
             return pickle.load(f)
     
@@ -91,29 +91,29 @@ class STLGen:
         num_processes = max(1, multiprocessing.cpu_count() - 1)
         meshes = []
 
-        # if self.sphere_radius != 0:
-        #     self.logger.info(f"Processing {len(nodes)} spheres using {num_processes} processes...")
-        #     node_batches = [nodes[i:i+batch_size] for i in range(0, len(nodes), batch_size)]
+        if self.sphere_radius != 0:
+            self.logger.info(f"Processing {len(nodes)} spheres using {num_processes} processes...")
+            node_batches = [nodes[i:i+batch_size] for i in range(0, len(nodes), batch_size)]
         
-        #     with ProcessPoolExecutor(max_workers=num_processes) as executor:
-        #         futures = [executor.submit(
-        #                     self.process_batch, 
-        #                     batch, 
-        #                     'spheres', 
-        #                     self.sphere_radius, 
-        #                     self.cylinder_radius
-        #                     ) for batch in node_batches]
+            with ProcessPoolExecutor(max_workers=num_processes) as executor:
+                futures = [executor.submit(
+                            self.process_batch, 
+                            batch, 
+                            'spheres', 
+                            self.sphere_radius, 
+                            self.cylinder_radius
+                            ) for batch in node_batches]
                 
-        #         for i, future in enumerate(as_completed(futures)):
-        #             result = future.result()
-        #             if result['status'] == 'success':
-        #                 meshes.append(result['mesh'])
-        #                 self.logger.info(f"Completed sphere batch {i+1}/{len(node_batches)}")
-        #             elif result['status'] == 'warning':
-        #                 meshes.append(result['mesh'])
-        #                 self.logger.warning(f"Batch {i+1}/{len(node_batches)}: {result['message']}")
-        #             elif result['status'] == 'error':
-        #                 self.logger.error(f"Error in batch {i+1}/{len(node_batches)}: {result['message']}")
+                for i, future in enumerate(as_completed(futures)):
+                    result = future.result()
+                    if result['status'] == 'success':
+                        meshes.append(result['mesh'])
+                        self.logger.info(f"Completed sphere batch {i+1}/{len(node_batches)}")
+                    elif result['status'] == 'warning':
+                        meshes.append(result['mesh'])
+                        self.logger.warning(f"Batch {i+1}/{len(node_batches)}: {result['message']}")
+                    elif result['status'] == 'error':
+                        self.logger.error(f"Error in batch {i+1}/{len(node_batches)}: {result['message']}")
             
         self.logger.info(f"Processing {len(edges)} cylinders...")
         edge_batches = [edges[i:i+batch_size] for i in range(0, len(edges), batch_size)]
@@ -167,22 +167,23 @@ class STLGen:
         """
         self.logger.info("Saving mesh...")
         self.final_mesh.export(self.output_path + "/mesh.stl")
+        # self.final_mesh.export("/home/abernadi/exchange/probes/4060/mesh_4060_50p.stl")
 
 if __name__ == "__main__":
     from utils.logger import Logger
-    pickle_path = "../tmp"
+    pickle_path = "/home/abernadi/Desktop/mesh-gen/data/output/Cone_v2_16-04-11-09/G.pickle"
     output_path = "../tmp"
     logger = Logger("main")
     generator = STLGen(
         
-        sphere_radius=2,
+        sphere_radius=0,
         cylinder_radius=0.5,
         graph_path=pickle_path,
         output_path=output_path,
         logger= logger
     )
     
-    mes = generator.generate_stl()
+    mesh = generator.generate_stl()
     
     generator.save_mesh()
-    mesh.show()
+    # mesh.show()
