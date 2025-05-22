@@ -78,7 +78,6 @@ def print_dict(points, poly_dict, plotter="pyvista"):
             facecolors='none', edgecolors='gray', alpha=0.5
         )
         for k,elem in poly_dict.items():
-            # ax.scatter(elem["base_points"][:, 0], elem["base_points"][:, 1], elem["base_points"][:,2], c='black')
             ax.scatter(elem["apex"][0], elem["apex"][1], elem["apex"][2], c='orange', s= 10)
             for i,p in enumerate(elem["base_points"]):
             # if len(elem["base_points"]) == 3:

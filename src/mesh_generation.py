@@ -7,12 +7,10 @@ import trimesh
 import triangle
 from collections import defaultdict
 from config import config
-from utils import tessellate_points, polar_angle_sort, area_polygon, sort_simplices, \
+from utils import tessellate_points, area_polygon, sort_simplices, \
                     adjacency_matrix, update_polyhedrons_dict, find_POI, find_apex, \
-                    min_dist, between_points, remove_close_edges, isin, connectivity,  \
-                    get_growth_vect, calculate_number_of_simplices, \
-                    plot_tessellation, print_dict, initial_area, group_segments, detect_holes, \
-                    valid, angle
+                    isin, connectivity, get_growth_vect, angle, \
+                    plot_tessellation, print_dict, initial_area, group_segments, detect_holes
 
 class MeshGen:
 
@@ -64,7 +62,6 @@ class MeshGen:
         iteration = 0
         banned_points = []
         while True:
-        # while iteration < 5:
             optimal_points = []
             virtual = {}
             if iteration == 0:
@@ -112,24 +109,20 @@ class MeshGen:
                     banned_points.extend(not_in_opt_points)
 
                 else:
-                    # if len(banned_points) == 0 or not isin(base_points, banned_points).sum() == len(base_points)-1:
-                    if len(banned_points) == 0 or not isin(base_points, banned_points).any():
+                    if len(banned_points) == 0 or not isin(base_points, banned_points).sum() == len(base_points)-1:
                         if not self.mesh.contains([optimal_point]):
                             optimal_point = trimesh.proximity.closest_point(self.mesh, [optimal_point])[0].flatten()
 
                         optimal_points.append(optimal_point)
                         self.polyhedrons[f"{iteration}_{i}"] = {"base_points": base_points, "apex": optimal_point}
-                        # print({"base_points": base_points, "apex": optimal_point})
                         outter_shell_points_in_base = isin(base_points, outter_shell_pts)
                         if np.count_nonzero(outter_shell_points_in_base) > 1 and len(base_points) == 3:
-                            # if valid(outter_shell_points_in_base):
                             outter_shell_apex_idx.append(len(optimal_points)-1)
 
                         else:
                             for c,m in enumerate(inner_shell_pts):
                                 inner_shell_points_in_base = isin(base_points, m)
                                 if np.count_nonzero(inner_shell_points_in_base) > 1 and len(base_points) == 3:
-                                    # if valid(inner_shell_points_in_base):
                                     inner_shell_apex_idx_dict[c].append(len(optimal_points)-1)
                                     break
 
@@ -142,9 +135,9 @@ class MeshGen:
                     min_angle = angles[min_angle_idx]
                     xy_dist = np.linalg.norm(min_angle_point[:2] - poly["apex"][:2])
                     delta = xy_dist*(np.tan(np.radians(min_angle)) - np.tan(np.radians(config.mesh.MIN_STRUT_ANGLE)))
-                    # if poly["apex"][2] - self.z_max <= delta:
-                    poly["apex"][2] = self.z_max
-                    self.polyhedrons[f"{iteration}_{i}"] = {"base_points": poly["base_points"], "apex": poly["apex"]}
+                    if poly["apex"][2] - self.z_max <= delta:
+                        poly["apex"][2] = self.z_max
+                        self.polyhedrons[f"{iteration}_{i}"] = {"base_points": poly["base_points"], "apex": poly["apex"]}
 
                 break
 

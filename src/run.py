@@ -19,17 +19,17 @@ def main():
         logger.log_file(output_path)
         logger.info("Ouput folder: {}".format(output_path))
 
-        # if len(glob(f"{parsed_path(config.paths.TMP_PATH)}/*.pickle")) > 0:
-        #     logger.info("Pickle file found in tmp folder. Using precomputed mesh")
-        #     stl = STLGen(parsed_path(config.paths.TMP_PATH), 
-        #                 config.mesh.SECTION_THICKNESS,
-        #                 config.mesh.N_SIDES,
-        #                 output_path,
-        #                 logger)
+        if len(glob(f"{parsed_path(config.paths.TMP_PATH)}/*.pickle")) > 0:
+            logger.info("Pickle file found in tmp folder. Using precomputed mesh")
+            stl = STLGen(parsed_path(config.paths.TMP_PATH), 
+                        config.mesh.SECTION_THICKNESS,
+                        config.mesh.N_SIDES,
+                        output_path,
+                        logger)
             
-        #     stl.graph_to_mesh(config.mesh.MESH_SUBDIVISION_LOOPS)
-        #     logger.finalize()
-        #     exit(0)
+            stl.graph_to_mesh(config.mesh.MESH_SUBDIVISION_LOOPS)
+            logger.finalize()
+            exit(0)
 
         logger.info("Processing file: {}".format(config.paths.STL_FILE))
         stl_mesh, points, base_points, top_points, lateral_mesh, inner_mesh = extract_points_from_STL(config.paths.STL_FILE)  
@@ -47,19 +47,18 @@ def main():
                         logger)
 
         mesh.generate_mesh()
-        # mesh.save_graph()
+        mesh.save_graph()
 
-        # stl = STLGen(output_path, 
-        #             config.mesh.SECTION_THICKNESS,
-        #             config.mesh.N_SIDES,
-        #             output_path,
-        #             logger)
+        stl = STLGen(output_path, 
+                    config.mesh.SECTION_THICKNESS,
+                    config.mesh.N_SIDES,
+                    output_path,
+                    logger)
 
-        # stl.graph_to_mesh(config.mesh.MESH_SUBDIVISION_LOOPS)
+        stl.graph_to_mesh(config.mesh.MESH_SUBDIVISION_LOOPS)
         logger.finalize()
 
     except Exception as e:
-        import traceback
         logger.error(e)
         shutil.rmtree(output_path, ignore_errors= True)
 
