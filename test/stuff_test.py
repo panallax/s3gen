@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.spatial import Delaunay
 import trimesh
 import triangle
 from shapely.geometry import *
@@ -153,7 +152,6 @@ import config
 import numpy as np
 import matplotlib.pyplot as plt
 import networkx as nx
-from scipy.spatial import KDTree, cKDTree
 
 # def caracteristic_distsance(points):
 #     kd_tree = cKDTree(points)

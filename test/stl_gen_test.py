@@ -170,13 +170,13 @@ class STLGen:
         # self.final_mesh.export("/home/abernadi/exchange/probes/4060/mesh_4060_50p.stl")
 
 if __name__ == "__main__":
-    from utils.logger import Logger
-    pickle_path = "/home/abernadi/Desktop/mesh-gen/data/output/Cone_v2_16-04-11-09/G.pickle"
+    from config import Logger
+    pickle_path = "/home/alex/Desktop/mesh-gen/data/output/Cylinder_21-05-12-20/G.pickle"
     output_path = "../tmp"
     logger = Logger("main")
     generator = STLGen(
         
-        sphere_radius=0,
+        sphere_radius=0.5,
         cylinder_radius=0.5,
         graph_path=pickle_path,
         output_path=output_path,

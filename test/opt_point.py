@@ -6,10 +6,8 @@ from utils import in_volume, extract_points_from__STL
 from sklearn.neighbors import NearestNeighbors
 import networkx as nx
 import os
-from scipy.stats.qmc import PoissonDisk
 from collections import Counter
 from scipy.spatial import  KDTree
-from scipy.spatial.distance import cdist
 from time import time
 
 #angle

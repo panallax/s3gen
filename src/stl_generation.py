@@ -270,7 +270,7 @@ class STLGen:
         self.logger.success(f"Mesh saved at {self.output_path}")
 
 if __name__ == "__main__":
-    from utils.logger import Logger
+    from config import Logger
 
     pickle_path = "../tmp"
     output_path = "../tmp"

@@ -14,7 +14,7 @@ def angle(ref, points):
         np.ndarray -- Array of angles
     """
 
-    vecs = points - ref
+    vecs = ref - points
     return np.degrees(np.arctan2(vecs[:, 2], np.sqrt(vecs[:, 0]**2 + vecs[:, 1]**2)))
 
 

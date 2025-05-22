@@ -27,9 +27,7 @@ def remove_close_edges(G, max_global_dist):
     nodes = np.array(G.nodes())
     edges = G.edges()
     tree_points = KDTree(nodes)
-    print(G.edges())
     for segment in edges:
-        print(segment)
         if segment not in G.edges():
             continue
         p1,p2 = np.array(segment)
@@ -47,7 +45,7 @@ def remove_close_edges(G, max_global_dist):
         min_nbr_current_segment = min(list(map(lambda x: calculate_neighbors_in_node(G,x), [p1,p2])))
         local_segments_to_remove = []
         for s in observable_segments:
-            if calculate_segments_dist(s, (p1,p2)) < config.printing.EXTRUSIONWIDTH:
+            if calculate_segments_dist(s, (p1,p2)) < config.printing.EXTRUSION_WIDTH:
                 nbr_node = list(map(lambda x: calculate_neighbors_in_node(G,x), s))
                 if min(nbr_node) > min_nbr_current_segment:
                     local_segments_to_remove.append(tuple(map(tuple,s)))

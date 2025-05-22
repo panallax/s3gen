@@ -93,7 +93,7 @@ def sort_simplices(simplices, idx_simplices, points):
   sorted_simplices = np.array(list(map(lambda s: sorted(s, key=lambda x : polar_angle_sort(points[x],np.mean(points[s], axis=0))), idx_simplices)))
   return areas, sorted_simplices
 
-def tessellate_points(initial_len, mesh, points, outter_points_idx, inner_points_dict, bolts, logger):
+def tessellate_points(initial_len, points, outter_points_idx, inner_points_dict, bolts):
   """
   Tessellate a set of points from a intial Delaunay triangulation until the number
   of simplices is equal to the initial one. The tessellation is done by merging 
@@ -130,33 +130,19 @@ def tessellate_points(initial_len, mesh, points, outter_points_idx, inner_points
   # plt.plot(points_pr[:,0], points_pr[:,1], 'o')
   # plt.show()
 
-  # import pickle
-  # test_dict = {"dea":dea, "simplices":simplices, "segments": t["segments"], "points": points, "initial_len": initial_len}
-  # pickle.dump(test_dict, open( "./test.pickle","wb"))
-
   segments_groups = sorted(group_segments(t["segments"]), key= len, reverse= True)
   outter_points = points[segments_groups[0]]
   inner_points =  [points[idx] for idx in segments_groups[1:]]
 
-  
-  idxss = [int(item) for sublist in segments_groups for item in sublist]
-  bolts_dea_idx = np.flatnonzero(np.sum(np.isin(dea, idxss), axis=1) >= 2)
-  bolts_dea = dea[bolts_dea_idx]
-  
-  dea = np.delete(dea, bolts_dea_idx, axis= 0)
-  simplices = np.delete(simplices, bolts_dea_idx, axis= 0)
-  initial_len -= len(bolts_dea)
+  "---"
+  surface_segments_idx = [int(item) for sublist in segments_groups for item in sublist]
+  surface_dea_idx = np.flatnonzero(np.sum(np.isin(dea, surface_segments_idx), axis=1) >= 2)
+  surface_dea = dea[surface_dea_idx]
 
-  # if bolts:
-  #   sorted_dict = dict(sorted(inner_points_dict.items(), key=lambda idx: -len(idx[1])))
-  #   bolts = detect_bolts([points[idx] for idx in sorted_dict.values()])
-  #   bolts_idx = [item for key in bolts for item in sorted_dict[key]]
-  #   bolts_dea_idx = np.flatnonzero(np.sum(np.isin(dea, bolts_idx), axis=1) >= 2)
-  #   bolts_dea = dea[bolts_dea_idx]
-    
-  #   dea = np.delete(dea, bolts_dea_idx, axis= 0)
-  #   simplices = np.delete(simplices, bolts_dea_idx, axis= 0)
-  #   initial_len -= len(bolts_dea)
+  dea = np.delete(dea, surface_dea_idx, axis= 0)
+  simplices = np.delete(simplices, surface_dea_idx, axis= 0)
+  initial_len -= len(surface_dea)
+  "---"
 
   areas, sorted_idx_dea = sort_simplices(simplices, dea, points)
   simplices = points[sorted_idx_dea]
@@ -166,15 +152,14 @@ def tessellate_points(initial_len, mesh, points, outter_points_idx, inner_points
   sorted_simplices = list(simplices[sorted_areas_idx])
   sorted_dea = list(dea[sorted_areas_idx])
 
-
-  while len(sorted_simplices) >= initial_len:
+  while len(sorted_simplices) >= initial_len and initial_len > 3:
     simplex = sorted_simplices[0]
     area_simplex = sorted_areas[0]
 
-    idx,n = neighbours(simplex, sorted_simplices, logger)
+    idx,n = neighbours(simplex, sorted_simplices)
     idx_smaller_neighbor, smaller_area = [(idx[x], sorted_areas[idx[x]]) for x in sorted(range(len(n)), key=lambda k: sorted_areas[idx[k]])][0]
-    # merged_dea = merge_sorted_simplices(sorted_dea[0], sorted_dea[idx_smaller_neighbor])
-    merged_dea = np.unique(np.append(sorted_dea[0], sorted_dea[idx_smaller_neighbor]))
+    merged_dea = merge_sorted_simplices(sorted_dea[0], sorted_dea[idx_smaller_neighbor])
+    # merged_dea = np.unique(np.append(sorted_dea[0], sorted_dea[idx_smaller_neighbor]))
     merged_simplex = points[merged_dea]
     merged_area = area_simplex + smaller_area
 
@@ -187,10 +172,7 @@ def tessellate_points(initial_len, mesh, points, outter_points_idx, inner_points
     sorted_simplices.insert(pos, merged_simplex)
     sorted_dea.insert(pos, merged_dea)
 
-  if bolts:
-      return sorted_dea + list(bolts_dea), points, outter_points, inner_points
-
-  return list(bolts_dea) + sorted_dea, points, outter_points, inner_points
+  return sorted_dea + list(surface_dea), points, outter_points, inner_points
 
 def area_polygon(points):
   """
@@ -211,7 +193,7 @@ def area_polygon(points):
   
   return area
 
-def neighbours(simplex, simplices, logger):
+def neighbours(simplex, simplices):
   """
   Find the neighbours of a simplex and its indices.
 
@@ -288,7 +270,7 @@ def find_apex(base_points, apex_proj, growth_vect):
   it = 0
   apex_pos = apex_proj
   while not found:
-    found = (-angle(apex_pos, base_points) > config.mesh.MIN_STRUT_ANGLE).all()
+    found = (angle(apex_pos, base_points) > config.mesh.MIN_STRUT_ANGLE).all()
     if not found:
       if it < max_it:
         apex_pos = apex_pos + growth_vect*delta

@@ -9,13 +9,13 @@ setup(
     install_requires=[
         "networkx",
         "scipy",
-        "numpy  ",
+        "numpy<2.0",
         "matplotlib",
+        "pyvista"
         "shapely",
         "triangle",
         "trimesh",
         "pytz",
-        "manifold3d",
         "rtree",
         "pyglet<2"
     ]

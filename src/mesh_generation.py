@@ -6,13 +6,13 @@ import pickle
 import trimesh
 import triangle
 from collections import defaultdict
-from scipy.spatial import Delaunay
+from config import config
 from utils import tessellate_points, polar_angle_sort, area_polygon, sort_simplices, \
                     adjacency_matrix, update_polyhedrons_dict, find_POI, find_apex, \
                     min_dist, between_points, remove_close_edges, isin, connectivity,  \
                     get_growth_vect, calculate_number_of_simplices, \
                     plot_tessellation, print_dict, initial_area, group_segments, detect_holes, \
-                    valid
+                    valid, angle
 
 class MeshGen:
 
@@ -63,20 +63,22 @@ class MeshGen:
 
         iteration = 0
         banned_points = []
-
         while True:
         # while iteration < 5:
             optimal_points = []
+            virtual = {}
             if iteration == 0:
                 bot_points, simplices, outter_shell_pts, inner_shell_pts = self.__initial_points(self.mesh, self.pore_area)
                 self.__add_base(simplices, bot_points)
                 num_simplices = len(simplices)
                 self.logger.debug(f"Initial number of simplices: {num_simplices}")
+                # plot_tessellation(bot_points[:,:2],simplices)
+
 
             else:
                 self.logger.debug(f"iteration {iteration}")
-                simplices, bot_points, outter_shell_pts, inner_shell_pts = tessellate_points(num_simplices, self.lateral_mesh, bot_points,
-                                                                                            outter_shell_apex_idx, inner_shell_apex_idx_dict, self.bolts, self.logger)
+                simplices, bot_points, outter_shell_pts, inner_shell_pts = tessellate_points(num_simplices, bot_points, outter_shell_apex_idx,
+                                                                                             inner_shell_apex_idx_dict, self.bolts)
                 # plot_tessellation(bot_points[:,:2],simplices)
 
             outter_shell_apex_idx = []
@@ -95,6 +97,7 @@ class MeshGen:
                 optimal_point = find_apex(base_points, initial_point, growth_vect)
 
                 if optimal_point[-1] >= self.z_max:
+                    virtual[str(i)] = {"base_points": base_points, "apex": optimal_point}
                     not_in_opt_points = base_points[~isin(base_points, optimal_points)] if len(optimal_points) > 0 else base_points
                     outter_shell_points_to_join = isin(not_in_opt_points, outter_shell_pts)
                     if any(outter_shell_points_to_join):
@@ -109,13 +112,14 @@ class MeshGen:
                     banned_points.extend(not_in_opt_points)
 
                 else:
+                    # if len(banned_points) == 0 or not isin(base_points, banned_points).sum() == len(base_points)-1:
                     if len(banned_points) == 0 or not isin(base_points, banned_points).any():
                         if not self.mesh.contains([optimal_point]):
                             optimal_point = trimesh.proximity.closest_point(self.mesh, [optimal_point])[0].flatten()
 
                         optimal_points.append(optimal_point)
                         self.polyhedrons[f"{iteration}_{i}"] = {"base_points": base_points, "apex": optimal_point}
-
+                        # print({"base_points": base_points, "apex": optimal_point})
                         outter_shell_points_in_base = isin(base_points, outter_shell_pts)
                         if np.count_nonzero(outter_shell_points_in_base) > 1 and len(base_points) == 3:
                             # if valid(outter_shell_points_in_base):
@@ -129,19 +133,34 @@ class MeshGen:
                                     inner_shell_apex_idx_dict[c].append(len(optimal_points)-1)
                                     break
 
-            if len([x for x in self.polyhedrons.keys() if x.startswith(f"{iteration}_")]) == 0:
+            if not any(x.startswith(f"{iteration}_") for x in self.polyhedrons.keys()):
                 self.logger.info("No polyhedrons created. Process finished.")
+                for i,poly in enumerate(virtual.values()):
+                    angles =  angle(poly["apex"], poly["base_points"])
+                    min_angle_idx = np.argmin(angles)
+                    min_angle_point = poly["base_points"][min_angle_idx]
+                    min_angle = angles[min_angle_idx]
+                    xy_dist = np.linalg.norm(min_angle_point[:2] - poly["apex"][:2])
+                    delta = xy_dist*(np.tan(np.radians(min_angle)) - np.tan(np.radians(config.mesh.MIN_STRUT_ANGLE)))
+                    # if poly["apex"][2] - self.z_max <= delta:
+                    poly["apex"][2] = self.z_max
+                    self.polyhedrons[f"{iteration}_{i}"] = {"base_points": poly["base_points"], "apex": poly["apex"]}
+
                 break
 
             optimal_points = np.array(optimal_points)
 
+
             bot_points, self.polyhedrons, inner_shell_apex_idx_dict, self.inner_mesh = self.__join_hull_and_shell(self.polyhedrons, optimal_points,
                                                                                                                 self.lateral_mesh, outter_shell_apex_idx,
                                                                                                                 self.inner_mesh, inner_shell_apex_idx_dict)
+            # if virtual:
+            #     print_dict(self.points, {x:y for x,y in self.polyhedrons.items() if (x.startswith(f"{iteration}_"))})
             iteration += 1
 
         self.__dict_to_graph()
-        # print_dict(self.points, self.polyhedrons)
+        # print_dict(self.points, virtual)
+        print_dict(self.points, self.polyhedrons)
 
     def __add_base(self, simplex, points):
         """ Add the base triangulation to the graph to facilitate printing it.
@@ -170,10 +189,10 @@ class MeshGen:
         while not np.isclose(current_area, pore_area, atol = pore_area*0.05):
             if it == max_it:
                 self.logger.error("Maximum number of iterations reached. Desired pore area cannot be reached.")
-                raise Exception("Maximum number of iterations reached. Desired pore area cannot be reached.")
+                raise Exception(f"Maximum number of iterations reached. Desired pore area cannot be reached. {current_area:2f}")
 
             current_val = (min_val + max_val)/2
-            opt = f"pqa{current_val}"
+            opt = f"pqa{current_val}D"
             t = triangle.triangulate({"vertices": section_points, "segments": segments, **({"holes": holes} if holes else {})}, opt)
             triang_points = np.array(t["vertices"].tolist())
             simplices = np.array(t["triangles"].tolist())
@@ -258,7 +277,7 @@ class MeshGen:
         """
         max_global_dist = 0
         for v in self.polyhedrons.values():
-            for i, p in enumerate(v["base_points"]):
+            for i, p in enumerate(v["base_points"][angle(v["apex"], v["base_points"]) >= config.mesh.MIN_STRUT_ANGLE]):
                 local_dist = np.linalg.norm(v["apex"] - p)
                 max_global_dist = local_dist if local_dist > max_global_dist else max_global_dist
                 self.G.add_edge(tuple(p), tuple(v["apex"]), length= np.linalg.norm(v["apex"] - p))
@@ -272,6 +291,7 @@ class MeshGen:
                 #         self.G.add_edge(tuple(p), tuple(v["apex"]), length= np.linalg.norm(v["apex"] - p))
         
         # Move the nodes to the top of the shell
+        "---"
         nodes = list(self.G.nodes())
         to_remove = []
         for node in nodes:
@@ -291,7 +311,7 @@ class MeshGen:
             new_nodes.append(new_node)
             for n in neighb:
                 self.G.add_edge(new_node, n, length= np.linalg.norm(np.array(new_node) - np.array(n)))
-
+        "----"
         # # Move the outter and inner nodes to the perimeter of the top section
         # new_nodes = np.array(new_nodes)
         # adpt, self.polyhedrons = self.__join_hull_and_shell(self.polyhedrons, self.lateral_mesh, 
@@ -306,9 +326,9 @@ class MeshGen:
         #         self.G.add_node(tuple(adpt[i]))
         #         for node in n:
         #             self.G.add_edge(tuple(adpt[i]), node, length= np.linalg.norm(adpt[i] - np.array(node)))
-
-        # simplex = Delaunay(adpt[:,:2]).simplices
-        # self.__add_base(simplex, adpt)
+        # from scipy.spatial import Delaunay
+        # simplex = Delaunay(new_nodes[:,:2]).simplices
+        # self.__add_base(simplex, new_nodes)
 
         # self.G = remove_close_edges(self.G, max_global_dist)
         # self.G.remove_nodes_from(list(nx.isolates(self.G)))
