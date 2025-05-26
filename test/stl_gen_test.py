@@ -141,7 +141,7 @@ class STLGen:
         self.final_mesh = meshes[0]
         for i, mesh in enumerate(meshes[1:], 1):
             try:
-                tmp_mesh = trimesh.boolean.union([self.final_mesh, mesh], engine='manifold')
+                tmp_mesh = trimesh.util.concatenate([self.final_mesh, mesh])
                 if tmp_mesh.is_volume:
                     self.final_mesh = tmp_mesh
                     self.logger.info(f"Joined {i+1}/{len(meshes)} components")
@@ -171,7 +171,7 @@ class STLGen:
 
 if __name__ == "__main__":
     from config import Logger
-    pickle_path = "/home/alex/Desktop/mesh-gen/data/output/Cylinder_21-05-12-20/G.pickle"
+    pickle_path = "/home/alex/Desktop/mesh-gen/data/output/Cylinder_26-05-13-11/G.pickle"
     output_path = "../tmp"
     logger = Logger("main")
     generator = STLGen(

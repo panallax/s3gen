@@ -294,7 +294,7 @@ def section_props(mesh, z):
 
 
 def get_growth_vect(mesh, point, z_2):
-  center_1, len_1, max_dist, min_dist = section_props(mesh, point[-1])
+  center_1, len_1, max_dist, min_dist = section_props(mesh, point[-1] if point[-1] < z_2 else z_2-1e-6)
   center_2, len_2 = section_props(mesh, z_2)[:2]
     
   relative_pos = point - center_1
