@@ -11,7 +11,7 @@ setup(
         "scipy",
         "numpy<2.0",
         "matplotlib",
-        "pyvista"
+        "pyvista",
         "shapely",
         "triangle",
         "trimesh",
