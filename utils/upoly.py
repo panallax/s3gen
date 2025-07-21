@@ -152,18 +152,23 @@ def tessellate_points(initial_len, points, outter_points_idx, inner_points_dict,
   sorted_simplices = list(simplices[sorted_areas_idx])
   sorted_dea = list(dea[sorted_areas_idx])
 
+  current = 0
   while len(sorted_simplices) >= initial_len and initial_len > 3:
-    simplex = sorted_simplices[0]
-    area_simplex = sorted_areas[0]
+    simplex = sorted_simplices[current]
+    area_simplex = sorted_areas[current]
 
     idx,n = neighbours(simplex, sorted_simplices)
-    idx_smaller_neighbor, smaller_area = [(idx[x], sorted_areas[idx[x]]) for x in sorted(range(len(n)), key=lambda k: sorted_areas[idx[k]])][0]
-    merged_dea = merge_sorted_simplices(sorted_dea[0], sorted_dea[idx_smaller_neighbor])
+    try:
+      idx_smaller_neighbor, smaller_area = [(idx[x], sorted_areas[idx[x]]) for x in sorted(range(len(n)), key=lambda k: sorted_areas[idx[k]])][0]
+    except:
+      current += 1
+      continue
+    merged_dea = merge_sorted_simplices(sorted_dea[current], sorted_dea[idx_smaller_neighbor])
     # merged_dea = np.unique(np.append(sorted_dea[0], sorted_dea[idx_smaller_neighbor]))
     merged_simplex = points[merged_dea]
     merged_area = area_simplex + smaller_area
 
-    for _id in [0,idx_smaller_neighbor-1]: #restamos uno porque cuando quitamos el indice 0 y el otro se adelanta una posición
+    for _id in [current,idx_smaller_neighbor-1]: #restamos uno porque cuando quitamos el indice 0 y el otro se adelanta una posición
       del sorted_areas[_id]
       del sorted_simplices[_id]
       del sorted_dea[_id]

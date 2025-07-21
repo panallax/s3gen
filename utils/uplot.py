@@ -51,10 +51,8 @@ def print_dict(points, poly_dict, plotter="pyvista"):
     if plotter == "pyvista":
         import pyvista as pv
         plotter = pv.Plotter()
-        
         # Añadir todos los nodos
         plotter.add_points(points, color='gray', point_size=5, render_points_as_spheres=True, opacity=0.2)  
-
         for poly in poly_dict.values():
             apex = poly["apex"]
             base = poly["base_points"]
@@ -96,7 +94,7 @@ def print_dict(points, poly_dict, plotter="pyvista"):
         plt.show()
         # fig.savefig("hole_structure.svg", format="svg", dpi=1200)
 
-def plot_tessellation(points, dea):
+def plot_tessellation(points, dea, save=False):
     """
     Plot the tessellation of a set of points. 
 
@@ -111,11 +109,15 @@ def plot_tessellation(points, dea):
         for par in consecutive_pairs:
             x_values = [par[0][0], par[1][0]]
             y_values = [par[0][1], par[1][1]]
-            ax.plot(x_values, y_values, color="royalblue")
-
-    ax.scatter(*points.T, color="orange", zorder=10)
-    ax.set_xlabel("X [mm]")
-    ax.set_ylabel("Y [mm]")
+            ax.plot(x_values, y_values, color="royalblue", linewidth=3)
+    
+    ax.scatter(*points.T, color="orange", zorder=10, s= 50)
+    ax.set_xlabel("X [mm]", {'fontsize': 20})
+    ax.set_ylabel("Y [mm]", {'fontsize': 20})
+    plt.xticks(fontsize=20)
+    plt.yticks(fontsize=20)
     ax.set_aspect('equal', adjustable='datalim')
     plt.tight_layout()
+    if save:
+        plt.savefig(f"{save}.svg", format="svg", dpi=1200)
     plt.show()

@@ -63,6 +63,7 @@ class MeshGen:
         iteration = 0
         banned_points = []
         while True:
+        # while iteration < 2:
             optimal_points = []
             if iteration == 0:
                 bot_points, simplices, outter_shell_pts, inner_shell_pts = self.__initial_points(self.mesh, self.pore_area)
@@ -71,14 +72,15 @@ class MeshGen:
                 self.logger.debug(f"Initial number of simplices: {num_simplices}")
                 # plot_tessellation(bot_points[:,:2],simplices)
 
-
             else:
                 self.logger.debug(f"iteration {iteration}")
                 simplices, bot_points, outter_shell_pts, inner_shell_pts = tessellate_points(num_simplices, bot_points, outter_shell_apex_idx,
                                                                                              inner_shell_apex_idx_dict, self.bolts)
-                # plot_tessellation(bot_points[:,:2],simplices)
+                plot_tessellation(bot_points[:,:2],simplices)
 
             outter_shell_apex_idx = []
+            first = []
+            second = []
             inner_shell_apex_idx_dict = defaultdict(list)
             for i,indice in enumerate(simplices):
                 base_points = bot_points[indice]
@@ -93,17 +95,17 @@ class MeshGen:
                                                                                     else self.z_max - 1e-6)
                 optimal_point = find_apex(base_points, initial_point, growth_vect)
 
-                if optimal_point[-1] > self.z_max:
-                    angles =  angle(optimal_point, base_points)
-                    min_angle_idx = np.argmin(angles)
-                    min_angle_point = base_points[min_angle_idx]
-                    min_angle = angles[min_angle_idx]
-                    xy_dist = np.linalg.norm(min_angle_point[:2] - optimal_point[:2])
-                    delta = xy_dist*(np.tan(np.radians(min_angle)) - np.tan(np.radians(config.mesh.MIN_STRUT_ANGLE)))
-                    if optimal_point[2] - self.z_max <= delta:
-                        optimal_point[2] = self.z_max
+                # if optimal_point[-1] > self.z_max:
+                #     angles =  angle(optimal_point, base_points)
+                #     min_angle_idx = np.argmin(angles)
+                #     min_angle_point = base_points[min_angle_idx]
+                #     min_angle = angles[min_angle_idx]
+                #     xy_dist = np.linalg.norm(min_angle_point[:2] - optimal_point[:2])
+                #     delta = xy_dist*(np.tan(np.radians(min_angle)) - np.tan(np.radians(config.mesh.MIN_STRUT_ANGLE)))
+                #     if optimal_point[2] - self.z_max <= delta:
+                #         optimal_point[2] = self.z_max
         
-                if optimal_point[-1] >= 2*self.z_max:
+                if optimal_point[-1] >= self.z_max:
                     not_in_opt_points = base_points[~isin(base_points, optimal_points)] if len(optimal_points) > 0 else base_points
                     outter_shell_points_to_join = isin(not_in_opt_points, outter_shell_pts)
                     if any(outter_shell_points_to_join):
@@ -123,6 +125,7 @@ class MeshGen:
                         self.polyhedrons[f"{iteration}_{i}"] = {"base_points": base_points, "apex": optimal_point}
                         outter_shell_points_in_base = isin(base_points, outter_shell_pts)
                         if np.count_nonzero(outter_shell_points_in_base) > 1 and len(base_points) == 3:
+                            first.append(optimal_point)
                             outter_shell_apex_idx.append(len(optimal_points)-1)
 
                         else:
@@ -130,20 +133,81 @@ class MeshGen:
                                 inner_shell_points_in_base = isin(base_points, m)
                                 if np.count_nonzero(inner_shell_points_in_base) > 1 and len(base_points) == 3:
                                     inner_shell_apex_idx_dict[c].append(len(optimal_points)-1)
+                                    second.append(optimal_point)
                                     break
+                                
+            # if all(p[2] > self.z_max for p in optimal_points):
+            #     to_remove = [k for k,v in self.polyhedrons.items() if  any(x[2] > self.z_max for x in v["base_points"])]
+            #     for k in to_remove:
+            #         del self.polyhedrons[k]
+            #     self.logger.info("No polyhedrons created. Process finished.")
+            #     break
+            # if iteration == 3:
+            #     import matplotlib.pyplot as plt
+            #     from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset
+            #     _, ax = plt.subplots(figsize=(10,10))
+            #     for d in simplices:
+            #         points_simplex = bot_points[d]
+            #         consecutive_pairs = [(points_simplex[i], points_simplex[(i + 1) % len(points_simplex)]) for i in range(len(points_simplex))]
+            #         for par in consecutive_pairs:
+            #             x_values = [par[0][0], par[1][0]]
+            #             y_values = [par[0][1], par[1][1]]
+            #             ax.plot(x_values, y_values, color="royalblue", linewidth=3)
 
-            if all(p[2] > self.z_max for p in optimal_points):
-                to_remove = [k for k,v in self.polyhedrons.items() if v["apex"][2] > self.z_max]
-                for k in to_remove:
-                    del self.polyhedrons[k]
-                self.logger.info("No polyhedrons created. Process finished.")
-                break
+            #     ax.scatter(*np.array(bot_points)[:, :2].T, color="orange", zorder=10, s= 50)
 
+            #     for p in optimal_points:
+            #         if isin(first,p):
+            #             ax.scatter(*p[:2], color="red", zorder=10, s= 50)
+                    
+            #         elif isin(second,p):
+            #             ax.scatter(*p[:2], color="green", zorder=10, s= 50)
+                                
+            #     ax.set_xlabel("X [mm]", {'fontsize': 20})
+            #     ax.set_ylabel("Y [mm]", {'fontsize': 20})
+            #     plt.xticks(fontsize=20)
+            #     plt.yticks(fontsize=20)
+            #     ax.set_aspect('equal', adjustable='datalim')
+            #     axins = zoomed_inset_axes(ax, zoom=3, loc='upper right')  # zoom=4x, en esquina superior derecha
+
+            #     for d in simplices:
+            #         points_simplex = bot_points[d]
+            #         consecutive_pairs = [(points_simplex[i], points_simplex[(i + 1) % len(points_simplex)]) for i in range(len(points_simplex))]
+            #         for par in consecutive_pairs:
+            #             x_values = [par[0][0], par[1][0]]
+            #             y_values = [par[0][1], par[1][1]]
+            #             axins.plot(x_values, y_values, color="royalblue", linewidth=3)
+
+            #     axins.scatter(*np.array(bot_points)[:, :2].T, color="orange", zorder=10, s=50)
+
+            #     for p in optimal_points:
+            #         if isin(first, p):
+            #             axins.scatter(*p[:2], color="red", zorder=10, s=50)
+            #         elif isin(second, p):
+            #             axins.scatter(*p[:2], color="green", zorder=10, s=50)
+            #     # Definir límites del zoom
+            #     x1, x2 = 48, 78
+            #     y1, y2 = -3,12
+            #     axins.set_xlim(x1, x2)
+            #     axins.set_ylim(y1, y2)
+
+            #     # Quitar ticks del recuadro
+            #     axins.set_xticks([])
+            #     axins.set_yticks([])
+
+            #     # Conectar zoom con el plot principal
+            #     mark_inset(ax, axins, loc1=2, loc2=4, fc="none", ec="0.5")
+            #     plt.tight_layout()
+            #     plt.savefig("zoomed_3.svg", format="svg", dpi=1200)
+            #     plt.show()
             optimal_points = np.array(optimal_points)
             bot_points, self.polyhedrons, inner_shell_apex_idx_dict, self.inner_mesh = self.__join_hull_and_shell(self.polyhedrons, optimal_points,
                                                                                                                 self.lateral_mesh, outter_shell_apex_idx,
                                                                                                                 self.inner_mesh, inner_shell_apex_idx_dict)
-
+            if len([x for x in self.polyhedrons.keys() if x.startswith(f"{iteration}_")]) == 0:
+                self.logger.info("No polyhedrons created. Process finished.")
+                break
+            # print_dict(self.points, {k:v for k,v in self.polyhedrons.items() if k.startswith(f"{iteration}_")})
             iteration += 1
 
         self.__dict_to_graph()
@@ -179,7 +243,7 @@ class MeshGen:
                 raise Exception(f"Maximum number of iterations reached. Desired pore area cannot be reached. {current_area:2f}")
 
             current_val = (min_val + max_val)/2
-            opt = f"pqa{current_val}D"
+            opt = f"pqa{current_val}"
             t = triangle.triangulate({"vertices": section_points, "segments": segments, **({"holes": holes} if holes else {})}, opt)
             triang_points = np.array(t["vertices"].tolist())
             simplices = np.array(t["triangles"].tolist())
@@ -193,7 +257,6 @@ class MeshGen:
             it += 1
 
         triang_points = np.c_[triang_points, np.zeros(triang_points.shape[0])]
-
         segments_groups = sorted(group_segments(t["segments"]), key= len, reverse= True)
         outter_points = triang_points[segments_groups[0]]
         inner_points =  [triang_points[idx] for idx in segments_groups[1:]]
