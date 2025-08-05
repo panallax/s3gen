@@ -1,0 +1,28 @@
+11:28:37 - logger - INFO - [94mLog file initialized at: /home/alex/Desktop/mesh-gen/data/output/Cylinder_07-03-11-28/log.log[0m
+11:28:37 - run - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/Cylinder_07-03-11-28[0m
+11:28:37 - run - INFO - [94mProcessing file: /home/alex/Desktop/mesh-gen/data/Cylinder.stl[0m
+11:28:37 - mesh_generation - INFO - [94mInitial pore area: 4 mm² and initial radius: 3.0393427426063706 mm[0m
+11:28:38 - mesh_generation - DEBUG - Initial number of simplices: 70
+11:28:41 - mesh_generation - DEBUG - iteration 1
+11:28:44 - mesh_generation - DEBUG - iteration 2
+11:28:47 - mesh_generation - DEBUG - iteration 3
+11:28:50 - mesh_generation - DEBUG - iteration 4
+11:28:53 - mesh_generation - DEBUG - iteration 5
+11:28:56 - mesh_generation - DEBUG - iteration 6
+11:28:59 - mesh_generation - DEBUG - iteration 7
+11:29:02 - mesh_generation - DEBUG - iteration 8
+11:29:04 - mesh_generation - DEBUG - iteration 9
+11:29:06 - mesh_generation - INFO - [94mNo polyhedrons created. Process finished.[0m
+11:29:06 - mesh_generation - INFO - [94mGraph saved in /home/alex/Desktop/mesh-gen/data/output/Cylinder_07-03-11-28/G.pickle[0m
+11:29:06 - stl_generation - INFO - [94mLoading graph from pickle file: /home/alex/Desktop/mesh-gen/data/output/Cylinder_07-03-11-28/G.pickle[0m
+11:29:06 - stl_generation - INFO - [94mInitialized mesh generation process[0m
+11:29:06 - stl_generation - INFO - [94mGenerating polygons in edges...[0m
+11:29:07 - stl_generation - INFO - [94mFixing mesh in process...[0m
+11:29:11 - stl_generation - DEBUG - Fixing mesh completed. 977 edges removes.
+11:29:11 - stl_generation - INFO - [94mGenerating vertices hulls...[0m
+11:29:13 - stl_generation - INFO - [94mGenerating struts...[0m
+11:29:16 - stl_generation - INFO - [94mGenerating mesh...[0m
+11:29:16 - stl_generation - WARNING - [93mError while subdividing the mesh: Some edges are shared by more than 2 faces. Retrying with half of loops.[0m
+11:29:16 - stl_generation - WARNING - [93mError while subdividing the mesh again: Some edges are shared by more than 2 faces. No subdivision can be made. Saving the original mesh.[0m
+11:29:16 - stl_generation - INFO - [92mMesh saved at /home/alex/Desktop/mesh-gen/data/output/Cylinder_07-03-11-28[0m
+11:29:16 - logger - INFO - [92mFinished! Execution time: 0 minutes and 38 seconds[0m

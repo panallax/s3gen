@@ -1,0 +1,9 @@
+14:16:18 - logger - INFO - [94mLog file initialized at: /home/alex/Desktop/mesh-gen/data/output/Cylinder_08-05-14-16/log.log[0m
+14:16:18 - run - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/Cylinder_08-05-14-16[0m
+14:16:18 - run - INFO - [94mProcessing file: /home/alex/Desktop/mesh-gen/data/Cylinder.stl[0m
+14:16:18 - mesh_generation - INFO - [94mInitial pore area: 80 mm² and initial radius: 13.59235395877698 mm[0m
+14:16:18 - mesh_generation - ERROR - [91mMaximum number of iterations reached. Desired pore area cannot be reached.[0m
+14:16:30 - logger - INFO - [94mLog file initialized at: /home/alex/Desktop/mesh-gen/data/output/Cylinder_08-05-14-16/log.log[0m
+14:16:30 - run - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/Cylinder_08-05-14-16[0m
+14:16:30 - run - INFO - [94mProcessing file: /home/alex/Desktop/mesh-gen/data/Cylinder.stl[0m
+14:16:31 - mesh_generation - INFO - [94mInitial pore area: 10 mm² and initial radius: 4.805622828269509 mm[0m

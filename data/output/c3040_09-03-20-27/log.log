@@ -1,0 +1,7 @@
+20:27:51 - logger - INFO - [94mLog file initialized at: /home/alex/Desktop/mesh-gen/data/output/c3040_09-03-20-27/log.log[0m
+20:27:51 - run - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/c3040_09-03-20-27[0m
+20:27:51 - run - INFO - [94mPickle file found in tmp folder. Using precomputed mesh[0m
+20:27:51 - stl_generation - INFO - [94mLoading graph from pickle file: /home/alex/Desktop/mesh-gen/tmp/G.pickle[0m
+20:27:51 - stl_generation - INFO - [94mInitialized mesh generation process[0m
+20:27:51 - stl_generation - INFO - [94mGenerating polygons in edges...[0m
+20:27:56 - stl_generation - INFO - [94mFixing mesh in process...[0m

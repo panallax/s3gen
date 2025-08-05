@@ -1,0 +1,13 @@
+11:24:43 - logger - INFO - [94mLog file initialized at: /home/alex/Desktop/mesh-gen/data/output/Cylinder_07-03-11-24/log.log[0m
+11:24:43 - run - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/Cylinder_07-03-11-24[0m
+11:24:43 - run - INFO - [94mPickle file found in tmp folder. Using precomputed mesh[0m
+11:24:43 - stl_generation - INFO - [94mLoading graph from pickle file: /home/alex/Desktop/mesh-gen/tmp/G.pickle[0m
+11:24:43 - stl_generation - INFO - [94mInitialized mesh generation process[0m
+11:24:43 - stl_generation - INFO - [94mGenerating polygons in edges...[0m
+11:24:46 - stl_generation - INFO - [94mFixing mesh in process...[0m
+11:24:59 - stl_generation - DEBUG - Fixing mesh completed. 3775 edges removes.
+11:25:00 - stl_generation - INFO - [94mGenerating vertices hulls...[0m
+11:25:04 - stl_generation - INFO - [94mGenerating struts...[0m
+11:25:11 - stl_generation - INFO - [94mGenerating mesh...[0m
+11:27:12 - stl_generation - INFO - [92mMesh saved at /home/alex/Desktop/mesh-gen/data/output/Cylinder_07-03-11-24[0m
+11:27:12 - logger - INFO - [92mFinished! Execution time: 2 minutes and 29 seconds[0m

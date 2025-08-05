@@ -1,3 +1,4 @@
+from matplotlib import pyplot as plt
 import numpy as np
 from stl import mesh
 from scipy.spatial import Delaunay
@@ -48,7 +49,6 @@ def in_volume(p, hull):
 
     if not isinstance(hull,Delaunay):
         hull = Delaunay(hull)
-
     return hull.find_simplex(p) >= 0
     
 
@@ -161,12 +161,12 @@ def generate_point_in_quadrant(center, r, n, quadrant, seed=1):
     z = r*np.cos(phi)
 
     if n == 1:
-      return np.squeeze(np.column_stack((x, y, z)) + center)
+      return (np.column_stack((x, y, z)) + center).flatten()
     else:
       return np.column_stack((x, y, z)) + center
 
 
-def fill_volume(shell_points, r=0.2):
+def fill_volume(shell_points, r=0.05):
     """
     Fill the volume of a mesh with points using a Poisson Disk Sampling algorithm.
     Points are separated by a distance of r. Points distanced less than 0.1 due to
@@ -180,25 +180,42 @@ def fill_volume(shell_points, r=0.2):
         np.ndarray -- Array of points of the mesh filled
     """
     min_max = min_max_points(shell_points)
-
     x_min, x_max = flat(min_max[0])
     y_min, y_max = flat(min_max[1])
     z_min, z_max = flat(min_max[2])
 
-    n = 1000
+    n = 3
     all_points = np.zeros([(x_max-x_min)*(y_max-y_min)*(z_max-z_min)*n,3])
-    for k in range(z_min, z_max):
-        for j in range(y_min,y_max):
-            for i in range(x_min, x_max):
+    for k in range(z_min, z_max, 2):
+        for j in range(y_min, y_max, 2):
+            for i in range(x_min, x_max, 2):
                 vect = np.array([i,j,k])
-                engine = PoissonDisk(d=3, radius=r, seed=1)
+                engine = PoissonDisk(d=3, radius=r)
                 sample = engine.random(n)
                 sub_points = sample + vect
                 index_location = int(np.argwhere(np.all(all_points == [0, 0, 0], axis=1))[0])
                 all_points[index_location : index_location + len(sub_points)] = sub_points
 
-    all_points = all_points[np.argwhere(np.all(all_points != [0, 0, 0], axis=1))]
+    mins = shell_points.min(axis=0)
+    maxs = shell_points.max(axis=0)
+    n_points = 2400
+    points = np.random.uniform(low=mins, high=maxs, size=(n_points, 3))
+    # all_points = all_points[np.argwhere(np.all(all_points != [0, 0, 0], axis=1))]
+    uniform_points = points[in_volume(points, shell_points)]
     inner_points = all_points[in_volume(all_points, shell_points)]
+    print(len(inner_points), len(uniform_points))
+    import matplotlib.pyplot as plt
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(projection='3d')
+    ax.scatter(*uniform_points.T)
+    ax.set_aspect('equal')
+    plt.show()
+
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(projection='3d')
+    ax.scatter(*inner_points.T)
+    ax.set_aspect('equal')
+    plt.show()
 
     all_points = np.concatenate((shell_points, inner_points), axis=0)
     _, dist,idx = knn(all_points, 10)
@@ -256,9 +273,10 @@ def decompose_structure(shell_points, r):
         np.ndarray -- Array of points of the bottom of the mesh
         np.ndarray -- Array of points of the top of the mesh
     """
-    
-    bot_points = shell_points[np.where(shell_points[:,-1] < np.min(shell_points[:,-1]) + 0.1)]
-    top_points = shell_points[np.where(shell_points[:,-1] > np.max(shell_points[:,-1]) - 0.1)]
-    inner_points = fill_volume(shell_points, r)
+    mins = shell_points.min(axis=0)
+    maxs = shell_points.max(axis=0)
+    pc  = np.random.uniform(low=mins, high=maxs, size=(1000, 3))
+    inner_points = pc[in_volume(pc, shell_points)]
+    # inner_points = fill_volume(shell_points, r)
     points = inner_points[np.argsort(inner_points[:, 2])[::1]]
-    return points, bot_points, top_points
+    return points

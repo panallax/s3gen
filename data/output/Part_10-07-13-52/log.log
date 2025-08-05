@@ -1,0 +1,6 @@
+13:52:08 - config - INFO - [94mLog file initialized at: /home/alex/Desktop/mesh-gen/data/output/Part_10-07-13-52/log.log[0m
+13:52:08 - run - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/Part_10-07-13-52[0m
+13:52:08 - run - INFO - [94mProcessing file: /home/alex/Desktop/mesh-gen/data/Part.stl[0m
+13:52:08 - mesh_generation - INFO - [94mInitial pore area: 50 mm² and initial radius: 10.74569931823542 mm[0m
+13:52:08 - mesh_generation - DEBUG - Initial number of simplices: 331
+13:52:12 - mesh_generation - DEBUG - iteration 1

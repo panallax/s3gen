@@ -1,0 +1,15 @@
+15:16:23 - config - INFO - [94mLog file initialized at: /home/alex/Desktop/mesh-gen/data/output/Cylinder_04-06-15-16/log.log[0m
+15:16:23 - run - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/Cylinder_04-06-15-16[0m
+15:16:23 - run - INFO - [94mPickle file found in tmp folder. Using precomputed mesh[0m
+15:16:23 - stl_generation - INFO - [94mLoading graph from pickle file: /home/alex/Desktop/mesh-gen/tmp/G.pickle[0m
+15:16:23 - stl_generation - INFO - [94mInitialized mesh generation process[0m
+15:16:23 - stl_generation - INFO - [94mGenerating polygons in edges...[0m
+15:16:23 - stl_generation - INFO - [94mFixing mesh in process...[0m
+15:16:23 - stl_generation - DEBUG - Fixing mesh completed. 31 edges removes.
+15:16:23 - stl_generation - INFO - [94mGenerating vertices hulls...[0m
+15:16:23 - stl_generation - INFO - [94mGenerating struts...[0m
+15:16:24 - stl_generation - INFO - [94mGenerating mesh...[0m
+15:16:25 - stl_generation - WARNING - [93mError while subdividing the mesh: Some edges are shared by more than 2 faces. Retrying with half of loops.[0m
+15:16:25 - stl_generation - WARNING - [93mError while subdividing the mesh again: Some edges are shared by more than 2 faces. No subdivision can be made. Saving the original mesh.[0m
+15:18:01 - stl_generation - INFO - [92mMesh saved at /home/alex/Desktop/mesh-gen/data/output/Cylinder_04-06-15-16[0m
+15:18:01 - config - INFO - [92mFinished! Execution time: 1 minutes and 37 seconds[0m

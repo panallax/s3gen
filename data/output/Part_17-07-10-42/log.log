@@ -1,0 +1,47 @@
+10:42:12 - config - INFO - [94mLog file initialized at: /home/alex/Desktop/mesh-gen/data/output/Part_17-07-10-42/log.log[0m
+10:42:12 - run - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/Part_17-07-10-42[0m
+10:42:12 - run - INFO - [94mProcessing file: /home/alex/Desktop/mesh-gen/data/Part.stl[0m
+10:42:12 - mesh_generation - INFO - [94mInitial pore area: 80 mm² and initial radius: 13.59235395877698 mm[0m
+10:42:12 - mesh_generation - DEBUG - Initial number of simplices: 213
+10:42:13 - mesh_generation - DEBUG - iteration 1
+10:42:14 - mesh_generation - DEBUG - iteration 2
+10:42:15 - mesh_generation - DEBUG - iteration 3
+10:42:16 - mesh_generation - DEBUG - iteration 4
+10:42:17 - mesh_generation - DEBUG - iteration 5
+10:42:18 - mesh_generation - DEBUG - iteration 6
+10:42:19 - mesh_generation - DEBUG - iteration 7
+10:42:20 - mesh_generation - DEBUG - iteration 8
+10:42:21 - mesh_generation - DEBUG - iteration 9
+10:42:22 - mesh_generation - DEBUG - iteration 10
+10:42:23 - mesh_generation - DEBUG - iteration 11
+10:42:24 - mesh_generation - DEBUG - iteration 12
+10:42:25 - mesh_generation - DEBUG - iteration 13
+10:42:26 - mesh_generation - DEBUG - iteration 14
+10:42:27 - mesh_generation - DEBUG - iteration 15
+10:42:29 - mesh_generation - DEBUG - iteration 16
+10:42:30 - mesh_generation - DEBUG - iteration 17
+10:42:31 - mesh_generation - DEBUG - iteration 18
+10:42:32 - mesh_generation - DEBUG - iteration 19
+10:42:34 - mesh_generation - DEBUG - iteration 20
+10:42:35 - mesh_generation - DEBUG - iteration 21
+10:42:36 - mesh_generation - DEBUG - iteration 22
+10:42:38 - mesh_generation - DEBUG - iteration 23
+10:42:39 - mesh_generation - DEBUG - iteration 24
+10:42:40 - mesh_generation - DEBUG - iteration 25
+10:42:42 - mesh_generation - DEBUG - iteration 26
+10:42:43 - mesh_generation - DEBUG - iteration 27
+10:42:45 - mesh_generation - DEBUG - iteration 28
+10:42:46 - mesh_generation - DEBUG - iteration 29
+10:42:48 - mesh_generation - DEBUG - iteration 30
+10:42:49 - mesh_generation - DEBUG - iteration 31
+10:42:50 - mesh_generation - DEBUG - iteration 32
+10:42:52 - mesh_generation - DEBUG - iteration 33
+10:42:53 - mesh_generation - DEBUG - iteration 34
+10:42:55 - mesh_generation - DEBUG - iteration 35
+10:42:56 - mesh_generation - DEBUG - iteration 36
+10:42:58 - mesh_generation - DEBUG - iteration 37
+10:42:59 - mesh_generation - DEBUG - iteration 38
+10:43:01 - mesh_generation - DEBUG - iteration 39
+10:43:02 - mesh_generation - DEBUG - iteration 40
+10:43:03 - mesh_generation - DEBUG - iteration 41
+10:43:05 - mesh_generation - DEBUG - iteration 42

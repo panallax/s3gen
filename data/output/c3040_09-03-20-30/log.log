@@ -1,0 +1,30 @@
+20:30:32 - logger - INFO - [94mLog file initialized at: /home/alex/Desktop/mesh-gen/data/output/c3040_09-03-20-30/log.log[0m
+20:30:32 - run - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/c3040_09-03-20-30[0m
+20:30:32 - run - INFO - [94mProcessing file: /home/alex/Desktop/mesh-gen/data/c3040.stl[0m
+20:30:32 - mesh_generation - INFO - [94mInitial pore area: 6.666666666666667 mm² and initial radius: 4.805622828269509 mm[0m
+20:30:33 - mesh_generation - DEBUG - Initial number of simplices: 99
+20:30:34 - mesh_generation - DEBUG - iteration 1
+20:30:36 - mesh_generation - DEBUG - iteration 2
+20:30:38 - mesh_generation - DEBUG - iteration 3
+20:30:40 - mesh_generation - DEBUG - iteration 4
+20:30:42 - mesh_generation - DEBUG - iteration 5
+20:30:44 - mesh_generation - DEBUG - iteration 6
+20:30:45 - mesh_generation - DEBUG - iteration 7
+20:30:47 - mesh_generation - DEBUG - iteration 8
+20:30:49 - mesh_generation - DEBUG - iteration 9
+20:30:51 - mesh_generation - DEBUG - iteration 10
+20:30:53 - mesh_generation - INFO - [94mNo polyhedrons created. Process finished.[0m
+20:30:53 - mesh_generation - INFO - [94mGraph saved in /home/alex/Desktop/mesh-gen/data/output/c3040_09-03-20-30/G.pickle[0m
+20:30:53 - mesh_generation - INFO - [94mAdjacency matrix and connectivity arrays saved in                          /home/alex/Desktop/mesh-gen/data/output/c3040_09-03-20-30/adjacency_matrix.npz[0m
+20:30:53 - stl_generation - INFO - [94mLoading graph from pickle file: /home/alex/Desktop/mesh-gen/data/output/c3040_09-03-20-30/G.pickle[0m
+20:30:53 - stl_generation - INFO - [94mInitialized mesh generation process[0m
+20:30:53 - stl_generation - INFO - [94mGenerating polygons in edges...[0m
+20:30:55 - stl_generation - INFO - [94mFixing mesh in process...[0m
+20:31:00 - stl_generation - DEBUG - Fixing mesh completed. 1056 edges removes.
+20:31:01 - stl_generation - INFO - [94mGenerating vertices hulls...[0m
+20:31:04 - stl_generation - INFO - [94mGenerating struts...[0m
+20:31:10 - stl_generation - INFO - [94mGenerating mesh...[0m
+20:31:11 - stl_generation - WARNING - [93mError while subdividing the mesh: Some edges are shared by more than 2 faces. Retrying with half of loops.[0m
+20:31:11 - stl_generation - WARNING - [93mError while subdividing the mesh again: Some edges are shared by more than 2 faces. No subdivision can be made. Saving the original mesh.[0m
+20:31:11 - stl_generation - INFO - [92mMesh saved at /home/alex/Desktop/mesh-gen/data/output/c3040_09-03-20-30[0m
+20:31:11 - logger - INFO - [92mFinished! Execution time: 0 minutes and 38 seconds[0m

@@ -1,0 +1,19 @@
+16:16:45 - logger - INFO - [94mLog file initialized at: /home/alex/Desktop/mesh-gen/data/output/Cylinder_03-03-16-16/log.log[0m
+16:16:45 - run - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/Cylinder_03-03-16-16[0m
+16:16:45 - run - INFO - [94mPickle file found in tmp folder. Using precomputed mesh[0m
+16:16:45 - stl_generation - INFO - [94mLoading graph from pickle file: /home/alex/Desktop/mesh-gen/tmp/G.pickle[0m
+16:16:45 - stl_generation - INFO - [94mInitialized mesh generation process[0m
+16:16:45 - stl_generation - ERROR - [91mConnectivity Error: The following nodes are not stable: [[ 0.     9.523  0.   ]
+ [14.121  1.756  0.   ]
+ [ 3.334  2.532  0.   ]
+ [ 6.997  1.276  0.   ]
+ [ 2.658 16.797  0.   ]
+ [ 6.185 18.395  0.   ]
+ [13.323 18.591  0.   ]][0m
+NoneType: None
+16:16:45 - stl_generation - INFO - [94mGenerating polygons in edges...[0m
+16:16:45 - stl_generation - INFO - [94mGenerating vertices hulls...[0m
+16:16:45 - stl_generation - INFO - [94mGenerating struts...[0m
+16:16:46 - stl_generation - INFO - [94mGenerating mesh...[0m
+16:17:10 - stl_generation - INFO - [92mMesh saved at /home/alex/Desktop/mesh-gen/data/output/Cylinder_03-03-16-16[0m
+16:17:10 - logger - INFO - [92mFinished! Execution time: 0 minutes and 25 seconds[0m

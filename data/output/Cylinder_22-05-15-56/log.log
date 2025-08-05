@@ -1,0 +1,15 @@
+15:56:41 - config - INFO - [94mLog file initialized at: /home/alex/Desktop/mesh-gen/data/output/Cylinder_22-05-15-56/log.log[0m
+15:56:41 - run - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/Cylinder_22-05-15-56[0m
+15:56:41 - run - INFO - [94mProcessing file: /home/alex/Desktop/mesh-gen/data/Cylinder.stl[0m
+15:56:41 - mesh_generation - INFO - [94mInitial pore area: 8 mm² and initial radius: 4.298279727294168 mm[0m
+15:56:42 - mesh_generation - DEBUG - Initial number of simplices: 38
+15:56:42 - mesh_generation - DEBUG - iteration 1
+15:56:45 - mesh_generation - DEBUG - iteration 2
+15:56:52 - mesh_generation - DEBUG - iteration 3
+15:56:54 - mesh_generation - DEBUG - iteration 4
+15:56:56 - mesh_generation - DEBUG - iteration 5
+15:56:58 - mesh_generation - DEBUG - iteration 6
+15:57:01 - mesh_generation - DEBUG - iteration 7
+15:57:06 - mesh_generation - DEBUG - iteration 8
+15:57:08 - mesh_generation - DEBUG - iteration 9
+15:57:11 - mesh_generation - INFO - [94mNo polyhedrons created. Process finished.[0m

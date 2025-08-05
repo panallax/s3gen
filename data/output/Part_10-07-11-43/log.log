@@ -1,0 +1,24 @@
+11:43:05 - config - INFO - [94mLog file initialized at: /home/alex/Desktop/mesh-gen/data/output/Part_10-07-11-43/log.log[0m
+11:43:05 - run - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/Part_10-07-11-43[0m
+11:43:05 - run - INFO - [94mProcessing file: /home/alex/Desktop/mesh-gen/data/Part.stl[0m
+11:43:05 - mesh_generation - INFO - [94mInitial pore area: 100 mm² and initial radius: 15.196713713031851 mm[0m
+11:43:06 - mesh_generation - DEBUG - Initial number of simplices: 170
+11:43:11 - config - INFO - [92mFinished! Execution time: 0 minutes and 5 seconds[0m
+11:43:17 - config - INFO - [94mLog file initialized at: /home/alex/Desktop/mesh-gen/data/output/Part_10-07-11-43/log.log[0m
+11:43:17 - run - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/Part_10-07-11-43[0m
+11:43:17 - run - INFO - [94mProcessing file: /home/alex/Desktop/mesh-gen/data/Part.stl[0m
+11:43:17 - mesh_generation - INFO - [94mInitial pore area: 70 mm² and initial radius: 12.714482898375978 mm[0m
+11:43:18 - mesh_generation - DEBUG - Initial number of simplices: 234
+11:43:35 - config - INFO - [92mFinished! Execution time: 0 minutes and 17 seconds[0m
+11:43:41 - config - INFO - [94mLog file initialized at: /home/alex/Desktop/mesh-gen/data/output/Part_10-07-11-43/log.log[0m
+11:43:41 - run - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/Part_10-07-11-43[0m
+11:43:41 - run - INFO - [94mProcessing file: /home/alex/Desktop/mesh-gen/data/Part.stl[0m
+11:43:41 - mesh_generation - INFO - [94mInitial pore area: 50 mm² and initial radius: 10.74569931823542 mm[0m
+11:43:41 - mesh_generation - DEBUG - Initial number of simplices: 331
+11:43:52 - config - INFO - [92mFinished! Execution time: 0 minutes and 11 seconds[0m
+11:43:58 - config - INFO - [94mLog file initialized at: /home/alex/Desktop/mesh-gen/data/output/Part_10-07-11-43/log.log[0m
+11:43:58 - run - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/Part_10-07-11-43[0m
+11:43:58 - run - INFO - [94mProcessing file: /home/alex/Desktop/mesh-gen/data/Part.stl[0m
+11:43:58 - mesh_generation - INFO - [94mInitial pore area: 20 mm² and initial radius: 6.79617697938849 mm[0m
+11:43:59 - mesh_generation - DEBUG - Initial number of simplices: 790
+11:44:15 - config - INFO - [92mFinished! Execution time: 0 minutes and 16 seconds[0m

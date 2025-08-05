@@ -1,0 +1,26 @@
+15:21:31 - config - INFO - [94mLog file initialized at: /home/alex/Desktop/mesh-gen/data/output/Cylinder_04-06-15-21/log.log[0m
+15:21:31 - run - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/Cylinder_04-06-15-21[0m
+15:21:31 - run - INFO - [94mProcessing file: /home/alex/Desktop/mesh-gen/data/Cylinder.stl[0m
+15:21:31 - mesh_generation - INFO - [94mInitial pore area: 10 mm² and initial radius: 4.805622828269509 mm[0m
+15:21:31 - mesh_generation - DEBUG - Initial number of simplices: 30
+15:21:32 - mesh_generation - DEBUG - iteration 1
+15:21:32 - mesh_generation - DEBUG - iteration 2
+15:21:32 - mesh_generation - DEBUG - iteration 3
+15:21:32 - mesh_generation - DEBUG - iteration 4
+15:21:33 - mesh_generation - DEBUG - iteration 5
+15:21:33 - mesh_generation - DEBUG - iteration 6
+15:21:33 - mesh_generation - DEBUG - iteration 7
+15:21:33 - mesh_generation - INFO - [94mNo polyhedrons created. Process finished.[0m
+15:24:27 - mesh_generation - INFO - [94mGraph saved in /home/alex/Desktop/mesh-gen/data/output/Cylinder_04-06-15-21/G.pickle[0m
+15:24:27 - stl_generation - INFO - [94mLoading graph from pickle file: /home/alex/Desktop/mesh-gen/data/output/Cylinder_04-06-15-21/G.pickle[0m
+15:24:27 - stl_generation - INFO - [94mInitialized mesh generation process[0m
+15:24:27 - stl_generation - INFO - [94mGenerating polygons in edges...[0m
+15:24:28 - stl_generation - INFO - [94mFixing mesh in process...[0m
+15:24:28 - stl_generation - DEBUG - Fixing mesh completed. 31 edges removes.
+15:24:28 - stl_generation - INFO - [94mGenerating vertices hulls...[0m
+15:24:28 - stl_generation - INFO - [94mGenerating struts...[0m
+15:24:29 - stl_generation - INFO - [94mGenerating mesh...[0m
+15:24:29 - stl_generation - WARNING - [93mError while subdividing the mesh: Some edges are shared by more than 2 faces. Retrying with half of loops.[0m
+15:24:29 - stl_generation - WARNING - [93mError while subdividing the mesh again: Some edges are shared by more than 2 faces. No subdivision can be made. Saving the original mesh.[0m
+15:24:32 - stl_generation - INFO - [92mMesh saved at /home/alex/Desktop/mesh-gen/data/output/Cylinder_04-06-15-21[0m
+15:24:32 - config - INFO - [92mFinished! Execution time: 3 minutes and 1 seconds[0m

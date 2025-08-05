@@ -1,0 +1,20 @@
+16:18:45 - logger - INFO - [94mLog file initialized at: /home/alex/Desktop/mesh-gen/data/output/Cylinder_03-03-16-18/log.log[0m
+16:18:45 - run - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/Cylinder_03-03-16-18[0m
+16:18:45 - run - INFO - [94mProcessing file: /home/alex/Desktop/mesh-gen/data/Cylinder.stl[0m
+16:18:45 - mesh_generation - INFO - [94mInitial pore area: 10 mm² and initial radius: 4.805622828269509 mm[0m
+16:18:45 - mesh_generation - DEBUG - Initial number of simplices: 28
+16:18:46 - mesh_generation - DEBUG - iteration 1
+16:18:48 - mesh_generation - DEBUG - iteration 2
+16:18:49 - mesh_generation - DEBUG - iteration 3
+16:18:50 - mesh_generation - DEBUG - iteration 4
+16:18:52 - mesh_generation - DEBUG - iteration 5
+16:18:53 - mesh_generation - INFO - [94mNo polyhedrons created. Process finished.[0m
+16:19:02 - mesh_generation - INFO - [94mGraph saved in /home/alex/Desktop/mesh-gen/data/output/Cylinder_03-03-16-18/G.pickle[0m
+16:19:02 - stl_generation - INFO - [94mLoading graph from pickle file: /home/alex/Desktop/mesh-gen/data/output/Cylinder_03-03-16-18/G.pickle[0m
+16:19:02 - stl_generation - INFO - [94mInitialized mesh generation process[0m
+16:19:02 - stl_generation - INFO - [94mGenerating polygons in edges...[0m
+16:19:02 - stl_generation - INFO - [94mGenerating vertices hulls...[0m
+16:19:02 - stl_generation - INFO - [94mGenerating struts...[0m
+16:19:03 - stl_generation - INFO - [94mGenerating mesh...[0m
+16:19:09 - stl_generation - INFO - [92mMesh saved at /home/alex/Desktop/mesh-gen/data/output/Cylinder_03-03-16-18[0m
+16:19:09 - logger - INFO - [92mFinished! Execution time: 0 minutes and 23 seconds[0m

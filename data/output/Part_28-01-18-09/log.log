@@ -1,0 +1,290 @@
+18:09:48 - utils - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/Part_28-01-18-09[0m
+18:09:48 - utils - INFO - [94mPickle file found in tmp folder. Using precomputed mesh[0m
+18:09:48 - utils - INFO - [94mLoading graph from pickle file: /home/alex/Desktop/mesh-gen/tmp/G.pickle[0m
+18:09:48 - utils - INFO - [94mProcessing 3232 spheres using 15 processes...[0m
+18:09:49 - utils - INFO - [94mCompleted sphere batch 1/33[0m
+18:09:49 - utils - INFO - [94mCompleted sphere batch 2/33[0m
+18:09:49 - utils - INFO - [94mCompleted sphere batch 3/33[0m
+18:09:49 - utils - INFO - [94mCompleted sphere batch 4/33[0m
+18:09:49 - utils - INFO - [94mCompleted sphere batch 5/33[0m
+18:09:49 - utils - INFO - [94mCompleted sphere batch 6/33[0m
+18:09:49 - utils - INFO - [94mCompleted sphere batch 7/33[0m
+18:09:50 - utils - INFO - [94mCompleted sphere batch 8/33[0m
+18:09:50 - utils - INFO - [94mCompleted sphere batch 9/33[0m
+18:09:50 - utils - INFO - [94mCompleted sphere batch 10/33[0m
+18:09:50 - utils - INFO - [94mCompleted sphere batch 11/33[0m
+18:09:50 - utils - INFO - [94mCompleted sphere batch 12/33[0m
+18:09:50 - utils - INFO - [94mCompleted sphere batch 13/33[0m
+18:09:51 - utils - INFO - [94mCompleted sphere batch 14/33[0m
+18:09:51 - utils - INFO - [94mCompleted sphere batch 15/33[0m
+18:09:51 - utils - INFO - [94mCompleted sphere batch 16/33[0m
+18:09:51 - utils - INFO - [94mCompleted sphere batch 17/33[0m
+18:09:52 - utils - INFO - [94mCompleted sphere batch 18/33[0m
+18:09:52 - utils - INFO - [94mCompleted sphere batch 19/33[0m
+18:09:52 - utils - INFO - [94mCompleted sphere batch 20/33[0m
+18:09:52 - utils - INFO - [94mCompleted sphere batch 21/33[0m
+18:09:52 - utils - INFO - [94mCompleted sphere batch 22/33[0m
+18:09:53 - utils - INFO - [94mCompleted sphere batch 23/33[0m
+18:09:53 - utils - INFO - [94mCompleted sphere batch 24/33[0m
+18:09:53 - utils - INFO - [94mCompleted sphere batch 25/33[0m
+18:09:53 - utils - INFO - [94mCompleted sphere batch 26/33[0m
+18:09:53 - utils - INFO - [94mCompleted sphere batch 27/33[0m
+18:09:53 - utils - INFO - [94mCompleted sphere batch 28/33[0m
+18:09:53 - utils - INFO - [94mCompleted sphere batch 29/33[0m
+18:09:53 - utils - INFO - [94mCompleted sphere batch 30/33[0m
+18:09:53 - utils - INFO - [94mCompleted sphere batch 31/33[0m
+18:09:53 - utils - INFO - [94mCompleted sphere batch 32/33[0m
+18:09:53 - utils - INFO - [94mCompleted sphere batch 33/33[0m
+18:09:53 - utils - INFO - [94mProcessing 10786 cylinders...[0m
+18:09:54 - utils - INFO - [94mCompleted cylinder batch 1/108[0m
+18:09:54 - utils - INFO - [94mCompleted cylinder batch 2/108[0m
+18:09:54 - utils - INFO - [94mCompleted cylinder batch 3/108[0m
+18:09:54 - utils - INFO - [94mCompleted cylinder batch 4/108[0m
+18:09:54 - utils - INFO - [94mCompleted cylinder batch 5/108[0m
+18:09:54 - utils - INFO - [94mCompleted cylinder batch 6/108[0m
+18:09:55 - utils - INFO - [94mCompleted cylinder batch 7/108[0m
+18:09:55 - utils - INFO - [94mCompleted cylinder batch 8/108[0m
+18:09:55 - utils - INFO - [94mCompleted cylinder batch 9/108[0m
+18:09:55 - utils - INFO - [94mCompleted cylinder batch 10/108[0m
+18:09:55 - utils - INFO - [94mCompleted cylinder batch 11/108[0m
+18:09:55 - utils - INFO - [94mCompleted cylinder batch 12/108[0m
+18:09:56 - utils - INFO - [94mCompleted cylinder batch 13/108[0m
+18:09:56 - utils - INFO - [94mCompleted cylinder batch 14/108[0m
+18:09:56 - utils - INFO - [94mCompleted cylinder batch 15/108[0m
+18:09:56 - utils - INFO - [94mCompleted cylinder batch 16/108[0m
+18:09:56 - utils - INFO - [94mCompleted cylinder batch 17/108[0m
+18:09:57 - utils - INFO - [94mCompleted cylinder batch 18/108[0m
+18:09:57 - utils - INFO - [94mCompleted cylinder batch 19/108[0m
+18:09:57 - utils - INFO - [94mCompleted cylinder batch 20/108[0m
+18:09:57 - utils - INFO - [94mCompleted cylinder batch 21/108[0m
+18:09:57 - utils - INFO - [94mCompleted cylinder batch 22/108[0m
+18:09:57 - utils - INFO - [94mCompleted cylinder batch 23/108[0m
+18:09:57 - utils - INFO - [94mCompleted cylinder batch 24/108[0m
+18:09:57 - utils - INFO - [94mCompleted cylinder batch 25/108[0m
+18:09:58 - utils - INFO - [94mCompleted cylinder batch 26/108[0m
+18:09:58 - utils - INFO - [94mCompleted cylinder batch 27/108[0m
+18:09:58 - utils - INFO - [94mCompleted cylinder batch 28/108[0m
+18:09:58 - utils - INFO - [94mCompleted cylinder batch 29/108[0m
+18:09:58 - utils - INFO - [94mCompleted cylinder batch 30/108[0m
+18:09:58 - utils - INFO - [94mCompleted cylinder batch 31/108[0m
+18:09:59 - utils - INFO - [94mCompleted cylinder batch 32/108[0m
+18:09:59 - utils - INFO - [94mCompleted cylinder batch 33/108[0m
+18:09:59 - utils - INFO - [94mCompleted cylinder batch 34/108[0m
+18:09:59 - utils - INFO - [94mCompleted cylinder batch 35/108[0m
+18:09:59 - utils - INFO - [94mCompleted cylinder batch 36/108[0m
+18:09:59 - utils - INFO - [94mCompleted cylinder batch 37/108[0m
+18:09:59 - utils - INFO - [94mCompleted cylinder batch 38/108[0m
+18:10:00 - utils - INFO - [94mCompleted cylinder batch 39/108[0m
+18:10:00 - utils - INFO - [94mCompleted cylinder batch 40/108[0m
+18:10:00 - utils - INFO - [94mCompleted cylinder batch 41/108[0m
+18:10:00 - utils - INFO - [94mCompleted cylinder batch 42/108[0m
+18:10:00 - utils - INFO - [94mCompleted cylinder batch 43/108[0m
+18:10:01 - utils - INFO - [94mCompleted cylinder batch 44/108[0m
+18:10:01 - utils - INFO - [94mCompleted cylinder batch 45/108[0m
+18:10:01 - utils - INFO - [94mCompleted cylinder batch 46/108[0m
+18:10:01 - utils - INFO - [94mCompleted cylinder batch 47/108[0m
+18:10:01 - utils - INFO - [94mCompleted cylinder batch 48/108[0m
+18:10:01 - utils - INFO - [94mCompleted cylinder batch 49/108[0m
+18:10:02 - utils - INFO - [94mCompleted cylinder batch 50/108[0m
+18:10:02 - utils - INFO - [94mCompleted cylinder batch 51/108[0m
+18:10:02 - utils - INFO - [94mCompleted cylinder batch 52/108[0m
+18:10:02 - utils - INFO - [94mCompleted cylinder batch 53/108[0m
+18:10:02 - utils - INFO - [94mCompleted cylinder batch 54/108[0m
+18:10:02 - utils - INFO - [94mCompleted cylinder batch 55/108[0m
+18:10:03 - utils - INFO - [94mCompleted cylinder batch 56/108[0m
+18:10:03 - utils - INFO - [94mCompleted cylinder batch 57/108[0m
+18:10:03 - utils - INFO - [94mCompleted cylinder batch 58/108[0m
+18:10:03 - utils - INFO - [94mCompleted cylinder batch 59/108[0m
+18:10:03 - utils - INFO - [94mCompleted cylinder batch 60/108[0m
+18:10:03 - utils - INFO - [94mCompleted cylinder batch 61/108[0m
+18:10:03 - utils - INFO - [94mCompleted cylinder batch 62/108[0m
+18:10:04 - utils - INFO - [94mCompleted cylinder batch 63/108[0m
+18:10:04 - utils - INFO - [94mCompleted cylinder batch 64/108[0m
+18:10:04 - utils - INFO - [94mCompleted cylinder batch 65/108[0m
+18:10:04 - utils - INFO - [94mCompleted cylinder batch 66/108[0m
+18:10:04 - utils - INFO - [94mCompleted cylinder batch 67/108[0m
+18:10:05 - utils - INFO - [94mCompleted cylinder batch 68/108[0m
+18:10:05 - utils - INFO - [94mCompleted cylinder batch 69/108[0m
+18:10:05 - utils - INFO - [94mCompleted cylinder batch 70/108[0m
+18:10:05 - utils - INFO - [94mCompleted cylinder batch 71/108[0m
+18:10:05 - utils - INFO - [94mCompleted cylinder batch 72/108[0m
+18:10:05 - utils - INFO - [94mCompleted cylinder batch 73/108[0m
+18:10:06 - utils - INFO - [94mCompleted cylinder batch 74/108[0m
+18:10:06 - utils - INFO - [94mCompleted cylinder batch 75/108[0m
+18:10:06 - utils - INFO - [94mCompleted cylinder batch 76/108[0m
+18:10:06 - utils - INFO - [94mCompleted cylinder batch 77/108[0m
+18:10:06 - utils - INFO - [94mCompleted cylinder batch 78/108[0m
+18:10:06 - utils - INFO - [94mCompleted cylinder batch 79/108[0m
+18:10:06 - utils - INFO - [94mCompleted cylinder batch 80/108[0m
+18:10:07 - utils - INFO - [94mCompleted cylinder batch 81/108[0m
+18:10:07 - utils - INFO - [94mCompleted cylinder batch 82/108[0m
+18:10:07 - utils - INFO - [94mCompleted cylinder batch 83/108[0m
+18:10:07 - utils - INFO - [94mCompleted cylinder batch 84/108[0m
+18:10:07 - utils - INFO - [94mCompleted cylinder batch 85/108[0m
+18:10:07 - utils - INFO - [94mCompleted cylinder batch 86/108[0m
+18:10:08 - utils - INFO - [94mCompleted cylinder batch 87/108[0m
+18:10:08 - utils - INFO - [94mCompleted cylinder batch 88/108[0m
+18:10:08 - utils - INFO - [94mCompleted cylinder batch 89/108[0m
+18:10:08 - utils - INFO - [94mCompleted cylinder batch 90/108[0m
+18:10:08 - utils - INFO - [94mCompleted cylinder batch 91/108[0m
+18:10:08 - utils - INFO - [94mCompleted cylinder batch 92/108[0m
+18:10:09 - utils - INFO - [94mCompleted cylinder batch 93/108[0m
+18:10:09 - utils - INFO - [94mCompleted cylinder batch 94/108[0m
+18:10:09 - utils - INFO - [94mCompleted cylinder batch 95/108[0m
+18:10:09 - utils - INFO - [94mCompleted cylinder batch 96/108[0m
+18:10:09 - utils - INFO - [94mCompleted cylinder batch 97/108[0m
+18:10:09 - utils - INFO - [94mCompleted cylinder batch 98/108[0m
+18:10:10 - utils - INFO - [94mCompleted cylinder batch 99/108[0m
+18:10:10 - utils - INFO - [94mCompleted cylinder batch 100/108[0m
+18:10:10 - utils - INFO - [94mCompleted cylinder batch 101/108[0m
+18:10:10 - utils - INFO - [94mCompleted cylinder batch 102/108[0m
+18:10:10 - utils - INFO - [94mCompleted cylinder batch 103/108[0m
+18:10:10 - utils - INFO - [94mCompleted cylinder batch 104/108[0m
+18:10:11 - utils - INFO - [94mCompleted cylinder batch 105/108[0m
+18:10:11 - utils - INFO - [94mCompleted cylinder batch 106/108[0m
+18:10:11 - utils - INFO - [94mCompleted cylinder batch 107/108[0m
+18:10:11 - utils - INFO - [94mCompleted cylinder batch 108/108[0m
+18:10:11 - utils - INFO - [94mJoining all results...[0m
+18:10:11 - utils - INFO - [94mJoined 2/141 components[0m
+18:10:11 - utils - INFO - [94mJoined 3/141 components[0m
+18:10:11 - utils - INFO - [94mJoined 4/141 components[0m
+18:10:12 - utils - INFO - [94mJoined 5/141 components[0m
+18:10:12 - utils - INFO - [94mJoined 6/141 components[0m
+18:10:12 - utils - INFO - [94mJoined 7/141 components[0m
+18:10:13 - utils - INFO - [94mJoined 8/141 components[0m
+18:10:13 - utils - INFO - [94mJoined 9/141 components[0m
+18:10:13 - utils - INFO - [94mJoined 10/141 components[0m
+18:10:14 - utils - INFO - [94mJoined 11/141 components[0m
+18:10:14 - utils - INFO - [94mJoined 12/141 components[0m
+18:10:15 - utils - INFO - [94mJoined 13/141 components[0m
+18:10:16 - utils - INFO - [94mJoined 14/141 components[0m
+18:10:16 - utils - INFO - [94mJoined 15/141 components[0m
+18:10:17 - utils - INFO - [94mJoined 16/141 components[0m
+18:10:18 - utils - INFO - [94mJoined 17/141 components[0m
+18:10:18 - utils - INFO - [94mJoined 18/141 components[0m
+18:10:19 - utils - INFO - [94mJoined 19/141 components[0m
+18:10:20 - utils - INFO - [94mJoined 20/141 components[0m
+18:10:21 - utils - INFO - [94mJoined 21/141 components[0m
+18:10:22 - utils - INFO - [94mJoined 22/141 components[0m
+18:10:23 - utils - INFO - [94mJoined 23/141 components[0m
+18:10:24 - utils - INFO - [94mJoined 24/141 components[0m
+18:10:25 - utils - INFO - [94mJoined 25/141 components[0m
+18:10:27 - utils - INFO - [94mJoined 26/141 components[0m
+18:10:28 - utils - INFO - [94mJoined 27/141 components[0m
+18:10:29 - utils - INFO - [94mJoined 28/141 components[0m
+18:10:31 - utils - INFO - [94mJoined 29/141 components[0m
+18:10:32 - utils - INFO - [94mJoined 30/141 components[0m
+18:10:34 - utils - INFO - [94mJoined 31/141 components[0m
+18:10:35 - utils - INFO - [94mJoined 32/141 components[0m
+18:10:37 - utils - INFO - [94mJoined 33/141 components[0m
+18:10:37 - utils - INFO - [94mConcatenated 34/141 components (fallback)[0m
+18:10:37 - utils - INFO - [94mConcatenated 35/141 components (fallback)[0m
+18:10:38 - utils - INFO - [94mConcatenated 36/141 components (fallback)[0m
+18:10:38 - utils - INFO - [94mConcatenated 37/141 components (fallback)[0m
+18:10:38 - utils - INFO - [94mConcatenated 38/141 components (fallback)[0m
+18:10:39 - utils - INFO - [94mConcatenated 39/141 components (fallback)[0m
+18:10:39 - utils - INFO - [94mConcatenated 40/141 components (fallback)[0m
+18:10:39 - utils - INFO - [94mConcatenated 41/141 components (fallback)[0m
+18:10:40 - utils - INFO - [94mConcatenated 42/141 components (fallback)[0m
+18:10:40 - utils - INFO - [94mConcatenated 43/141 components (fallback)[0m
+18:10:40 - utils - INFO - [94mConcatenated 44/141 components (fallback)[0m
+18:10:41 - utils - INFO - [94mConcatenated 45/141 components (fallback)[0m
+18:10:41 - utils - INFO - [94mConcatenated 46/141 components (fallback)[0m
+18:10:42 - utils - INFO - [94mConcatenated 47/141 components (fallback)[0m
+18:10:42 - utils - INFO - [94mConcatenated 48/141 components (fallback)[0m
+18:10:42 - utils - INFO - [94mConcatenated 49/141 components (fallback)[0m
+18:10:43 - utils - INFO - [94mConcatenated 50/141 components (fallback)[0m
+18:10:43 - utils - INFO - [94mConcatenated 51/141 components (fallback)[0m
+18:10:44 - utils - INFO - [94mConcatenated 52/141 components (fallback)[0m
+18:10:44 - utils - INFO - [94mConcatenated 53/141 components (fallback)[0m
+18:10:45 - utils - INFO - [94mConcatenated 54/141 components (fallback)[0m
+18:10:45 - utils - INFO - [94mConcatenated 55/141 components (fallback)[0m
+18:10:46 - utils - INFO - [94mConcatenated 56/141 components (fallback)[0m
+18:10:46 - utils - INFO - [94mConcatenated 57/141 components (fallback)[0m
+18:10:47 - utils - INFO - [94mConcatenated 58/141 components (fallback)[0m
+18:10:47 - utils - INFO - [94mConcatenated 59/141 components (fallback)[0m
+18:10:48 - utils - INFO - [94mConcatenated 60/141 components (fallback)[0m
+18:10:48 - utils - INFO - [94mConcatenated 61/141 components (fallback)[0m
+18:10:49 - utils - INFO - [94mConcatenated 62/141 components (fallback)[0m
+18:10:49 - utils - INFO - [94mConcatenated 63/141 components (fallback)[0m
+18:10:50 - utils - INFO - [94mConcatenated 64/141 components (fallback)[0m
+18:10:50 - utils - INFO - [94mConcatenated 65/141 components (fallback)[0m
+18:10:51 - utils - INFO - [94mConcatenated 66/141 components (fallback)[0m
+18:10:51 - utils - INFO - [94mConcatenated 67/141 components (fallback)[0m
+18:10:51 - utils - INFO - [94mConcatenated 68/141 components (fallback)[0m
+18:10:52 - utils - INFO - [94mConcatenated 69/141 components (fallback)[0m
+18:10:53 - utils - INFO - [94mConcatenated 70/141 components (fallback)[0m
+18:10:53 - utils - INFO - [94mConcatenated 71/141 components (fallback)[0m
+18:10:54 - utils - INFO - [94mConcatenated 72/141 components (fallback)[0m
+18:10:54 - utils - INFO - [94mConcatenated 73/141 components (fallback)[0m
+18:10:55 - utils - INFO - [94mConcatenated 74/141 components (fallback)[0m
+18:10:56 - utils - INFO - [94mConcatenated 75/141 components (fallback)[0m
+18:10:56 - utils - INFO - [94mConcatenated 76/141 components (fallback)[0m
+18:10:57 - utils - INFO - [94mConcatenated 77/141 components (fallback)[0m
+18:10:58 - utils - INFO - [94mConcatenated 78/141 components (fallback)[0m
+18:10:58 - utils - INFO - [94mConcatenated 79/141 components (fallback)[0m
+18:10:59 - utils - INFO - [94mConcatenated 80/141 components (fallback)[0m
+18:10:59 - utils - INFO - [94mConcatenated 81/141 components (fallback)[0m
+18:11:00 - utils - INFO - [94mConcatenated 82/141 components (fallback)[0m
+18:11:01 - utils - INFO - [94mConcatenated 83/141 components (fallback)[0m
+18:11:01 - utils - INFO - [94mConcatenated 84/141 components (fallback)[0m
+18:11:02 - utils - INFO - [94mConcatenated 85/141 components (fallback)[0m
+18:11:02 - utils - INFO - [94mConcatenated 86/141 components (fallback)[0m
+18:11:03 - utils - INFO - [94mConcatenated 87/141 components (fallback)[0m
+18:11:03 - utils - INFO - [94mConcatenated 88/141 components (fallback)[0m
+18:11:04 - utils - INFO - [94mConcatenated 89/141 components (fallback)[0m
+18:11:05 - utils - INFO - [94mConcatenated 90/141 components (fallback)[0m
+18:11:05 - utils - INFO - [94mConcatenated 91/141 components (fallback)[0m
+18:11:06 - utils - INFO - [94mConcatenated 92/141 components (fallback)[0m
+18:11:07 - utils - INFO - [94mConcatenated 93/141 components (fallback)[0m
+18:11:07 - utils - INFO - [94mConcatenated 94/141 components (fallback)[0m
+18:11:08 - utils - INFO - [94mConcatenated 95/141 components (fallback)[0m
+18:11:09 - utils - INFO - [94mConcatenated 96/141 components (fallback)[0m
+18:11:09 - utils - INFO - [94mConcatenated 97/141 components (fallback)[0m
+18:11:10 - utils - INFO - [94mConcatenated 98/141 components (fallback)[0m
+18:11:11 - utils - INFO - [94mConcatenated 99/141 components (fallback)[0m
+18:11:12 - utils - INFO - [94mConcatenated 100/141 components (fallback)[0m
+18:11:12 - utils - INFO - [94mConcatenated 101/141 components (fallback)[0m
+18:11:13 - utils - INFO - [94mConcatenated 102/141 components (fallback)[0m
+18:11:14 - utils - INFO - [94mConcatenated 103/141 components (fallback)[0m
+18:11:15 - utils - INFO - [94mConcatenated 104/141 components (fallback)[0m
+18:11:15 - utils - INFO - [94mConcatenated 105/141 components (fallback)[0m
+18:11:16 - utils - INFO - [94mConcatenated 106/141 components (fallback)[0m
+18:11:17 - utils - INFO - [94mConcatenated 107/141 components (fallback)[0m
+18:11:17 - utils - INFO - [94mConcatenated 108/141 components (fallback)[0m
+18:11:18 - utils - INFO - [94mConcatenated 109/141 components (fallback)[0m
+18:11:19 - utils - INFO - [94mConcatenated 110/141 components (fallback)[0m
+18:11:20 - utils - INFO - [94mConcatenated 111/141 components (fallback)[0m
+18:11:20 - utils - INFO - [94mConcatenated 112/141 components (fallback)[0m
+18:11:21 - utils - INFO - [94mConcatenated 113/141 components (fallback)[0m
+18:11:22 - utils - INFO - [94mConcatenated 114/141 components (fallback)[0m
+18:11:23 - utils - INFO - [94mConcatenated 115/141 components (fallback)[0m
+18:11:24 - utils - INFO - [94mConcatenated 116/141 components (fallback)[0m
+18:11:25 - utils - INFO - [94mConcatenated 117/141 components (fallback)[0m
+18:11:25 - utils - INFO - [94mConcatenated 118/141 components (fallback)[0m
+18:11:26 - utils - INFO - [94mConcatenated 119/141 components (fallback)[0m
+18:11:27 - utils - INFO - [94mConcatenated 120/141 components (fallback)[0m
+18:11:28 - utils - INFO - [94mConcatenated 121/141 components (fallback)[0m
+18:11:29 - utils - INFO - [94mConcatenated 122/141 components (fallback)[0m
+18:11:30 - utils - INFO - [94mConcatenated 123/141 components (fallback)[0m
+18:11:30 - utils - INFO - [94mConcatenated 124/141 components (fallback)[0m
+18:11:31 - utils - INFO - [94mConcatenated 125/141 components (fallback)[0m
+18:11:32 - utils - INFO - [94mConcatenated 126/141 components (fallback)[0m
+18:11:33 - utils - INFO - [94mConcatenated 127/141 components (fallback)[0m
+18:11:33 - utils - INFO - [94mConcatenated 128/141 components (fallback)[0m
+18:11:34 - utils - INFO - [94mConcatenated 129/141 components (fallback)[0m
+18:11:35 - utils - INFO - [94mConcatenated 130/141 components (fallback)[0m
+18:11:36 - utils - INFO - [94mConcatenated 131/141 components (fallback)[0m
+18:11:37 - utils - INFO - [94mConcatenated 132/141 components (fallback)[0m
+18:11:38 - utils - INFO - [94mConcatenated 133/141 components (fallback)[0m
+18:11:39 - utils - INFO - [94mConcatenated 134/141 components (fallback)[0m
+18:11:39 - utils - INFO - [94mConcatenated 135/141 components (fallback)[0m
+18:11:40 - utils - INFO - [94mConcatenated 136/141 components (fallback)[0m
+18:11:41 - utils - INFO - [94mConcatenated 137/141 components (fallback)[0m
+18:11:42 - utils - INFO - [94mConcatenated 138/141 components (fallback)[0m
+18:11:43 - utils - INFO - [94mConcatenated 139/141 components (fallback)[0m
+18:11:44 - utils - INFO - [94mConcatenated 140/141 components (fallback)[0m
+18:11:45 - utils - INFO - [94mConcatenated 141/141 components (fallback)[0m
+18:11:45 - utils - INFO - [94mCleaning final mesh...[0m
+18:14:29 - utils - INFO - [94mSaving mesh...[0m
+18:14:34 - utils - INFO - [94mFinished![0m

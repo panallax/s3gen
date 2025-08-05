@@ -1,0 +1,291 @@
+15:53:44 - logger - INFO - [94mLog file initialized at: /home/alex/Desktop/mesh-gen/data/output/Part_29-01-15-53/log.log[0m
+15:53:44 - run - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/Part_29-01-15-53[0m
+15:53:44 - run - INFO - [94mPickle file found in tmp folder. Using precomputed mesh[0m
+15:53:44 - stl_generation - INFO - [94mLoading graph from pickle file: /home/alex/Desktop/mesh-gen/tmp/G.pickle[0m
+15:53:44 - stl_generation - INFO - [94mProcessing 3232 spheres using 15 processes...[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 1/33[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 2/33[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 3/33[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 4/33[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 5/33[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 6/33[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 7/33[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 8/33[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 9/33[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 10/33[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 11/33[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 12/33[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 13/33[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 14/33[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 15/33[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 16/33[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 17/33[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 18/33[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 19/33[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 20/33[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 21/33[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 22/33[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 23/33[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 24/33[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 25/33[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 26/33[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 27/33[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 28/33[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 29/33[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 30/33[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 31/33[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 32/33[0m
+15:53:45 - stl_generation - INFO - [94mCompleted sphere batch 33/33[0m
+15:53:45 - stl_generation - INFO - [94mProcessing 10786 cylinders...[0m
+15:53:46 - stl_generation - INFO - [94mCompleted cylinder batch 1/108[0m
+15:53:46 - stl_generation - INFO - [94mCompleted cylinder batch 2/108[0m
+15:53:46 - stl_generation - INFO - [94mCompleted cylinder batch 3/108[0m
+15:53:46 - stl_generation - INFO - [94mCompleted cylinder batch 4/108[0m
+15:53:46 - stl_generation - INFO - [94mCompleted cylinder batch 5/108[0m
+15:53:46 - stl_generation - INFO - [94mCompleted cylinder batch 6/108[0m
+15:53:46 - stl_generation - INFO - [94mCompleted cylinder batch 7/108[0m
+15:53:47 - stl_generation - INFO - [94mCompleted cylinder batch 8/108[0m
+15:53:47 - stl_generation - INFO - [94mCompleted cylinder batch 9/108[0m
+15:53:47 - stl_generation - INFO - [94mCompleted cylinder batch 10/108[0m
+15:53:47 - stl_generation - INFO - [94mCompleted cylinder batch 11/108[0m
+15:53:47 - stl_generation - INFO - [94mCompleted cylinder batch 12/108[0m
+15:53:47 - stl_generation - INFO - [94mCompleted cylinder batch 13/108[0m
+15:53:47 - stl_generation - INFO - [94mCompleted cylinder batch 14/108[0m
+15:53:47 - stl_generation - INFO - [94mCompleted cylinder batch 15/108[0m
+15:53:47 - stl_generation - INFO - [94mCompleted cylinder batch 16/108[0m
+15:53:47 - stl_generation - INFO - [94mCompleted cylinder batch 17/108[0m
+15:53:47 - stl_generation - INFO - [94mCompleted cylinder batch 18/108[0m
+15:53:47 - stl_generation - INFO - [94mCompleted cylinder batch 19/108[0m
+15:53:47 - stl_generation - INFO - [94mCompleted cylinder batch 20/108[0m
+15:53:47 - stl_generation - INFO - [94mCompleted cylinder batch 21/108[0m
+15:53:47 - stl_generation - INFO - [94mCompleted cylinder batch 22/108[0m
+15:53:47 - stl_generation - INFO - [94mCompleted cylinder batch 23/108[0m
+15:53:47 - stl_generation - INFO - [94mCompleted cylinder batch 24/108[0m
+15:53:48 - stl_generation - INFO - [94mCompleted cylinder batch 25/108[0m
+15:53:48 - stl_generation - INFO - [94mCompleted cylinder batch 26/108[0m
+15:53:48 - stl_generation - INFO - [94mCompleted cylinder batch 27/108[0m
+15:53:48 - stl_generation - INFO - [94mCompleted cylinder batch 28/108[0m
+15:53:48 - stl_generation - INFO - [94mCompleted cylinder batch 29/108[0m
+15:53:48 - stl_generation - INFO - [94mCompleted cylinder batch 30/108[0m
+15:53:48 - stl_generation - INFO - [94mCompleted cylinder batch 31/108[0m
+15:53:48 - stl_generation - INFO - [94mCompleted cylinder batch 32/108[0m
+15:53:48 - stl_generation - INFO - [94mCompleted cylinder batch 33/108[0m
+15:53:48 - stl_generation - INFO - [94mCompleted cylinder batch 34/108[0m
+15:53:48 - stl_generation - INFO - [94mCompleted cylinder batch 35/108[0m
+15:53:48 - stl_generation - INFO - [94mCompleted cylinder batch 36/108[0m
+15:53:48 - stl_generation - INFO - [94mCompleted cylinder batch 37/108[0m
+15:53:48 - stl_generation - INFO - [94mCompleted cylinder batch 38/108[0m
+15:53:48 - stl_generation - INFO - [94mCompleted cylinder batch 39/108[0m
+15:53:48 - stl_generation - INFO - [94mCompleted cylinder batch 40/108[0m
+15:53:48 - stl_generation - INFO - [94mCompleted cylinder batch 41/108[0m
+15:53:48 - stl_generation - INFO - [94mCompleted cylinder batch 42/108[0m
+15:53:48 - stl_generation - INFO - [94mCompleted cylinder batch 43/108[0m
+15:53:49 - stl_generation - INFO - [94mCompleted cylinder batch 44/108[0m
+15:53:49 - stl_generation - INFO - [94mCompleted cylinder batch 45/108[0m
+15:53:49 - stl_generation - INFO - [94mCompleted cylinder batch 46/108[0m
+15:53:49 - stl_generation - INFO - [94mCompleted cylinder batch 47/108[0m
+15:53:49 - stl_generation - INFO - [94mCompleted cylinder batch 48/108[0m
+15:53:49 - stl_generation - INFO - [94mCompleted cylinder batch 49/108[0m
+15:53:49 - stl_generation - INFO - [94mCompleted cylinder batch 50/108[0m
+15:53:49 - stl_generation - INFO - [94mCompleted cylinder batch 51/108[0m
+15:53:49 - stl_generation - INFO - [94mCompleted cylinder batch 52/108[0m
+15:53:49 - stl_generation - INFO - [94mCompleted cylinder batch 53/108[0m
+15:53:49 - stl_generation - INFO - [94mCompleted cylinder batch 54/108[0m
+15:53:49 - stl_generation - INFO - [94mCompleted cylinder batch 55/108[0m
+15:53:49 - stl_generation - INFO - [94mCompleted cylinder batch 56/108[0m
+15:53:49 - stl_generation - INFO - [94mCompleted cylinder batch 57/108[0m
+15:53:49 - stl_generation - INFO - [94mCompleted cylinder batch 58/108[0m
+15:53:49 - stl_generation - INFO - [94mCompleted cylinder batch 59/108[0m
+15:53:49 - stl_generation - INFO - [94mCompleted cylinder batch 60/108[0m
+15:53:50 - stl_generation - INFO - [94mCompleted cylinder batch 61/108[0m
+15:53:50 - stl_generation - INFO - [94mCompleted cylinder batch 62/108[0m
+15:53:50 - stl_generation - INFO - [94mCompleted cylinder batch 63/108[0m
+15:53:50 - stl_generation - INFO - [94mCompleted cylinder batch 64/108[0m
+15:53:50 - stl_generation - INFO - [94mCompleted cylinder batch 65/108[0m
+15:53:50 - stl_generation - INFO - [94mCompleted cylinder batch 66/108[0m
+15:53:50 - stl_generation - INFO - [94mCompleted cylinder batch 67/108[0m
+15:53:50 - stl_generation - INFO - [94mCompleted cylinder batch 68/108[0m
+15:53:50 - stl_generation - INFO - [94mCompleted cylinder batch 69/108[0m
+15:53:50 - stl_generation - INFO - [94mCompleted cylinder batch 70/108[0m
+15:53:50 - stl_generation - INFO - [94mCompleted cylinder batch 71/108[0m
+15:53:50 - stl_generation - INFO - [94mCompleted cylinder batch 72/108[0m
+15:53:50 - stl_generation - INFO - [94mCompleted cylinder batch 73/108[0m
+15:53:50 - stl_generation - INFO - [94mCompleted cylinder batch 74/108[0m
+15:53:50 - stl_generation - INFO - [94mCompleted cylinder batch 75/108[0m
+15:53:50 - stl_generation - INFO - [94mCompleted cylinder batch 76/108[0m
+15:53:50 - stl_generation - INFO - [94mCompleted cylinder batch 77/108[0m
+15:53:50 - stl_generation - INFO - [94mCompleted cylinder batch 78/108[0m
+15:53:51 - stl_generation - INFO - [94mCompleted cylinder batch 79/108[0m
+15:53:51 - stl_generation - INFO - [94mCompleted cylinder batch 80/108[0m
+15:53:51 - stl_generation - INFO - [94mCompleted cylinder batch 81/108[0m
+15:53:51 - stl_generation - INFO - [94mCompleted cylinder batch 82/108[0m
+15:53:51 - stl_generation - INFO - [94mCompleted cylinder batch 83/108[0m
+15:53:51 - stl_generation - INFO - [94mCompleted cylinder batch 84/108[0m
+15:53:51 - stl_generation - INFO - [94mCompleted cylinder batch 85/108[0m
+15:53:51 - stl_generation - INFO - [94mCompleted cylinder batch 86/108[0m
+15:53:51 - stl_generation - INFO - [94mCompleted cylinder batch 87/108[0m
+15:53:51 - stl_generation - INFO - [94mCompleted cylinder batch 88/108[0m
+15:53:51 - stl_generation - INFO - [94mCompleted cylinder batch 89/108[0m
+15:53:51 - stl_generation - INFO - [94mCompleted cylinder batch 90/108[0m
+15:53:51 - stl_generation - INFO - [94mCompleted cylinder batch 91/108[0m
+15:53:51 - stl_generation - INFO - [94mCompleted cylinder batch 92/108[0m
+15:53:51 - stl_generation - INFO - [94mCompleted cylinder batch 93/108[0m
+15:53:52 - stl_generation - INFO - [94mCompleted cylinder batch 94/108[0m
+15:53:52 - stl_generation - INFO - [94mCompleted cylinder batch 95/108[0m
+15:53:52 - stl_generation - INFO - [94mCompleted cylinder batch 96/108[0m
+15:53:52 - stl_generation - INFO - [94mCompleted cylinder batch 97/108[0m
+15:53:52 - stl_generation - INFO - [94mCompleted cylinder batch 98/108[0m
+15:53:52 - stl_generation - INFO - [94mCompleted cylinder batch 99/108[0m
+15:53:52 - stl_generation - INFO - [94mCompleted cylinder batch 100/108[0m
+15:53:52 - stl_generation - INFO - [94mCompleted cylinder batch 101/108[0m
+15:53:52 - stl_generation - INFO - [94mCompleted cylinder batch 102/108[0m
+15:53:52 - stl_generation - INFO - [94mCompleted cylinder batch 103/108[0m
+15:53:52 - stl_generation - INFO - [94mCompleted cylinder batch 104/108[0m
+15:53:52 - stl_generation - INFO - [94mCompleted cylinder batch 105/108[0m
+15:53:52 - stl_generation - INFO - [94mCompleted cylinder batch 106/108[0m
+15:53:52 - stl_generation - INFO - [94mCompleted cylinder batch 107/108[0m
+15:53:52 - stl_generation - INFO - [94mCompleted cylinder batch 108/108[0m
+15:53:52 - stl_generation - INFO - [94mJoining all results...[0m
+15:53:52 - stl_generation - INFO - [94mJoined 2/141 components[0m
+15:53:52 - stl_generation - INFO - [94mJoined 3/141 components[0m
+15:53:53 - stl_generation - INFO - [94mJoined 4/141 components[0m
+15:53:53 - stl_generation - INFO - [94mJoined 5/141 components[0m
+15:53:53 - stl_generation - INFO - [94mJoined 6/141 components[0m
+15:53:53 - stl_generation - INFO - [94mJoined 7/141 components[0m
+15:53:54 - stl_generation - INFO - [94mJoined 8/141 components[0m
+15:53:54 - stl_generation - INFO - [94mJoined 9/141 components[0m
+15:53:54 - stl_generation - INFO - [94mJoined 10/141 components[0m
+15:53:55 - stl_generation - INFO - [94mJoined 11/141 components[0m
+15:53:55 - stl_generation - INFO - [94mJoined 12/141 components[0m
+15:53:56 - stl_generation - INFO - [94mJoined 13/141 components[0m
+15:53:57 - stl_generation - INFO - [94mJoined 14/141 components[0m
+15:53:57 - stl_generation - INFO - [94mJoined 15/141 components[0m
+15:53:58 - stl_generation - INFO - [94mJoined 16/141 components[0m
+15:53:59 - stl_generation - INFO - [94mJoined 17/141 components[0m
+15:54:00 - stl_generation - INFO - [94mJoined 18/141 components[0m
+15:54:01 - stl_generation - INFO - [94mJoined 19/141 components[0m
+15:54:01 - stl_generation - INFO - [94mJoined 20/141 components[0m
+15:54:02 - stl_generation - INFO - [94mJoined 21/141 components[0m
+15:54:03 - stl_generation - INFO - [94mJoined 22/141 components[0m
+15:54:05 - stl_generation - INFO - [94mJoined 23/141 components[0m
+15:54:06 - stl_generation - INFO - [94mJoined 24/141 components[0m
+15:54:07 - stl_generation - INFO - [94mJoined 25/141 components[0m
+15:54:08 - stl_generation - INFO - [94mJoined 26/141 components[0m
+15:54:10 - stl_generation - INFO - [94mJoined 27/141 components[0m
+15:54:11 - stl_generation - INFO - [94mJoined 28/141 components[0m
+15:54:12 - stl_generation - INFO - [94mJoined 29/141 components[0m
+15:54:14 - stl_generation - INFO - [94mJoined 30/141 components[0m
+15:54:15 - stl_generation - INFO - [94mJoined 31/141 components[0m
+15:54:17 - stl_generation - INFO - [94mJoined 32/141 components[0m
+15:54:18 - stl_generation - INFO - [94mJoined 33/141 components[0m
+15:54:18 - stl_generation - WARNING - [93mConcatenated 34/141 components (fallback)[0m
+15:54:18 - stl_generation - WARNING - [93mConcatenated 35/141 components (fallback)[0m
+15:54:19 - stl_generation - WARNING - [93mConcatenated 36/141 components (fallback)[0m
+15:54:19 - stl_generation - WARNING - [93mConcatenated 37/141 components (fallback)[0m
+15:54:20 - stl_generation - WARNING - [93mConcatenated 38/141 components (fallback)[0m
+15:54:20 - stl_generation - WARNING - [93mConcatenated 39/141 components (fallback)[0m
+15:54:20 - stl_generation - WARNING - [93mConcatenated 40/141 components (fallback)[0m
+15:54:21 - stl_generation - WARNING - [93mConcatenated 41/141 components (fallback)[0m
+15:54:21 - stl_generation - WARNING - [93mConcatenated 42/141 components (fallback)[0m
+15:54:21 - stl_generation - WARNING - [93mConcatenated 43/141 components (fallback)[0m
+15:54:22 - stl_generation - WARNING - [93mConcatenated 44/141 components (fallback)[0m
+15:54:22 - stl_generation - WARNING - [93mConcatenated 45/141 components (fallback)[0m
+15:54:23 - stl_generation - WARNING - [93mConcatenated 46/141 components (fallback)[0m
+15:54:23 - stl_generation - WARNING - [93mConcatenated 47/141 components (fallback)[0m
+15:54:24 - stl_generation - WARNING - [93mConcatenated 48/141 components (fallback)[0m
+15:54:24 - stl_generation - WARNING - [93mConcatenated 49/141 components (fallback)[0m
+15:54:25 - stl_generation - WARNING - [93mConcatenated 50/141 components (fallback)[0m
+15:54:25 - stl_generation - WARNING - [93mConcatenated 51/141 components (fallback)[0m
+15:54:25 - stl_generation - WARNING - [93mConcatenated 52/141 components (fallback)[0m
+15:54:26 - stl_generation - WARNING - [93mConcatenated 53/141 components (fallback)[0m
+15:54:26 - stl_generation - WARNING - [93mConcatenated 54/141 components (fallback)[0m
+15:54:27 - stl_generation - WARNING - [93mConcatenated 55/141 components (fallback)[0m
+15:54:27 - stl_generation - WARNING - [93mConcatenated 56/141 components (fallback)[0m
+15:54:28 - stl_generation - WARNING - [93mConcatenated 57/141 components (fallback)[0m
+15:54:28 - stl_generation - WARNING - [93mConcatenated 58/141 components (fallback)[0m
+15:54:29 - stl_generation - WARNING - [93mConcatenated 59/141 components (fallback)[0m
+15:54:29 - stl_generation - WARNING - [93mConcatenated 60/141 components (fallback)[0m
+15:54:30 - stl_generation - WARNING - [93mConcatenated 61/141 components (fallback)[0m
+15:54:30 - stl_generation - WARNING - [93mConcatenated 62/141 components (fallback)[0m
+15:54:31 - stl_generation - WARNING - [93mConcatenated 63/141 components (fallback)[0m
+15:54:31 - stl_generation - WARNING - [93mConcatenated 64/141 components (fallback)[0m
+15:54:32 - stl_generation - WARNING - [93mConcatenated 65/141 components (fallback)[0m
+15:54:32 - stl_generation - WARNING - [93mConcatenated 66/141 components (fallback)[0m
+15:54:33 - stl_generation - WARNING - [93mConcatenated 67/141 components (fallback)[0m
+15:54:33 - stl_generation - WARNING - [93mConcatenated 68/141 components (fallback)[0m
+15:54:34 - stl_generation - WARNING - [93mConcatenated 69/141 components (fallback)[0m
+15:54:34 - stl_generation - WARNING - [93mConcatenated 70/141 components (fallback)[0m
+15:54:35 - stl_generation - WARNING - [93mConcatenated 71/141 components (fallback)[0m
+15:54:35 - stl_generation - WARNING - [93mConcatenated 72/141 components (fallback)[0m
+15:54:36 - stl_generation - WARNING - [93mConcatenated 73/141 components (fallback)[0m
+15:54:36 - stl_generation - WARNING - [93mConcatenated 74/141 components (fallback)[0m
+15:54:37 - stl_generation - WARNING - [93mConcatenated 75/141 components (fallback)[0m
+15:54:37 - stl_generation - WARNING - [93mConcatenated 76/141 components (fallback)[0m
+15:54:38 - stl_generation - WARNING - [93mConcatenated 77/141 components (fallback)[0m
+15:54:39 - stl_generation - WARNING - [93mConcatenated 78/141 components (fallback)[0m
+15:54:39 - stl_generation - WARNING - [93mConcatenated 79/141 components (fallback)[0m
+15:54:40 - stl_generation - WARNING - [93mConcatenated 80/141 components (fallback)[0m
+15:54:40 - stl_generation - WARNING - [93mConcatenated 81/141 components (fallback)[0m
+15:54:41 - stl_generation - WARNING - [93mConcatenated 82/141 components (fallback)[0m
+15:54:41 - stl_generation - WARNING - [93mConcatenated 83/141 components (fallback)[0m
+15:54:42 - stl_generation - WARNING - [93mConcatenated 84/141 components (fallback)[0m
+15:54:43 - stl_generation - WARNING - [93mConcatenated 85/141 components (fallback)[0m
+15:54:43 - stl_generation - WARNING - [93mConcatenated 86/141 components (fallback)[0m
+15:54:44 - stl_generation - WARNING - [93mConcatenated 87/141 components (fallback)[0m
+15:54:45 - stl_generation - WARNING - [93mConcatenated 88/141 components (fallback)[0m
+15:54:45 - stl_generation - WARNING - [93mConcatenated 89/141 components (fallback)[0m
+15:54:46 - stl_generation - WARNING - [93mConcatenated 90/141 components (fallback)[0m
+15:54:47 - stl_generation - WARNING - [93mConcatenated 91/141 components (fallback)[0m
+15:54:47 - stl_generation - WARNING - [93mConcatenated 92/141 components (fallback)[0m
+15:54:48 - stl_generation - WARNING - [93mConcatenated 93/141 components (fallback)[0m
+15:54:49 - stl_generation - WARNING - [93mConcatenated 94/141 components (fallback)[0m
+15:54:49 - stl_generation - WARNING - [93mConcatenated 95/141 components (fallback)[0m
+15:54:50 - stl_generation - WARNING - [93mConcatenated 96/141 components (fallback)[0m
+15:54:51 - stl_generation - WARNING - [93mConcatenated 97/141 components (fallback)[0m
+15:54:51 - stl_generation - WARNING - [93mConcatenated 98/141 components (fallback)[0m
+15:54:52 - stl_generation - WARNING - [93mConcatenated 99/141 components (fallback)[0m
+15:54:52 - stl_generation - WARNING - [93mConcatenated 100/141 components (fallback)[0m
+15:54:53 - stl_generation - WARNING - [93mConcatenated 101/141 components (fallback)[0m
+15:54:54 - stl_generation - WARNING - [93mConcatenated 102/141 components (fallback)[0m
+15:54:55 - stl_generation - WARNING - [93mConcatenated 103/141 components (fallback)[0m
+15:54:55 - stl_generation - WARNING - [93mConcatenated 104/141 components (fallback)[0m
+15:54:56 - stl_generation - WARNING - [93mConcatenated 105/141 components (fallback)[0m
+15:54:57 - stl_generation - WARNING - [93mConcatenated 106/141 components (fallback)[0m
+15:54:58 - stl_generation - WARNING - [93mConcatenated 107/141 components (fallback)[0m
+15:54:58 - stl_generation - WARNING - [93mConcatenated 108/141 components (fallback)[0m
+15:54:59 - stl_generation - WARNING - [93mConcatenated 109/141 components (fallback)[0m
+15:55:00 - stl_generation - WARNING - [93mConcatenated 110/141 components (fallback)[0m
+15:55:01 - stl_generation - WARNING - [93mConcatenated 111/141 components (fallback)[0m
+15:55:01 - stl_generation - WARNING - [93mConcatenated 112/141 components (fallback)[0m
+15:55:02 - stl_generation - WARNING - [93mConcatenated 113/141 components (fallback)[0m
+15:55:03 - stl_generation - WARNING - [93mConcatenated 114/141 components (fallback)[0m
+15:55:04 - stl_generation - WARNING - [93mConcatenated 115/141 components (fallback)[0m
+15:55:06 - stl_generation - WARNING - [93mConcatenated 116/141 components (fallback)[0m
+15:55:07 - stl_generation - WARNING - [93mConcatenated 117/141 components (fallback)[0m
+15:55:07 - stl_generation - WARNING - [93mConcatenated 118/141 components (fallback)[0m
+15:55:08 - stl_generation - WARNING - [93mConcatenated 119/141 components (fallback)[0m
+15:55:09 - stl_generation - WARNING - [93mConcatenated 120/141 components (fallback)[0m
+15:55:10 - stl_generation - WARNING - [93mConcatenated 121/141 components (fallback)[0m
+15:55:11 - stl_generation - WARNING - [93mConcatenated 122/141 components (fallback)[0m
+15:55:11 - stl_generation - WARNING - [93mConcatenated 123/141 components (fallback)[0m
+15:55:12 - stl_generation - WARNING - [93mConcatenated 124/141 components (fallback)[0m
+15:55:13 - stl_generation - WARNING - [93mConcatenated 125/141 components (fallback)[0m
+15:55:14 - stl_generation - WARNING - [93mConcatenated 126/141 components (fallback)[0m
+15:55:15 - stl_generation - WARNING - [93mConcatenated 127/141 components (fallback)[0m
+15:55:16 - stl_generation - WARNING - [93mConcatenated 128/141 components (fallback)[0m
+15:55:17 - stl_generation - WARNING - [93mConcatenated 129/141 components (fallback)[0m
+15:55:18 - stl_generation - WARNING - [93mConcatenated 130/141 components (fallback)[0m
+15:55:19 - stl_generation - WARNING - [93mConcatenated 131/141 components (fallback)[0m
+15:55:20 - stl_generation - WARNING - [93mConcatenated 132/141 components (fallback)[0m
+15:55:21 - stl_generation - WARNING - [93mConcatenated 133/141 components (fallback)[0m
+15:55:22 - stl_generation - WARNING - [93mConcatenated 134/141 components (fallback)[0m
+15:55:24 - stl_generation - WARNING - [93mConcatenated 135/141 components (fallback)[0m
+15:55:26 - stl_generation - WARNING - [93mConcatenated 136/141 components (fallback)[0m
+15:55:28 - stl_generation - WARNING - [93mConcatenated 137/141 components (fallback)[0m
+15:55:29 - stl_generation - WARNING - [93mConcatenated 138/141 components (fallback)[0m
+15:55:29 - stl_generation - WARNING - [93mConcatenated 139/141 components (fallback)[0m
+15:55:30 - stl_generation - WARNING - [93mConcatenated 140/141 components (fallback)[0m
+15:55:31 - stl_generation - WARNING - [93mConcatenated 141/141 components (fallback)[0m
+15:55:31 - stl_generation - INFO - [94mCleaning final mesh...[0m
+15:58:12 - stl_generation - INFO - [94mSaving mesh...[0m
+16:12:21 - logger - INFO - [92mFinished! Execution time: 18 minutes and 36 seconds[0m

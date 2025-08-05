@@ -1,0 +1,4 @@
+15:18:39 - config - INFO - [94mLog file initialized at: /home/alex/Desktop/mesh-gen/data/output/Part_07-07-15-18/log.log[0m
+15:18:39 - run - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/Part_07-07-15-18[0m
+15:18:39 - run - INFO - [94mProcessing file: /home/alex/Desktop/mesh-gen/data/Part.stl[0m
+15:18:39 - mesh_generation - INFO - [94mInitial pore area: 100 mm² and initial radius: 15.196713713031851 mm[0m

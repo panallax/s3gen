@@ -1,0 +1,31 @@
+16:57:52 - config - INFO - [94mLog file initialized at: /home/alex/Desktop/mesh-gen/data/output/Part_16-07-16-57/log.log[0m
+16:57:52 - run - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/Part_16-07-16-57[0m
+16:57:52 - run - INFO - [94mProcessing file: /home/alex/Desktop/mesh-gen/data/Part.stl[0m
+16:57:52 - mesh_generation - INFO - [94mInitial pore area: 80 mm² and initial radius: 13.59235395877698 mm[0m
+16:57:52 - mesh_generation - DEBUG - Initial number of simplices: 213
+16:57:53 - mesh_generation - DEBUG - iteration 1
+16:57:54 - mesh_generation - DEBUG - iteration 2
+16:57:55 - mesh_generation - DEBUG - iteration 3
+16:57:56 - mesh_generation - DEBUG - iteration 4
+16:57:56 - mesh_generation - DEBUG - iteration 5
+16:57:57 - mesh_generation - DEBUG - iteration 6
+16:57:58 - mesh_generation - DEBUG - iteration 7
+16:57:59 - mesh_generation - DEBUG - iteration 8
+16:58:00 - mesh_generation - DEBUG - iteration 9
+16:58:01 - mesh_generation - DEBUG - iteration 10
+16:58:02 - mesh_generation - DEBUG - iteration 11
+16:58:03 - mesh_generation - DEBUG - iteration 12
+16:58:04 - mesh_generation - DEBUG - iteration 13
+16:58:05 - mesh_generation - DEBUG - iteration 14
+16:58:06 - mesh_generation - DEBUG - iteration 15
+16:58:07 - mesh_generation - DEBUG - iteration 16
+16:58:09 - mesh_generation - DEBUG - iteration 17
+16:58:10 - mesh_generation - DEBUG - iteration 18
+16:58:11 - mesh_generation - DEBUG - iteration 19
+16:58:12 - mesh_generation - DEBUG - iteration 20
+16:58:13 - mesh_generation - DEBUG - iteration 21
+16:58:15 - mesh_generation - DEBUG - iteration 22
+16:58:17 - mesh_generation - DEBUG - iteration 23
+16:58:19 - mesh_generation - DEBUG - iteration 24
+16:58:21 - mesh_generation - INFO - [94mNo polyhedrons created. Process finished.[0m
+17:07:49 - config - INFO - [92mFinished! Execution time: 9 minutes and 57 seconds[0m

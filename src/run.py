@@ -7,14 +7,14 @@ import os
 
 try:
     output_path = parse_ouput_folfer(config.STLFILE, config.OUTPUTPATH)
-    points = extract_points_from_STL(config.STLFILE)
-   
+    points, bot_points, top_points, lateral_points = extract_points_from_STL(config.STLFILE)
+
     if len(glob(f"{parsed_path(config.TMPPATH)}/*.pickle")) > 0:
         stl = STLGen(parsed_path(config.TMPPATH), output_path)
         stl.generate_stl()
         exit()
 
-    mesh = MeshGen(points, config.PORERADIUS, output_path, config.TMPPATH)
+    mesh = MeshGen(points, bot_points, top_points, lateral_points, config.PORERADIUS, output_path, config.TMPPATH)
     mesh.generate_mesh()
     mesh.save_graph()
     mesh.save_adjacency_matrix()

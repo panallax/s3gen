@@ -1,0 +1,8 @@
+15:20:13 - config - INFO - [94mLog file initialized at: /home/alex/Desktop/mesh-gen/data/output/Part_07-07-15-20/log.log[0m
+15:20:13 - run - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/Part_07-07-15-20[0m
+15:20:13 - run - INFO - [94mProcessing file: /home/alex/Desktop/mesh-gen/data/Part.stl[0m
+15:20:13 - mesh_generation - INFO - [94mInitial pore area: 100 mm² and initial radius: 15.196713713031851 mm[0m
+15:20:38 - config - INFO - [94mLog file initialized at: /home/alex/Desktop/mesh-gen/data/output/Part_07-07-15-20/log.log[0m
+15:20:38 - run - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/Part_07-07-15-20[0m
+15:20:38 - run - INFO - [94mProcessing file: /home/alex/Desktop/mesh-gen/data/Part.stl[0m
+15:20:38 - mesh_generation - INFO - [94mInitial pore area: 100 mm² and initial radius: 15.196713713031851 mm[0m

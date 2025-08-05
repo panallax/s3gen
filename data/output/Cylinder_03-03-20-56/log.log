@@ -1,0 +1,59 @@
+20:56:02 - logger - INFO - [94mLog file initialized at: /home/alex/Desktop/mesh-gen/data/output/Cylinder_03-03-20-56/log.log[0m
+20:56:02 - run - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/Cylinder_03-03-20-56[0m
+20:56:02 - run - INFO - [94mPickle file found in tmp folder. Using precomputed mesh[0m
+20:56:02 - stl_generation - INFO - [94mLoading graph from pickle file: /home/alex/Desktop/mesh-gen/tmp/G.pickle[0m
+20:56:02 - stl_generation - INFO - [94mInitialized mesh generation process[0m
+20:56:02 - stl_generation - INFO - [94mGenerating polygons in edges...[0m
+20:56:02 - stl_generation - INFO - [94mGenerating vertices hulls...[0m
+20:56:03 - stl_generation - INFO - [94mGenerating struts...[0m
+20:56:06 - stl_generation - INFO - [94mGenerating mesh...[0m
+20:56:27 - logger - INFO - [94mLog file initialized at: /home/alex/Desktop/mesh-gen/data/output/Cylinder_03-03-20-56/log.log[0m
+20:56:27 - run - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/Cylinder_03-03-20-56[0m
+20:56:27 - run - INFO - [94mProcessing file: /home/alex/Desktop/mesh-gen/data/Cylinder.stl[0m
+20:56:27 - mesh_generation - INFO - [94mInitial pore area: 2 mm² and initial radius: 2.149139863647084 mm[0m
+20:56:27 - mesh_generation - DEBUG - Initial number of simplices: 144
+20:56:32 - mesh_generation - DEBUG - iteration 1
+20:56:40 - mesh_generation - DEBUG - iteration 2
+20:56:46 - mesh_generation - DEBUG - iteration 3
+20:56:52 - mesh_generation - DEBUG - iteration 4
+20:56:58 - mesh_generation - DEBUG - iteration 5
+20:57:04 - mesh_generation - DEBUG - iteration 6
+20:57:11 - mesh_generation - DEBUG - iteration 7
+20:57:18 - mesh_generation - DEBUG - iteration 8
+20:57:25 - mesh_generation - DEBUG - iteration 9
+20:57:32 - mesh_generation - DEBUG - iteration 10
+20:57:38 - mesh_generation - DEBUG - iteration 11
+20:57:46 - mesh_generation - DEBUG - iteration 12
+20:57:51 - mesh_generation - DEBUG - iteration 13
+20:57:55 - mesh_generation - INFO - [94mNo polyhedrons created. Process finished.[0m
+20:58:27 - mesh_generation - INFO - [94mGraph saved in /home/alex/Desktop/mesh-gen/data/output/Cylinder_03-03-20-56/G.pickle[0m
+20:58:27 - stl_generation - INFO - [94mLoading graph from pickle file: /home/alex/Desktop/mesh-gen/data/output/Cylinder_03-03-20-56/G.pickle[0m
+20:58:27 - stl_generation - INFO - [94mInitialized mesh generation process[0m
+20:58:27 - stl_generation - INFO - [94mGenerating polygons in edges...[0m
+20:58:27 - stl_generation - WARNING - [93mEdge 242 too short. Subdivision mesh will probably fail. Consider merging close nodes.[0m
+20:58:28 - stl_generation - WARNING - [93mEdge 332 too short. Subdivision mesh will probably fail. Consider merging close nodes.[0m
+20:58:28 - stl_generation - WARNING - [93mEdge 383 too short. Subdivision mesh will probably fail. Consider merging close nodes.[0m
+20:58:28 - stl_generation - WARNING - [93mEdge 405 too short. Subdivision mesh will probably fail. Consider merging close nodes.[0m
+20:58:28 - stl_generation - WARNING - [93mEdge 423 too short. Subdivision mesh will probably fail. Consider merging close nodes.[0m
+20:58:28 - stl_generation - WARNING - [93mEdge 572 too short. Subdivision mesh will probably fail. Consider merging close nodes.[0m
+20:58:28 - stl_generation - WARNING - [93mEdge 587 too short. Subdivision mesh will probably fail. Consider merging close nodes.[0m
+20:58:28 - stl_generation - WARNING - [93mEdge 711 too short. Subdivision mesh will probably fail. Consider merging close nodes.[0m
+20:58:29 - stl_generation - WARNING - [93mEdge 1014 too short. Subdivision mesh will probably fail. Consider merging close nodes.[0m
+20:58:29 - stl_generation - WARNING - [93mEdge 1024 too short. Subdivision mesh will probably fail. Consider merging close nodes.[0m
+20:58:29 - stl_generation - WARNING - [93mEdge 1053 too short. Subdivision mesh will probably fail. Consider merging close nodes.[0m
+20:58:29 - stl_generation - WARNING - [93mEdge 1170 too short. Subdivision mesh will probably fail. Consider merging close nodes.[0m
+20:58:29 - stl_generation - WARNING - [93mEdge 1201 too short. Subdivision mesh will probably fail. Consider merging close nodes.[0m
+20:58:29 - stl_generation - WARNING - [93mEdge 1227 too short. Subdivision mesh will probably fail. Consider merging close nodes.[0m
+20:58:30 - stl_generation - WARNING - [93mEdge 1401 too short. Subdivision mesh will probably fail. Consider merging close nodes.[0m
+20:58:30 - stl_generation - WARNING - [93mEdge 1463 too short. Subdivision mesh will probably fail. Consider merging close nodes.[0m
+20:58:30 - stl_generation - WARNING - [93mEdge 1481 too short. Subdivision mesh will probably fail. Consider merging close nodes.[0m
+20:58:30 - stl_generation - WARNING - [93mEdge 1568 too short. Subdivision mesh will probably fail. Consider merging close nodes.[0m
+20:58:30 - stl_generation - WARNING - [93mEdge 1652 too short. Subdivision mesh will probably fail. Consider merging close nodes.[0m
+20:58:30 - stl_generation - WARNING - [93mEdge 1774 too short. Subdivision mesh will probably fail. Consider merging close nodes.[0m
+20:58:30 - stl_generation - INFO - [94mGenerating vertices hulls...[0m
+20:58:33 - stl_generation - INFO - [94mGenerating struts...[0m
+20:58:44 - stl_generation - INFO - [94mGenerating mesh...[0m
+20:58:45 - stl_generation - WARNING - [93mError while subdividing the mesh: Some edges are shared by more than 2 faces. Retrying with half of loops.[0m
+20:58:45 - stl_generation - WARNING - [93mError while subdividing the mesh again: Some edges are shared by more than 2 faces. No subdivision can be made. Saving the original mesh.[0m
+20:59:06 - stl_generation - INFO - [92mMesh saved at /home/alex/Desktop/mesh-gen/data/output/Cylinder_03-03-20-56[0m
+20:59:06 - logger - INFO - [92mFinished! Execution time: 2 minutes and 39 seconds[0m

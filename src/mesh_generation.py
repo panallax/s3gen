@@ -13,10 +13,16 @@ from itertools import chain
 
 class MeshGen:
 
-    def __init__(self, shell_points, radius, output_path, tmp_path):
-        self.shell_points = self.fixed_points =  shell_points
+    def __init__(self, shell_points, bot_points, top_points, lateral_points, radius, output_path, tmp_path):
+        self.shell_points = self.fixed_points = shell_points
+        # self.points = shell_points[np.argsort(shell_points[:, 2])]
+        self.bot_points = bot_points
+        self.top_points = top_points
+        self.lateral_points = lateral_points
         self.r = radius
-        self.points, self.bot_points, self.top_points = decompose_structure(self.shell_points, radius)
+        self.points = np.vstack((self.shell_points, decompose_structure(self.shell_points, radius)))
+        print(f"Points in shell: {len(self.shell_points)}, {len(self.points)}")
+        self.points = self.points[np.argsort(self.points[:, 2])]
         self.z_max = self.points[-1][-1]
         self.z = self.points[0][-1]
         self.max_global_dist = 0
@@ -34,12 +40,13 @@ class MeshGen:
             if (self.top_points[:, None] == self.points[i]).all(-1).any():
                 break
             nbrs = NearestNeighbors(algorithm="kd_tree").fit(self.points)
-            _, indices = nbrs.radius_neighbors([self.points[i]], radius=1.3*self.r, return_distance=True, sort_results=True)
+            _, indices = nbrs.radius_neighbors([self.points[i]], radius=self.r, return_distance=True, sort_results=True)
             self.points_to_join = []
             pnts = self.points[indices[0]]
-
             #Select one point to evaluate
             current_point = pnts[0,:]
+            curr_point = self.to_key(current_point)
+            self.G.add_node(curr_point)
             # print(f"current point: {current_point} is shell point {isin(self.shell_points, current_point)}")
             self.connections[i] = {"point": current_point, "connections": {}, "connections_below" :{}}
 
@@ -54,7 +61,7 @@ class MeshGen:
             index_not_fixed_points_above = indx_above[~(points_above[:, None] == self.fixed_points).all(-1).any(-1)]
 
             available_quadrants = [1,2,3,4]
-
+            #Si hay puntos fijos, se unen a los puntos actuales si cumplen el angulo
             if len(fixed_points_above) > 0:
                 for point in fixed_points_above:
                     union_angle = np.arcsin(np.divide(np.matmul(point-current_point, np.array([0,0,1])), np.linalg.norm(point - current_point)))*180/np.pi
@@ -62,57 +69,68 @@ class MeshGen:
                     if union_angle >= 44.9 and quadrant in available_quadrants:
                         self.__add_connection(point, i, quadrant, "connections", True)
                         available_quadrants.remove(quadrant)
+                        self.G.add_edge(curr_point, self.to_key(point))
+
 
             # print(f"{len(self.points_to_join)} fixed points joined, remaining quadrants {available_quadrants}")
             j = 0
+            #Si hay puntos no fijos, se generan puntos en cada uno de los cuadrantes disponibles
             while len(available_quadrants) > 0 and j < len(not_fixed_points_above):
+                #Se selecciona el primer punto no fijo
                 point = not_fixed_points_above[j]
+                #Se calcula el angulo de union con el punto actual
                 union_angle = np.arcsin(np.divide(np.matmul(point-current_point, np.array([0,0,1])), np.linalg.norm(point - current_point)))*180/np.pi
+                #Se determina el cuadrante del punto con respecto al punto actual
                 quadrant = determinate_quadrant(point, current_point)
-
                 if union_angle >= 44.9:
                     #If the angle is correct and it is in an empty quadrant, it joins
                     if quadrant in available_quadrants:
                         # print(f"union angle: {union_angle} between {point} and current point joined in quadrant {quadrant}")
                         self.__add_connection(point, i, quadrant, "connections", True)
                         available_quadrants.remove(quadrant)
+                        self.G.add_edge(curr_point, self.to_key(point))
   
                     # If the angle is correct but its quadrant is occupied, it is moved to an available quadrant
                     else:
                         destiny_quadrant = available_quadrants[0]
-                        new_point = generate_point_in_quadrant(current_point, self.r, 1, destiny_quadrant)[0]
+                        new_point = generate_point_in_quadrant(current_point, self.r, 1, destiny_quadrant)
                         if not in_volume(new_point, self.shell_points):
                             break
 
                         # print(f"union angle: {union_angle} between {point} and current point joined in quadrant {destiny_quadrant}  as new point {new_point} because quadrant {quadrant} is ocupied")
                         self.__add_point(new_point, index_not_fixed_points_above[j], i, destiny_quadrant, "connections")
                         available_quadrants.remove(destiny_quadrant)
+                        self.G.add_edge(curr_point, self.to_key(new_point))
 
                 #If the angle is not correct, it is moved to an available quadrant with a correct angle
                 else:
                     destiny_quadrant = available_quadrants[0]
-                    new_point = generate_point_in_quadrant(current_point, self.r, 1, destiny_quadrant)[0]
+            
+                    new_point = generate_point_in_quadrant(current_point, self.r, 1, destiny_quadrant)
                     if not in_volume(new_point, self.shell_points):
                         break
 
                     # print(f"union angle: {union_angle} between {point} and current point joined in quadrant {destiny_quadrant}  as new point {new_point} because angle is not correct")
                     self.__add_point(new_point, index_not_fixed_points_above[j], i, destiny_quadrant, "connections")
                     available_quadrants.remove(destiny_quadrant)
+                    self.G.add_edge(curr_point, self.to_key(new_point))
 
 
                 j+=1
             if len(available_quadrants) > 0:
                 # print(f"quadrants {available_quadrants} left, generating new points in those quadrants")
                 for quadrant in available_quadrants:
-                    new_point = generate_point_in_quadrant(current_point, self.r, 1, quadrant)[0]
+                    new_point = generate_point_in_quadrant(current_point, self.r, 1, quadrant)
                     if not in_volume(new_point, self.shell_points):
                         nearest_shell_points = self.shell_points[self.kd_tree.query_ball_point(current_point, self.r)]
                         available_nearest_shell_points = nearest_shell_points[np.where(angle(nearest_shell_points, current_point, np.array([0,0,1])) > 44.9)[0]]
                         for shell_point in available_nearest_shell_points:
                             if quadrant == determinate_quadrant(shell_point, current_point):
                                 self.__insert_point(shell_point, i, quadrant, "connections")
+                                self.G.add_edge(curr_point, self.to_key(shell_point))
                     else:
                         self.__insert_point(new_point, i, quadrant, "connections")
+                        self.G.add_edge(curr_point, self.to_key(new_point))
 
                     # print(f"new point {new_point} generated in quadrant {quadrant}")
 
@@ -123,38 +141,108 @@ class MeshGen:
             i+=1
             # print("--------------------------------------------------")
 
-        reversed_points = self.points[np.argsort(self.points[:, 2])[::-1]]
-        nbrs = NearestNeighbors(algorithm="kd_tree").fit(reversed_points)
+        # reversed_points = self.points[np.argsort(self.points[:, 2])[::-1]]
+        # nbrs = NearestNeighbors(algorithm="kd_tree").fit(reversed_points)
 
-        for p in reversed_points:
-            if (self.bot_points[:, None] == p).all(-1).any():
-                break
-            indx_point = np.where(np.all(self.points == p, axis=1))[0][0]
-            if indx_point not in self.connections.keys():
-                self.connections[indx_point] = {"point": p, "connections": {}, "connections_below" :{}}
-            _, indices = nbrs.radius_neighbors([p], radius=1.3*self.r, return_distance=True, sort_results=True)
-            pnts = reversed_points[indices[0]]
-            #Select one point to evaluate
-            current_point = pnts[0,:]
-            #Filter the neighbours of the point to keep only the ones below it
-            indx_pos_below = np.where(pnts[:,-1] < current_point[-1])
-            #Array of this points
-            points_below = pnts[indx_pos_below]
-            available_quadrants = [1,2,3,4]
+        # for p in reversed_points:
+        #     if (self.bot_points[:, None] == p).all(-1).any():
+        #         break
+        #     indx_point = np.where(np.all(self.points == p, axis=1))[0][0]
+        #     if indx_point not in self.connections.keys():
+        #         self.connections[indx_point] = {"point": p, "connections": {}, "connections_below" :{}}
+        #     _, indices = nbrs.radius_neighbors([p], radius=1.3*self.r, return_distance=True, sort_results=True)
+        #     pnts = reversed_points[indices[0]]
+        #     #Select one point to evaluate
+        #     current_point = pnts[0,:]
+        #     curr_point = self.to_key(current_point)
+        #     #Filter the neighbours of the point to keep only the ones below it
+        #     indx_pos_below = np.where(pnts[:,-1] < current_point[-1])
+        #     #Array of this points
+        #     points_below = pnts[indx_pos_below]
+        #     available_quadrants = [1,2,3,4]
 
-            for point in points_below:
-                #TODO: change to function
-                union_angle = np.arcsin(np.divide(np.matmul(point-current_point, np.array([0,0,-1])), np.linalg.norm(point - current_point)))*180/np.pi
-                quadrant = determinate_quadrant(point, current_point)
-                if union_angle >= 44.9 and quadrant in available_quadrants:
-                    self.__add_connection(point, indx_point, quadrant, "connections_below", False)
-                    available_quadrants.remove(quadrant)
+        #     for point in points_below:
+        #         #TODO: change to function
+        #         union_angle = np.arcsin(np.divide(np.matmul(point-current_point, np.array([0,0,-1])), np.linalg.norm(point - current_point)))*180/np.pi
+        #         quadrant = determinate_quadrant(point, current_point)
+        #         if union_angle >= 44.9 and quadrant in available_quadrants:
+        #             self.__add_connection(point, indx_point, quadrant, "connections_below", False)
+        #             available_quadrants.remove(quadrant)
+        #             self.G.add_edge(curr_point, self.to_key(point))
 
-        self.__generate_graph()
+
+        # self.__generate_graph()
         # plot_graph(self.G)
-        self.__remove_close_edges()
-        plot_graph(self.G)
+        # self.__remove_close_edges()
+        # self.plot_graph_edges_colored_by_length(self.G)
+        plot_graph(self.G, "pyvista")
+        print(len(self.G.nodes()))
+        print(len(self.G.edges()))
         return self.G
+    
+    def to_key(self, point, decimals=4):
+        return tuple(np.round(point.astype(np.float32), decimals=decimals))
+    
+    def plot_graph_edges_colored_by_length(self, G, node_size=20, linewidth=2, cmap='viridis'):
+        import matplotlib.pyplot as plt
+        import matplotlib.cm as cm
+        import matplotlib.colors as mcolors
+        from matplotlib import gridspec
+
+        """
+        Plotea un grafo 3D con nodos y aristas. Las aristas se colorean según su longitud.
+        """
+        edge_lengths = []
+        edges = list(G.edges)
+        for u, v in edges:
+            dist = np.linalg.norm(np.array(u) - np.array(v))
+            edge_lengths.append(dist)
+
+        edge_lengths = np.array(edge_lengths)
+        norm = plt.Normalize(vmin=edge_lengths.min(), vmax=edge_lengths.max())
+        colors = cm.viridis(norm(edge_lengths))
+
+        fig = plt.figure(figsize=(12, 6))
+        gs = gridspec.GridSpec(1, 3, width_ratios=[8, 0.3, 1])
+
+        # Subplot 1: grafo 3D
+        ax = fig.add_subplot(gs[0], projection='3d')
+
+        # Dibujar nodos
+        node_coords = np.array(G.nodes)
+        ax.scatter(
+            node_coords[:, 0], node_coords[:, 1], node_coords[:, 2],
+            color='black', s=10
+        )
+
+        # Dibujar aristas con colores según longitud
+        for (u, v), c in zip(edges, colors):
+            x = [u[0], v[0]]
+            y = [u[1], v[1]]
+            z = [u[2], v[2]]
+            ax.plot(x, y, z, color=c, linewidth=1.5)
+
+        ax.set_xlabel('X [mm]', fontsize=16)
+        ax.set_ylabel('Y [mm]', fontsize=16)
+        ax.set_zlabel('Z [mm]', fontsize=16)
+
+        # Subplot 2: colorbar
+        cax = fig.add_subplot(gs[1])
+        sm = cm.ScalarMappable(cmap='viridis', norm=norm)
+        sm.set_array(edge_lengths)
+        cbar = plt.colorbar(sm, cax=cax)
+        cbar.set_label("Edge Length", fontsize=16)
+
+        # Subplot 3: histograma de longitudes
+        hist_ax = fig.add_subplot(gs[2])
+        hist_ax.hist(edge_lengths, bins=10, orientation='horizontal', color='gray', edgecolor='black')
+        hist_ax.set_xlabel("Frequency", fontsize=16)
+        hist_ax.set_ylabel("Length", fontsize=16)
+        hist_ax.grid(True)
+        ax.set_aspect('equal')
+        plt.subplots_adjust(wspace=0.05)  
+        plt.tight_layout()
+        plt.show()
 
     def __remove_close_edges(self):
         init_edges = len(self.G.edges())

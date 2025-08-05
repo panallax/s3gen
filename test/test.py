@@ -1,0 +1,378 @@
+import numpy as np
+np.seterr(all="ignore")
+from utils import in_volume, exclude_points, determinate_quadrant, generate_point_in_quadrant, \
+                    angle, calculate_position, adjacency_matrix, calculate_segments_dist, \
+                    calculate_neighbors_in_node, isin, decompose_structure, plot_graph
+                    
+from sklearn.neighbors import NearestNeighbors
+from scipy.spatial import KDTree
+import os
+import networkx as nx
+import pickle
+from itertools import chain
+
+class MeshGen:
+
+    def __init__(self, shell_points, bot_points, top_points, lateral_points, radius, output_path, tmp_path):
+        self.shell_points = self.fixed_points = shell_points
+        self.points = shell_points[np.argsort(shell_points[:, 2])]
+        self.bot_points = bot_points
+        self.top_points = top_points
+        self.lateral_points = lateral_points
+        self.r = radius
+        # self.points = decompose_structure(self.shell_points, radius)
+        # import matplotlib.pyplot as plt
+        # fig = plt.figure(figsize=(12,12))
+        # ax = fig.add_subplot(projection = "3d")
+        # ax.scatter(*self.points.T)
+        # ax.set_aspect('equal')
+        # plt.show()
+
+        self.z_max = self.points[-1][-1]
+        self.z = self.points[0][-1]
+        self.max_global_dist = 0
+        self.connections = {}
+        self.kd_tree = KDTree(self.shell_points)
+        self.G = nx.Graph()
+        self.output_path = output_path
+        self.tmp_path = os.path.join("..", tmp_path)
+
+
+    def generate_mesh(self):
+
+        i = 0
+        max_it = 1000
+        connection = 0
+        generated = 0
+        print(len(self.points), len(self.shell_points))
+        while i <= max_it and self.z < self.z_max:
+            if (self.top_points[:, None] == self.points[i]).all(-1).any():
+                break
+            # print(i, len(self.points))
+            nbrs = NearestNeighbors(algorithm="kd_tree").fit(self.points)
+            _, indices = nbrs.radius_neighbors([self.points[i]], radius=self.r, return_distance=True, sort_results=True)
+            self.points_to_join = []
+            pnts = self.points[indices[0]]
+            #Select one point to evaluate
+            current_point = pnts[0,:]
+            curr_point = self.to_key(current_point)
+            self.G.add_node(curr_point)
+            # print(f"current point: {current_point} is shell point {isin(self.shell_points, current_point)}")
+            self.connections[i] = {"point": current_point, "connections": {}, "connections_below" :{}}
+
+            #Filter the neighbours of the point to keep only the ones above it
+            indx_pos_above = np.where(pnts[:,-1] > current_point[-1])
+            #Array of this points
+            points_above = pnts[indx_pos_above]
+            indx_above = indices[0][indx_pos_above]
+
+            # fixed_points_above = points_above[(points_above[:, None] == self.fixed_points).all(-1).any(-1)]
+            # not_fixed_points_above = points_above[~(points_above[:, None] == self.fixed_points).all(-1).any(-1)]
+            # index_not_fixed_points_above = indx_above[~(points_above[:, None] == self.fixed_points).all(-1).any(-1)]
+
+            available_quadrants = [1,2,3,4]
+            #Si hay puntos fijos, se unen a los puntos actuales si cumplen el angulo
+            # if len(fixed_points_above) > 0:
+            #     for point in fixed_points_above:
+            #         union_angle = np.arcsin(np.divide(np.matmul(point-current_point, np.array([0,0,1])), np.linalg.norm(point - current_point)))*180/np.pi
+            #         quadrant = determinate_quadrant(point, current_point)
+            #         if union_angle >= 44.9 and quadrant in available_quadrants:
+            #             self.__add_connection(point, i, quadrant, "connections", True)
+            #             available_quadrants.remove(quadrant)
+
+            # print(f"{len(self.points_to_join)} fixed points joined, remaining quadrants {available_quadrants}")
+            j = 0
+            #Si hay puntos no fijos, se generan puntos en cada uno de los cuadrantes disponibles
+            while len(available_quadrants) > 0 and j < len(points_above):
+                #Se selecciona el primer punto no fijo
+                point = points_above[j]
+                #Se calcula el angulo de union con el punto actual
+                union_angle = np.arcsin(np.divide(np.matmul(point-current_point, np.array([0,0,1])), np.linalg.norm(point - current_point)))*180/np.pi
+                #Se determina el cuadrante del punto con respecto al punto actual
+                quadrant = determinate_quadrant(point, current_point)
+                # print(point, union_angle, quadrant)
+                if union_angle >= 44.9:
+                    #If the angle is correct and it is in an empty quadrant, it joins
+                    if quadrant in available_quadrants:
+                        connection +=1
+                        self.G.add_edge(curr_point, self.to_key(point))
+                        # print(f"union angle: {union_angle} between {point} and current point joined in quadrant {quadrant}")
+                        self.__add_connection(point, i, quadrant, "connections", True)
+                        available_quadrants.remove(quadrant)
+  
+                    # If the angle is correct but its quadrant is occupied, it is moved to an available quadrant
+                    # else:
+                    #     destiny_quadrant = available_quadrants[0]
+                    #     new_point = generate_point_in_quadrant(current_point, self.r, 1, destiny_quadrant)
+                    #     if not in_volume(new_point, self.shell_points):
+                    #         break
+
+                    #     print(f"union angle: {union_angle} between {point} and current point joined in quadrant {destiny_quadrant}  as new point {new_point} because quadrant {quadrant} is ocupied")
+                    #     self.__add_point(new_point, indx_above[j], i, destiny_quadrant, "connections")
+                    #     available_quadrants.remove(destiny_quadrant)
+
+                #If the angle is not correct, it is moved to an available quadrant with a correct angle
+                # else:
+                #     destiny_quadrant = available_quadrants[0]
+            
+                #     new_point = generate_point_in_quadrant(current_point, self.r, 1, destiny_quadrant)
+                #     if not in_volume(new_point, self.shell_points):
+                #         break
+
+                #     print(f"union angle: {union_angle} between {point} and current point joined in quadrant {destiny_quadrant}  as new point {new_point} because angle is not correct")
+                #     self.__add_point(new_point, indx_above[j], i, destiny_quadrant, "connections")
+                #     available_quadrants.remove(destiny_quadrant)
+
+
+                j+=1
+            if len(available_quadrants) > 0:
+                # print(f"quadrants {available_quadrants} left, generating new points in those quadrants")
+                for quadrant in available_quadrants:
+                    new_point = generate_point_in_quadrant(current_point, self.r, 1, quadrant)
+                    if not in_volume(new_point, self.shell_points):
+                        nearest_shell_points = self.shell_points[self.kd_tree.query_ball_point(current_point, self.r)]
+                        available_nearest_shell_points = nearest_shell_points[np.where(angle(nearest_shell_points, current_point, np.array([0,0,1])) > 44.9)[0]]
+                        for shell_point in available_nearest_shell_points:
+                            if quadrant == determinate_quadrant(shell_point, current_point):
+                                generated += 1
+                                self.G.add_edge(curr_point, self.to_key(new_point))
+
+                                self.__insert_point(shell_point, i, quadrant, "connections")
+                    else:
+                        generated += 1
+                        self.G.add_edge(curr_point, self.to_key(new_point))
+
+                        self.__insert_point(new_point, i, quadrant, "connections")
+
+                    # print(f"new point {new_point} generated in quadrant {quadrant}")
+
+            # print(f"points joined: {self.points_to_join}")
+            local_dist = np.max(np.linalg.norm(self.points_to_join - current_point, axis=1)) if len(self.points_to_join) > 0 else 0
+            self.max_global_dist = local_dist if local_dist > self.max_global_dist else self.max_global_dist
+            self.z = np.max(exclude_points(self.fixed_points,self.shell_points)[:,2])
+            i+=1
+            # print("--------------------------------------------------")
+        # print(f"Total connections: {connection}, generated points: {generated}")
+        # print(f"Expected value connection: {connection/1000}, expected value generated: {generated/1000}")
+        reversed_points = self.points[np.argsort(self.points[:, 2])[::-1]]
+        nbrs = NearestNeighbors(algorithm="kd_tree").fit(reversed_points)
+
+        for p in reversed_points:
+            if (self.bot_points[:, None] == p).all(-1).any():
+                break
+            indx_point = np.where(np.all(self.points == p, axis=1))[0][0]
+            if indx_point not in self.connections.keys():
+                self.connections[indx_point] = {"point": p, "connections": {}, "connections_below" :{}}
+            _, indices = nbrs.radius_neighbors([p], radius=1.3*self.r, return_distance=True, sort_results=True)
+            pnts = reversed_points[indices[0]]
+            #Select one point to evaluate
+            current_point = pnts[0,:]
+            curr_point = self.to_key(current_point)
+            #Filter the neighbours of the point to keep only the ones below it
+            indx_pos_below = np.where(pnts[:,-1] < current_point[-1])
+            #Array of this points
+            points_below = pnts[indx_pos_below]
+            available_quadrants = [1,2,3,4]
+
+            for point in points_below:
+                #TODO: change to function
+                union_angle = np.arcsin(np.divide(np.matmul(point-current_point, np.array([0,0,-1])), np.linalg.norm(point - current_point)))*180/np.pi
+                quadrant = determinate_quadrant(point, current_point)
+                if union_angle >= 44.9 and quadrant in available_quadrants:
+                    self.__add_connection(point, indx_point, quadrant, "connections_below", False)
+                    available_quadrants.remove(quadrant)
+                    self.G.add_edge(curr_point, self.to_key(point))
+
+
+        # self.__generate_graph()
+        # plot_graph(self.G)
+        self.__remove_close_edges()
+        plot_graph(self.G, "pyvista")
+        self.plot_graph_edges_colored_by_length(self.G)
+        # self.save_graph()
+        print(len(self.G.nodes()), len(self.G.edges()))
+        return i,connection/i, generated/i
+    
+    def to_key(self, point, decimals=4):
+        return tuple(np.round(point.astype(np.float32), decimals=decimals))
+    
+    def __remove_close_edges(self):
+        init_edges = len(self.G.edges())
+        nodes = np.array(self.G.nodes()) 
+        tree_points = KDTree(nodes)
+        for segment in self.G.edges():
+            p1,p2 = np.array(segment)
+            mid_point = (p1+p2)/2
+            observable_points = np.unique(np.concatenate([x[1:] for x in tree_points.query_ball_point([p1,p2,mid_point], self.max_global_dist)], dtype= int, casting= "unsafe"))
+            valid_points = exclude_points(nodes[observable_points],[p1,p2, mid_point])
+
+            observable_segments = []
+            for valid_point in valid_points:  
+                point_nodes = self.G.neighbors(tuple(valid_point))
+                for n in point_nodes:
+                    if not isin(np.array(segment), np.array(n)).any() and isin(nodes[observable_points], np.array(n)).any():
+                        observable_segments.append(np.array([valid_point,n]))
+
+            observable_segments = np.unique(np.array(list(map(lambda x: x[np.argsort(x[:,0])], observable_segments))), axis=0)
+            min_nbr_current_segment = min(list(map(lambda x: calculate_neighbors_in_node(self.G,x), [p1,p2])))
+            local_segments_to_remove = []
+            for s in observable_segments:
+                if calculate_segments_dist(s, (p1,p2)) < 0.1:
+                    nbr_node = list(map(lambda x: calculate_neighbors_in_node(self.G,x), s))
+                    if min(nbr_node) > min_nbr_current_segment:
+                        local_segments_to_remove.append(tuple(map(tuple,s)))
+
+                    else:
+                        self.G.remove_edge(tuple(p1), tuple(p2))
+                        local_segments_to_remove.clear()
+                        break
+
+            if len(local_segments_to_remove) >= 1:
+                if  len(set(chain(*local_segments_to_remove))) % 2 != 0:
+                    self.G.remove_edge(tuple(p1), tuple(p2))
+                else:
+                    self.G.remove_edges_from(local_segments_to_remove) 
+       
+        print(f"Initially were {init_edges} edges. {init_edges - len(self.G.edges())} edges were removed")
+        return self.G
+        
+
+    
+    def __insert_point(self, point, connection_idx, quadrant, connection_type):
+        self.points = calculate_position(self.points, point)
+        self.fixed_points = np.vstack((self.fixed_points, point))
+        self.connections[connection_idx][connection_type].update({quadrant: point})
+        self.points_to_join.append(point)
+
+    def __add_connection(self, point, connection_idx, quadrant, connection_type, fix_point= True):
+        self.connections[connection_idx][connection_type].update({quadrant: point})
+        if fix_point:
+            self.fixed_points = np.vstack((self.fixed_points, point))
+            self.points_to_join.append(point)
+
+    def __generate_graph(self):
+        for value in self.connections.values():
+            tuples_points = list(map(tuple,[value['point']] + list(value.get('connections', {}).values()) + list(value.get('connections_below', {}).values())))
+            self.G.add_nodes_from(list(map(tuple,tuples_points)))
+            for i in range(1,len(tuples_points)):
+                self.G.add_edge(tuples_points[0], tuples_points[i])
+
+    def save_graph(self):
+        # pickle.dump(self.G, open(os.path.join(self.output_path, "G.pickle"),"wb"))
+        pickle.dump(self.G, open(os.path.join(self.tmp_path, "G.pickle"),"wb"))
+
+    # def save_adjacency_matrix(self):   
+    #     nodes, matrix = adjacency_matrix(self.G)
+    #     np.savez(os.path.join(self.output_path, "adjacency_matrix.npz"), nodes=nodes, matrix=matrix)
+
+
+
+    def plot_graph_edges_colored_by_length(self, G, node_size=20, linewidth=2, cmap='viridis'):
+        import matplotlib.cm as cm
+        import matplotlib.colors as mcolors
+        from matplotlib import gridspec
+
+        """
+        Plotea un grafo 3D con nodos y aristas. Las aristas se colorean según su longitud.
+        """
+        edge_lengths = []
+        edges = list(G.edges)
+        for u, v in edges:
+            dist = np.linalg.norm(np.array(u) - np.array(v))
+            edge_lengths.append(dist)
+
+        edge_lengths = np.array(edge_lengths)
+        norm = plt.Normalize(vmin=edge_lengths.min(), vmax=edge_lengths.max())
+        colors = cm.viridis(norm(edge_lengths))
+
+        fig = plt.figure(figsize=(12, 6))
+        gs = gridspec.GridSpec(1, 3, width_ratios=[8, 0.3, 1])
+
+        # Subplot 1: grafo 3D
+        ax = fig.add_subplot(gs[0], projection='3d')
+
+        # Dibujar nodos
+        node_coords = np.array(G.nodes)
+        ax.scatter(
+            node_coords[:, 0], node_coords[:, 1], node_coords[:, 2],
+            color='black', s=10
+        )
+
+        # Dibujar aristas con colores según longitud
+        for (u, v), c in zip(edges, colors):
+            x = [u[0], v[0]]
+            y = [u[1], v[1]]
+            z = [u[2], v[2]]
+            ax.plot(x, y, z, color=c, linewidth=1.5)
+
+        ax.set_xlabel('X [mm]', fontsize=16)
+        ax.set_ylabel('Y [mm]', fontsize=16)
+        ax.set_zlabel('Z [mm]', fontsize=16)
+
+        # Subplot 2: colorbar
+        cax = fig.add_subplot(gs[1])
+        sm = cm.ScalarMappable(cmap='viridis', norm=norm)
+        sm.set_array(edge_lengths)
+        cbar = plt.colorbar(sm, cax=cax)
+        cbar.set_label("Edge Length", fontsize=16)
+
+        # Subplot 3: histograma de longitudes
+        hist_ax = fig.add_subplot(gs[2])
+        hist_ax.hist(edge_lengths, bins=10, orientation='horizontal', color='gray', edgecolor='black')
+        hist_ax.set_xlabel("Frequency", fontsize=16)
+        hist_ax.set_ylabel("Length", fontsize=16)
+        hist_ax.grid(True)
+        ax.set_aspect('equal')
+        plt.subplots_adjust(wspace=0.05)  
+        plt.tight_layout()
+        plt.show()
+
+if __name__ == "__main__":
+    import config
+    from utils import extract_points_from_STL
+    import matplotlib.pyplot as plt
+    from scipy.interpolate import interp1d
+    from scipy.optimize import brentq
+    points, bot_points, top_points, lateral_points = extract_points_from_STL(config.STLFILE)
+    mesh = MeshGen(points, bot_points, top_points, lateral_points, config.PORERADIUS, "", config.TMPPATH)
+    mesh.generate_mesh()
+    # ev_gen = []
+    # ev_con = []
+    # radius = [0.1, 0.3, 0.5, 0.7, 1.0]
+    # for r in radius:
+    #     mesh = MeshGen(points, bot_points, top_points, lateral_points, r, "", config.TMPPATH)
+    #     i, con, gen = mesh.generate_mesh()
+    #     ev_gen.append(gen)
+    #     ev_con.append(con)
+
+    # f_E_gen = interp1d(radius, ev_gen, kind='cubic', fill_value="extrapolate")
+
+    # # Luego resolvemos f(r) - 1 = 0 ⇒ buscamos r tal que E_gen(r) = 1
+    # def f_root(r):
+    #     return f_E_gen(r) - 1
+
+    # # Buscamos el intervalo donde ocurre el cambio de signo
+    # r_cut = brentq(f_root, radius[0], radius[-1])
+
+    # fig, ax = plt.subplots(figsize=(10, 6))
+    # ax.plot(radius, ev_gen)
+    # ax.hlines(y=1, xmin=0, xmax=r_cut, color='red', linestyle='--')
+    # ax.vlines(r_cut, ymin=0, ymax=1, color='red', linestyle='--', label=f'r = {r_cut:.3f}')
+    # ax.scatter([r_cut], [1], color='red', zorder=5)
+    # ax.annotate(f"$r = {r_cut:.3f}$",
+    #          xy=(r_cut, 1), xycoords='data',
+    #          xytext=(10, 20), textcoords='offset points',
+    #          arrowprops=dict(arrowstyle="->", lw=1),
+    #          fontsize=16)
+    # ax.set_ylabel('Expected Value Generated Points', fontsize=16)
+    # ax.set_xlabel('Radius [mm]', fontsize=16)
+    # ax.tick_params(axis='y', labelcolor='royalblue', labelsize=16)
+    # ax.tick_params(axis='x', labelsize=16)
+
+    # ax2 = ax.twinx()
+    # ax2.plot(radius, ev_con, color='orange')
+    # ax2.set_ylabel('Expected Value Connections', fontsize=16)
+    # ax2.tick_params(axis='y', labelcolor='orange', labelsize=16)
+
+    # fig.tight_layout()
+    # plt.show()

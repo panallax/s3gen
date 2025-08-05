@@ -1,0 +1,6 @@
+13:01:07 - logger - INFO - [94mLog file initialized at: /home/alex/Desktop/mesh-gen/data/output/Cylinder_12-05-13-01/log.log[0m
+13:01:07 - run - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/Cylinder_12-05-13-01[0m
+13:01:07 - run - INFO - [94mProcessing file: /home/alex/Desktop/mesh-gen/data/Cylinder.stl[0m
+13:01:07 - mesh_generation - INFO - [94mInitial pore area: 10 mm² and initial radius: 4.805622828269509 mm[0m
+13:01:09 - mesh_generation - INFO - [94mNo polyhedrons created. Process finished.[0m
+13:04:56 - mesh_generation - INFO - [94mGraph saved in /home/alex/Desktop/mesh-gen/data/output/Cylinder_12-05-13-01/G.pickle[0m

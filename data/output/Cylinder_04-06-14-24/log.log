@@ -1,0 +1,28 @@
+14:24:37 - config - INFO - [94mLog file initialized at: /home/alex/Desktop/mesh-gen/data/output/Cylinder_04-06-14-24/log.log[0m
+14:24:37 - run - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/Cylinder_04-06-14-24[0m
+14:24:37 - run - INFO - [94mPickle file found in tmp folder. Using precomputed mesh[0m
+14:24:37 - stl_generation - INFO - [94mLoading graph from pickle file: /home/alex/Desktop/mesh-gen/tmp/G.pickle[0m
+14:24:37 - stl_generation - INFO - [94mInitialized mesh generation process[0m
+14:24:37 - stl_generation - INFO - [94mGenerating polygons in edges...[0m
+14:24:38 - stl_generation - INFO - [94mFixing mesh in process...[0m
+14:24:38 - stl_generation - DEBUG - Fixing mesh completed. 0 edges removes.
+14:24:38 - stl_generation - INFO - [94mGenerating vertices hulls...[0m
+14:24:38 - stl_generation - INFO - [94mGenerating struts...[0m
+14:24:39 - stl_generation - INFO - [94mGenerating mesh...[0m
+14:24:39 - stl_generation - WARNING - [93mError while subdividing the mesh: Some edges are shared by more than 2 faces. Retrying with half of loops.[0m
+14:24:39 - stl_generation - WARNING - [93mError while subdividing the mesh again: Some edges are shared by more than 2 faces. No subdivision can be made. Saving the original mesh.[0m
+14:24:47 - stl_generation - INFO - [92mMesh saved at /home/alex/Desktop/mesh-gen/data/output/Cylinder_04-06-14-24[0m
+14:24:47 - config - INFO - [92mFinished! Execution time: 0 minutes and 9 seconds[0m
+14:24:54 - config - INFO - [94mLog file initialized at: /home/alex/Desktop/mesh-gen/data/output/Cylinder_04-06-14-24/log.log[0m
+14:24:54 - run - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/Cylinder_04-06-14-24[0m
+14:24:54 - run - INFO - [94mPickle file found in tmp folder. Using precomputed mesh[0m
+14:24:54 - stl_generation - INFO - [94mLoading graph from pickle file: /home/alex/Desktop/mesh-gen/tmp/G.pickle[0m
+14:24:54 - stl_generation - INFO - [94mInitialized mesh generation process[0m
+14:24:54 - stl_generation - INFO - [94mGenerating polygons in edges...[0m
+14:24:54 - stl_generation - INFO - [94mFixing mesh in process...[0m
+14:24:54 - stl_generation - DEBUG - Fixing mesh completed. 0 edges removes.
+14:24:54 - stl_generation - INFO - [94mGenerating vertices hulls...[0m
+14:24:54 - stl_generation - INFO - [94mGenerating struts...[0m
+14:24:55 - stl_generation - INFO - [94mGenerating mesh...[0m
+14:24:59 - stl_generation - INFO - [92mMesh saved at /home/alex/Desktop/mesh-gen/data/output/Cylinder_04-06-14-24[0m
+14:24:59 - config - INFO - [92mFinished! Execution time: 0 minutes and 5 seconds[0m

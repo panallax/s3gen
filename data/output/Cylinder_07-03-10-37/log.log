@@ -1,0 +1,25 @@
+10:37:46 - logger - INFO - [94mLog file initialized at: /home/alex/Desktop/mesh-gen/data/output/Cylinder_07-03-10-37/log.log[0m
+10:37:46 - run - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/Cylinder_07-03-10-37[0m
+10:37:46 - run - INFO - [94mProcessing file: /home/alex/Desktop/mesh-gen/data/Cylinder.stl[0m
+10:37:46 - mesh_generation - INFO - [94mInitial pore area: 8 mm² and initial radius: 4.298279727294168 mm[0m
+10:37:46 - mesh_generation - DEBUG - Initial number of simplices: 37
+10:37:48 - mesh_generation - DEBUG - iteration 1
+10:37:50 - mesh_generation - DEBUG - iteration 2
+10:37:51 - mesh_generation - DEBUG - iteration 3
+10:37:53 - mesh_generation - DEBUG - iteration 4
+10:37:54 - mesh_generation - DEBUG - iteration 5
+10:37:55 - mesh_generation - DEBUG - iteration 6
+10:37:56 - mesh_generation - DEBUG - iteration 7
+10:37:57 - mesh_generation - INFO - [94mNo polyhedrons created. Process finished.[0m
+10:38:02 - mesh_generation - INFO - [94mGraph saved in /home/alex/Desktop/mesh-gen/data/output/Cylinder_07-03-10-37/G.pickle[0m
+10:38:02 - stl_generation - INFO - [94mLoading graph from pickle file: /home/alex/Desktop/mesh-gen/data/output/Cylinder_07-03-10-37/G.pickle[0m
+10:38:02 - stl_generation - INFO - [94mInitialized mesh generation process[0m
+10:38:02 - stl_generation - INFO - [94mGenerating polygons in edges...[0m
+10:38:02 - stl_generation - WARNING - [93mEdge 83 too short. Subdivision mesh will probably fail. Consider merging close nodes.[0m
+10:38:02 - stl_generation - INFO - [94mGenerating vertices hulls...[0m
+10:38:03 - stl_generation - INFO - [94mGenerating struts...[0m
+10:38:04 - stl_generation - INFO - [94mGenerating mesh...[0m
+10:38:04 - stl_generation - WARNING - [93mError while subdividing the mesh: Some edges are shared by more than 2 faces. Retrying with half of loops.[0m
+10:38:04 - stl_generation - WARNING - [93mError while subdividing the mesh again: Some edges are shared by more than 2 faces. No subdivision can be made. Saving the original mesh.[0m
+10:38:31 - stl_generation - INFO - [92mMesh saved at /home/alex/Desktop/mesh-gen/data/output/Cylinder_07-03-10-37[0m
+10:38:31 - logger - INFO - [92mFinished! Execution time: 0 minutes and 44 seconds[0m

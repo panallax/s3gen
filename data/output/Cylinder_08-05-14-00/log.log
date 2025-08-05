@@ -1,0 +1,22 @@
+14:00:15 - logger - INFO - [94mLog file initialized at: /home/alex/Desktop/mesh-gen/data/output/Cylinder_08-05-14-00/log.log[0m
+14:00:15 - run - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/Cylinder_08-05-14-00[0m
+14:00:15 - run - INFO - [94mProcessing file: /home/alex/Desktop/mesh-gen/data/Cylinder.stl[0m
+14:00:15 - mesh_generation - INFO - [94mInitial pore area: 10 mm² and initial radius: 4.805622828269509 mm[0m
+14:00:15 - mesh_generation - DEBUG - Initial number of simplices: 30
+14:00:20 - mesh_generation - DEBUG - iteration 1
+14:00:23 - mesh_generation - DEBUG - iteration 2
+14:00:24 - mesh_generation - DEBUG - iteration 3
+14:00:27 - mesh_generation - DEBUG - iteration 4
+14:00:30 - mesh_generation - INFO - [94mGraph saved in /home/alex/Desktop/mesh-gen/data/output/Cylinder_08-05-14-00/G.pickle[0m
+14:00:30 - stl_generation - INFO - [94mLoading graph from pickle file: /home/alex/Desktop/mesh-gen/data/output/Cylinder_08-05-14-00/G.pickle[0m
+14:00:30 - stl_generation - INFO - [94mInitialized mesh generation process[0m
+14:00:30 - stl_generation - INFO - [94mGenerating polygons in edges...[0m
+14:00:30 - stl_generation - INFO - [94mFixing mesh in process...[0m
+14:00:31 - stl_generation - DEBUG - Fixing mesh completed. 67 edges removes.
+14:00:31 - stl_generation - INFO - [94mGenerating vertices hulls...[0m
+14:00:31 - stl_generation - INFO - [94mGenerating struts...[0m
+14:00:32 - stl_generation - INFO - [94mGenerating mesh...[0m
+14:00:32 - stl_generation - WARNING - [93mError while subdividing the mesh: Some edges are shared by more than 2 faces. Retrying with half of loops.[0m
+14:00:32 - stl_generation - WARNING - [93mError while subdividing the mesh again: Some edges are shared by more than 2 faces. No subdivision can be made. Saving the original mesh.[0m
+14:00:48 - stl_generation - INFO - [92mMesh saved at /home/alex/Desktop/mesh-gen/data/output/Cylinder_08-05-14-00[0m
+14:00:48 - logger - INFO - [92mFinished! Execution time: 0 minutes and 33 seconds[0m

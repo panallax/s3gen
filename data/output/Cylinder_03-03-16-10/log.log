@@ -1,0 +1,22 @@
+16:10:42 - logger - INFO - [94mLog file initialized at: /home/alex/Desktop/mesh-gen/data/output/Cylinder_03-03-16-10/log.log[0m
+16:10:42 - run - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/Cylinder_03-03-16-10[0m
+16:10:42 - run - INFO - [94mPickle file found in tmp folder. Using precomputed mesh[0m
+16:10:42 - stl_generation - INFO - [94mLoading graph from pickle file: /home/alex/Desktop/mesh-gen/tmp/G.pickle[0m
+16:10:42 - stl_generation - INFO - [94mInitialized mesh generation process[0m
+16:10:42 - stl_generation - ERROR - [91mConnectivity Error: The following nodes are not stable: [[140.    100.      0.   ]
+ [ 13.427  79.176   0.   ]
+ [  0.      0.      0.   ]
+ [ 14.253 123.122   0.   ]
+ [ 39.445 154.412   0.   ]
+ [136.     77.554   0.   ]
+ [109.17  155.293   0.   ]
+ [150.    175.      0.   ]
+ [150.    200.      0.   ]
+ [  0.     25.      0.   ]
+ [ 69.957 164.063 350.   ]
+ [ 16.031 200.    350.   ]][0m
+NoneType: None
+16:10:42 - stl_generation - INFO - [94mGenerating polygons in edges...[0m
+16:10:45 - stl_generation - WARNING - [93mEdge 1938 too short. Subdivision mesh will probably fail. Consider merging close nodes.[0m
+16:10:46 - stl_generation - INFO - [94mGenerating vertices hulls...[0m
+16:10:50 - stl_generation - INFO - [94mGenerating struts...[0m

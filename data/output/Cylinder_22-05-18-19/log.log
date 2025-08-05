@@ -1,0 +1,30 @@
+18:19:03 - config - INFO - [94mLog file initialized at: /home/alex/Desktop/mesh-gen/data/output/Cylinder_22-05-18-19/log.log[0m
+18:19:03 - run - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/Cylinder_22-05-18-19[0m
+18:19:03 - run - INFO - [94mProcessing file: /home/alex/Desktop/mesh-gen/data/Cylinder.stl[0m
+18:19:03 - mesh_generation - INFO - [94mInitial pore area: 8 mm² and initial radius: 4.298279727294168 mm[0m
+18:19:03 - mesh_generation - DEBUG - Initial number of simplices: 38
+18:19:06 - mesh_generation - DEBUG - iteration 1
+18:19:07 - mesh_generation - DEBUG - iteration 2
+18:19:09 - mesh_generation - DEBUG - iteration 3
+18:19:11 - mesh_generation - DEBUG - iteration 4
+18:19:14 - mesh_generation - DEBUG - iteration 5
+18:19:17 - mesh_generation - DEBUG - iteration 6
+18:19:21 - mesh_generation - DEBUG - iteration 7
+18:19:29 - mesh_generation - DEBUG - iteration 8
+18:19:29 - mesh_generation - INFO - [94mNo polyhedrons created. Process finished.[0m
+18:19:38 - config - INFO - [92mFinished! Execution time: 0 minutes and 34 seconds[0m
+18:19:47 - config - INFO - [94mLog file initialized at: /home/alex/Desktop/mesh-gen/data/output/Cylinder_22-05-18-19/log.log[0m
+18:19:47 - run - INFO - [94mOuput folder: /home/alex/Desktop/mesh-gen/data/output/Cylinder_22-05-18-19[0m
+18:19:47 - run - INFO - [94mProcessing file: /home/alex/Desktop/mesh-gen/data/Cylinder.stl[0m
+18:19:47 - mesh_generation - INFO - [94mInitial pore area: 8 mm² and initial radius: 4.298279727294168 mm[0m
+18:19:47 - mesh_generation - DEBUG - Initial number of simplices: 38
+18:19:50 - mesh_generation - DEBUG - iteration 1
+18:19:52 - mesh_generation - DEBUG - iteration 2
+18:19:53 - mesh_generation - DEBUG - iteration 3
+18:19:56 - mesh_generation - DEBUG - iteration 4
+18:19:58 - mesh_generation - DEBUG - iteration 5
+18:20:01 - mesh_generation - DEBUG - iteration 6
+18:20:14 - mesh_generation - DEBUG - iteration 7
+18:20:40 - mesh_generation - DEBUG - iteration 8
+18:20:41 - mesh_generation - INFO - [94mNo polyhedrons created. Process finished.[0m
+18:21:20 - config - INFO - [92mFinished! Execution time: 1 minutes and 33 seconds[0m
