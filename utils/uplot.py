@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.spatial import Delaunay
-from utils.unodes import between_points
 
 
 def plot_Dealunay(points):
@@ -78,13 +77,8 @@ def print_dict(points, poly_dict, plotter="pyvista"):
         for k,elem in poly_dict.items():
             ax.scatter(elem["apex"][0], elem["apex"][1], elem["apex"][2], c='orange', s= 10)
             for i,p in enumerate(elem["base_points"]):
-            # if len(elem["base_points"]) == 3:
                 plt.plot([elem["base_points"][i,0],elem["apex"][0]],[elem["base_points"][i,1],elem["apex"][1]],[elem["base_points"][i,2],elem["apex"][2]], "tab:blue")
-            # else:  
-            #   previous = elem["base_points"][i-1] if i > 0 else elem["base_points"][-1]
-            #   following = elem["base_points"][(i+1)] if i < len(elem["base_points"])-1 else elem["base_points"][0]
-            #   # if between_points(np.array([previous, p, following]), elem["apex"]):
-            #   plt.plot([elem["base_points"][i,0],elem["apex"][0]],[elem["base_points"][i,1],elem["apex"][1]],[elem["base_points"][i,2],elem["apex"][2]], "tab:blue")
+
             
         ax.set_xlabel('X [mm]', fontsize=16)
         ax.set_ylabel('Y [mm]', fontsize=16)

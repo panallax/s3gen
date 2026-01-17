@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.spatial.distance import cdist, squareform, pdist 
+from scipy.spatial.distance import cdist
 
 def angle(ref, points):
     """
@@ -57,27 +57,6 @@ def exclude_points(arr, values_to_remove):
 
   return new_arr
 
-def between_points(points, p):
-    """
-    Check if a point is inside a triangle defined by three points
-
-    Arguments:
-        puntos {np.ndarray} -- Array of points
-        p {np.ndarray} -- Point to be checked
-    
-    Returns:
-        bool -- True if the point is inside the triangle, False otherwise
-    """
-
-    b,a,c = points[:,:2]
-    ab = b - a
-    ac = c - a
-    ap = p[:2] - a
-    cross_abp = np.cross(ab, ap)
-    cross_acp = np.cross(ac, ap)
-
-    return (cross_abp >= 0 and cross_acp <= 0) or (cross_abp <= 0 and cross_acp >= 0)
-
 def polar_angle_sort(point, ref_point):
     """
     Calculate the polar angle of a point with respect to a reference point
@@ -122,60 +101,6 @@ def calculate_segments_dist(s1,s2):
     ls2 = np.linspace(s2[0], s2[1], 20)
 
     return np.min(cdist(ls1, ls2))
-
-
-def remove_closer_points(tetra_dict, points, shell_points):
-  "Not used"
-  
-  points = np.unique(points, axis=0)
-  shell_points = np.array(shell_points)
-  points_pr = points[:,:2]
-
-  dists = squareform(pdist(points_pr))
-  closer = np.where((dists <= 1) & (dists>0))
-#   groups = join_paths(list(zip(*closer)))
-  groups = []
-  if len(groups) != 0:
-    indx_to_delete = []
-    for g in groups:
-      g = np.array(g)
-      check_shell = (points_pr[g][:,None] == shell_points[:,:2]).all(-1).any(-1)
-      if check_shell.any():
-        shell_point = points[g][np.nonzero(check_shell)][0]
-        indx_to_delete.extend(np.delete(g, np.nonzero(check_shell), axis=0).tolist())
-        # bot_points_pr = np.delete(points[g],np.nonzero(check_shell), axis=0)
-        for p in np.delete(points[g],np.nonzero(check_shell), axis=0):
-            pass
-        #   tetra_dict = update_polyhedrons_dict(tetra_dict, p, shell_point)
-      # else:
-      #   new_point = points[g[np.argmax(points[g][:,2])]]
-      #   indx_to_delete.extend(g.tolist())
-      #   # bot_points_pr = np.delete(bot_points_pr,bot_points_pr[g] , axis=0)
-      #   points = np.vstack((points, new_point))
-      #   for pt in points[np.array(g)]:
-      #     tetra_dict = update_polyhedrons_dict(tetra_dict, pt, new_point)
-
-    spaced_points = np.delete(points, indx_to_delete, axis=0)
-
-    return tetra_dict, spaced_points
-  else:
-    return tetra_dict, points
-  
-def distance(p1,p2):
-    """
-    Calculate the distance between two points.
-
-    Arguments:
-        p1 {np.ndarray} -- Point 1
-        p2 {np.ndarray} -- Point 2
-
-    Returns:
-        float -- Distance between the two points
-    """
-    p1 = np.array(p1)
-    p2 = np.array(p2)
-    return np.linalg.norm(p1-p2)
-
 
 def group_segments(segments):
     parent = {}
@@ -235,16 +160,3 @@ def generate_segments(points, external_indices, internal_indices_dict):
 
 
     return external_segments + internal_segments
-
-def valid(pts, simplices, shell_simplices, shell_pts, base_points):
-    base_set = {tuple(p) for p in base_points}
-    contour_set = {tuple(p) for p in shell_pts}
-    
-    for idx in shell_simplices:
-        simplex_points = {tuple(pts[i]) for i in simplices[idx]}
-        common_points = simplex_points & base_set
-        # if len(common_points) != len(base_points):
-        if len(common_points) >= 2 and sum(1 for p in common_points if p in contour_set) >= 2:
-            return False 
-
-    return True

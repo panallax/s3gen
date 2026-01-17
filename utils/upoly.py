@@ -122,19 +122,10 @@ def tessellate_points(initial_len, points, outter_points_idx, inner_points_dict,
   dea = t["triangles"]
   simplices = points[dea]
 
-  # import matplotlib.pyplot as plt
-  # p = np.array(t["vertices"].tolist())
-  # plt.figure(figsize=(20,20))
-  # plt.axes().set_aspect('equal')
-  # plt.triplot(points_pr[:,0], points_pr[:,1], dea)
-  # plt.plot(points_pr[:,0], points_pr[:,1], 'o')
-  # plt.show()
-
   segments_groups = sorted(group_segments(t["segments"]), key= len, reverse= True)
   outter_points = points[segments_groups[0]]
   inner_points =  [points[idx] for idx in segments_groups[1:]]
 
-  "---"
   surface_segments_idx = [int(item) for sublist in segments_groups for item in sublist]
   surface_dea_idx = np.flatnonzero(np.sum(np.isin(dea, surface_segments_idx), axis=1) >= 2)
   surface_dea = dea[surface_dea_idx]
@@ -142,7 +133,6 @@ def tessellate_points(initial_len, points, outter_points_idx, inner_points_dict,
   dea = np.delete(dea, surface_dea_idx, axis= 0)
   simplices = np.delete(simplices, surface_dea_idx, axis= 0)
   initial_len -= len(surface_dea)
-  "---"
 
   areas, sorted_idx_dea = sort_simplices(simplices, dea, points)
   simplices = points[sorted_idx_dea]
