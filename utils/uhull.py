@@ -99,7 +99,7 @@ def detect_holes(mesh, z):
   segments = []
   offset = 0
   for i,pts in enumerate(section):
-    pts = np.unique(pts.simplify(0.5).exterior.coords, axis= 0)
+    pts = np.unique(pts.simplify(0.8).exterior.coords, axis= 0)
     n = len(pts)
     if i != 0:
       holes.append(np.mean(pts, axis=0))
@@ -108,7 +108,6 @@ def detect_holes(mesh, z):
 
     segments.extend([[offset + i, offset + (i + 1) % n] for i in range(n)])
     offset += n
-
   points = np.array(points)
   segments = np.array(segments)
   transform[np.abs(transform) < 1e-10] = 0

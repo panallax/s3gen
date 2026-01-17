@@ -183,12 +183,10 @@ class STLGen:
                 invalid_nodes.append(node)
         if invalid_nodes:
             print(len(invalid_nodes), "nodes removed")
-            # print(invalid_nodes)
             self.graph.remove_nodes_from(invalid_nodes)
 
     def calculate_offset_per_node(self):
         self.offset_nodes = {}
-        invalid_nodes = []
         init_edges = len(self.graph.edges())
         for node in self.graph.nodes():
             node_specs = self.node_geom(node)
@@ -220,12 +218,6 @@ class STLGen:
         for idx, node in enumerate(self.graph.nodes()):
             point = np.array(node)
             node_offset = self.offset_nodes[node]
-            if node_offset > 100:
-                a = self.node_geom(node)
-                self.logger.debug(node)
-                print([x*np.pi/180 for x in a["angles"]])
-                print(a["lens"])
-                print(node_offset)
             neigh = list(self.graph.neighbors(node))
             for n in neigh:
                 edge_vector = point - np.array(n)
