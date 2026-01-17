@@ -135,7 +135,7 @@ class MeshConfig:
         PORE_RADIUS (float): Pore radius in mm
         PORE_AREA (int): Pore area in mm^2
     """
-    SECTION_THICKNESS = 0.5
+    SECTION_THICKNESS = 0.4
     N_SIDES = 4
     PORE_RADIUS: float = None  # mm
     PORE_AREA: int = 8
