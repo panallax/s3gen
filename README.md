@@ -6,8 +6,8 @@ A Python tool for generating and processing 3D stochastic strut-based self-suppo
 - Clone the repository:
 
    ```
-   git clone https://github.com/panallax/mesh-gen.git
-   cd mesh-gen
+   git clone https://github.com/panallax/s3gen.git
+   cd s3gen
    ```
 - Install package:
 
@@ -27,7 +27,7 @@ A Python tool for generating and processing 3D stochastic strut-based self-suppo
    1. Build the image:
 
    ```
-   docker build -t meshgen .
+   docker build -t s3gen .
    ```
    2. Run the container:
 
