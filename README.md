@@ -1,4 +1,4 @@
-# MESH-GEN
+# S³-Gen
 
 A Python tool for generating and processing 3D stochastic strut-based self-supported structures.
 
